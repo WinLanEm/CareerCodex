@@ -1,0 +1,76 @@
+version: '3.8'
+networks:
+    app-network:
+        driver: bridge
+services:
+    nginx:
+        image: nginx:latest
+        volumes:
+            - ./:/var/www
+            - ./_docker/nginx/conf.d/:/etc/nginx/conf.d
+            - ./_docker/nginx/ssl:/etc/nginx/ssl
+        ports:
+            - "443:443"
+        depends_on:
+            - app
+        container_name: project_nginx
+        networks:
+            - app-network
+
+    app:
+        build:
+            context: .
+            dockerfile: _docker/app/Dockerfile
+        user: "${UID:-1000}:${GID:-1000}"
+        volumes:
+            - ./:/var/www
+            - ./storage/app/public:/var/www/storage/app/public
+        depends_on:
+            - pgsql
+            - redis
+        container_name: project_app
+        environment:
+            - APP_ENV=dev
+        networks:
+            - app-network
+
+    pgsql:
+        image: postgres:latest
+        restart: always
+        volumes:
+            - ./tmp/db:/var/lib/postgresql/data
+        environment:
+            POSTGRES_DB: project_dev
+            POSTGRES_USER: root
+            POSTGRES_PASSWORD: root
+        ports:
+            - "5432:5432"
+        container_name: project_db
+        networks:
+            - app-network
+
+    pgadmin:
+        image: dpage/pgadmin4:8.6
+        container_name: project_pgadmin
+        environment:
+            PGADMIN_DEFAULT_EMAIL: admin@example.com
+            PGADMIN_DEFAULT_PASSWORD: admin
+        ports:
+            - "5050:80"
+        depends_on:
+            - pgsql
+        restart: unless-stopped
+        networks:
+            - app-network
+
+    redis:
+        image: redis:latest
+        restart: always
+        ports:
+            - "6379:6379"
+        volumes:
+            - ./tmp/redis:/data
+        container_name: project_redis
+        networks:
+            - app-network
+
