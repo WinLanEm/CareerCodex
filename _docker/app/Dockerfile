@@ -13,7 +13,7 @@ RUN apt-get update && apt-get install -y \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && docker-php-ext-configure gd --with-jpeg \
-    && docker-php-ext-install pdo_mysql pdo_pgsql bcmath gd zip \
+    && docker-php-ext-install pdo_mysql pdo_pgsql bcmath gd zip pcntl\
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
