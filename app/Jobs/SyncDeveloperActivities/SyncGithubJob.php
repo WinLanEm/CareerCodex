@@ -21,11 +21,9 @@ class SyncGithubJob implements ShouldQueue
     {
 
     }
-
-    public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository): void
+    public function handle(): void
     {
         $now = CarbonImmutable::now();
-
         $updatedSince = $this->isFirstRun
             ? $now->subDays(7)
             : CarbonImmutable::parse($this->integration->next_check_provider_instances_at)->subHour();
@@ -33,12 +31,12 @@ class SyncGithubJob implements ShouldQueue
         $repositories = $this->fetchUserRepositories();
 
         foreach ($repositories as $repo) {
-            $repoName = $repo['full_name'];
-            $defaultBranch = $repo['default_branch'];
-
-            $this->syncMergedPullRequests($developerActivityRepository, $repoName, $updatedSince);
-
-            $this->syncCommits($developerActivityRepository, $repoName, $defaultBranch, $updatedSince);
+            SyncGithubRepositoryJob::dispatch(
+                $this->integration,
+                $repo['full_name'],
+                $repo['default_branch'],
+                $updatedSince
+            );
         }
     }
 
@@ -61,112 +59,5 @@ class SyncGithubJob implements ShouldQueue
         } while (!empty($repositoriesOnPage));
 
         return $allRepositories;
-    }
-
-    private function syncMergedPullRequests(
-        UpdateOrCreateDeveloperActivityInterface $activityRepository,
-        string $repoName,
-        CarbonImmutable $updatedSince
-    ): void {
-        $query = "repo:{$repoName} is:pr is:merged updated:>" . $updatedSince->format('Y-m-d');
-
-        $response = Http::withToken($this->integration->access_token)
-            ->get('https://api.github.com/search/issues', ['q' => $query]);
-
-        $response->throw();
-
-        $pullRequests = $response->json('items',[]);
-
-        if (empty($pullRequests)) {
-            return;
-        }
-
-        foreach ($pullRequests as $pr) {
-            $prDetails = $this->fetchPullRequestDetails($pr['pull_request']['url']);
-
-            $activityRepository->updateOrCreateDeveloperActivity(
-                [
-                    'integration_id' => $this->integration->id,
-                    'type' => 'pull_request',
-                    'external_id' => $pr['number'],
-                    'repository_name' => $repoName,
-                    'title' => $pr['title'],
-                    'url' => $pr['html_url'],
-                    'completed_at' => CarbonImmutable::parse($pr['closed_at']),
-                    'additions' => $prDetails['additions'] ?? 0,
-                    'deletions' => $prDetails['deletions'] ?? 0,
-                ]
-            );
-        }
-    }
-
-
-    private function syncCommits(
-        UpdateOrCreateDeveloperActivityInterface $activityRepository,
-        string $repoName,
-        string $defaultBranch,
-        CarbonImmutable $updatedSince
-    ): void {
-        $response = Http::withToken($this->integration->access_token)
-            ->get("https://api.github.com/repos/{$repoName}/commits", [
-                'sha' => $defaultBranch,
-                'since' => $updatedSince->toIso8601String(),
-            ]);
-
-        $response->throw();
-
-        foreach ($response->json() as $commit) {
-            $commitDetails = $this->fetchCommitDetails($commit['url']);
-
-            $activityRepository->updateOrCreateDeveloperActivity(
-                [
-                    'integration_id' => $this->integration->id,
-                    'type' => 'commit',
-                    'external_id' => $commit['sha'],
-                    'repository_name' => $repoName,
-                    'title' => explode("\n", $commit['commit']['message'])[0],
-                    'url' => $commit['html_url'],
-                    'completed_at' => CarbonImmutable::parse($commit['commit']['author']['date']),
-                    'additions' => $commitDetails['stats']['additions'] ?? 0,
-                    'deletions' => $commitDetails['stats']['deletions'] ?? 0,
-                ]
-            );
-        }
-    }
-
-    private function fetchPullRequestDetails(string $url): array
-    {
-        try {
-            $response = Http::withToken($this->integration->access_token)->get($url);
-            $response->throw();
-            return $response->json();
-        } catch (\Exception $e) {
-            Log::error("Could not fetch PR details from {$url}: ",[
-                'integration_id' => $this->integration->id,
-                'message' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'code' => $e->getCode(),
-                'line' => $e->getLine(),
-            ]);
-            return [];
-        }
-    }
-
-    private function fetchCommitDetails(string $url): array
-    {
-        try {
-            $response = Http::withToken($this->integration->access_token)->get($url);
-            $response->throw();
-            return $response->json();
-        } catch (\Exception $e) {
-                Log::error("Could not fetch commit details from {$url}: ",[
-                    'integration_id' => $this->integration->id,
-                    'message' => $e->getMessage(),
-                    'trace' => $e->getTraceAsString(),
-                    'code' => $e->getCode(),
-                    'line' => $e->getLine(),
-            ]);
-            return [];
-        }
     }
 }
