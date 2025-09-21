@@ -38,7 +38,9 @@ abstract class SyncInstanceBaseJob implements ShouldQueue
             $this->updateNextCheckTime($integrationRepository, $now);
         } catch (\Exception $e) {
             Log::error("Sync failed for integration ID {$this->integration->id}", [
+                'job' => static::class,
                 'service' => $this->integration->service,
+                'integration_id' => $this->integration->id,
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);

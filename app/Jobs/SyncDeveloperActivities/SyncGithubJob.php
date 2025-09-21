@@ -2,50 +2,43 @@
 
 namespace App\Jobs\SyncDeveloperActivities;
 
-use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
+use App\Jobs\SyncDeveloperRepositories\SyncGithubRepositoryJob;
 use App\Models\Integration;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
-class SyncGithubJob implements ShouldQueue
+class SyncGithubJob extends SyncGitBaseJob
 {
-    use Queueable;
-
     public function __construct(
-        readonly private Integration $integration,
-        readonly private bool $isFirstRun,
+        Integration $integration,
     )
     {
-
+        parent::__construct($integration);
     }
-    public function handle(): void
-    {
-        $now = CarbonImmutable::now();
-        $updatedSince = $this->isFirstRun
-            ? $now->subDays(7)
-            : CarbonImmutable::parse($this->integration->next_check_provider_instances_at)->subHour();
 
-        $repositories = $this->fetchUserRepositories();
+    protected function sync(CarbonImmutable $updatedSince,PendingRequest $client): void
+    {
+        $repositories = $this->fetchUserRepositories($client);
 
         foreach ($repositories as $repo) {
             SyncGithubRepositoryJob::dispatch(
                 $this->integration,
-                $repo['full_name'],
                 $repo['default_branch'],
-                $updatedSince
+                $updatedSince,
+                $repo['full_name'],
             );
         }
     }
 
-    private function fetchUserRepositories():array
+    private function fetchUserRepositories(PendingRequest $client):array
     {
         $allRepositories = [];
         $page = 1;
         do {
-            $response = Http::withToken($this->integration->access_token)
+            $response = $client
                 ->get('https://api.github.com/user/repos', [
                     'per_page' => 100,
                     'page' => $page,

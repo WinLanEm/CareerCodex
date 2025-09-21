@@ -24,13 +24,13 @@ class GetIntegrationInstanceStrategy implements GetIntegrationInstanceStrategyIn
                 FetchAsanaInstances::dispatch($integration,$isFirstRun);
                 break;
             case ServiceConnectionsEnum::GITHUB->value:
-                SyncGithubJob::dispatch($integration,$isFirstRun);
+                SyncGithubJob::dispatch($integration);
                 break;
             case ServiceConnectionsEnum::GITLAB->value:
-                SyncGitlabJob::dispatch($integration,$isFirstRun);
+                SyncGitlabJob::dispatch($integration);
                 break;
             case ServiceConnectionsEnum::BITBUCKET->value:
-                SyncBitbucketJob::dispatch($integration,$isFirstRun);
+                SyncBitbucketJob::dispatch($integration);
                 break;
             default: throw new InvalidArgumentException("Unsupported provider service $integration->service");
         };

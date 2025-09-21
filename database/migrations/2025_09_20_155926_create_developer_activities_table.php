@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('external_id');
             $table->string('repository_name');
             $table->enum('type', ['commit', 'pull_request']);
+            $table->boolean('is_approved')->default(false);
             $table->string('title');
             $table->text('url');
             $table->timestamp('completed_at');
