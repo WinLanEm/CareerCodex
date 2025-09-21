@@ -227,11 +227,21 @@ return [
         'dev' => [
             'supervisor-1' => [
                 'connection' => 'redis',
-                'queue' => ['default'],
+                'queue' => [
+                    'default',
+                    'github',
+                    'gitlab',
+                    'bitbucket',
+                    'jira',
+                    'asana'
+                ],
                 'balance' => 'auto',
-                'processes' => 3,
-                'memory' => 128,
-                'timeout' => 60,
+                'minProcesses' => 1,
+                'maxProcesses' => 10,
+                'balanceMaxShift' => 1,
+                'balanceCooldown' => 3,
+                'memory' => 256,
+                'timeout' => 300,
                 'tries' => 3,
             ],
         ],

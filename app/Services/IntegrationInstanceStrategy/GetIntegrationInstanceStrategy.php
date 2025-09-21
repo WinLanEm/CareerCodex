@@ -18,19 +18,19 @@ class GetIntegrationInstanceStrategy implements GetIntegrationInstanceStrategyIn
     {
         switch ($integration->service) {
             case ServiceConnectionsEnum::JIRA->value:
-                FetchJiraInstances::dispatch($integration,$isFirstRun);
+                FetchJiraInstances::dispatch($integration,$isFirstRun)->onQueue('jira');
                 break;
             case ServiceConnectionsEnum::ASANA->value:
-                FetchAsanaInstances::dispatch($integration,$isFirstRun);
+                FetchAsanaInstances::dispatch($integration,$isFirstRun)->onQueue('asana');
                 break;
             case ServiceConnectionsEnum::GITHUB->value:
-                SyncGithubJob::dispatch($integration);
+                SyncGithubJob::dispatch($integration)->onQueue('github');
                 break;
             case ServiceConnectionsEnum::GITLAB->value:
-                SyncGitlabJob::dispatch($integration);
+                SyncGitlabJob::dispatch($integration)->onQueue('gitlab');
                 break;
             case ServiceConnectionsEnum::BITBUCKET->value:
-                SyncBitbucketJob::dispatch($integration);
+                SyncBitbucketJob::dispatch($integration)->onQueue('bitbucket');
                 break;
             default: throw new InvalidArgumentException("Unsupported provider service $integration->service");
         };

@@ -3,49 +3,47 @@
 namespace App\Jobs\SyncDeveloperRepositories;
 
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
+use App\Contracts\Services\HttpServices\BitbucketApiServiceInterface;
 use App\Models\Integration;
+use App\Traits\HandlesGitSyncErrors;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
-class SyncBitbucketRepositoryJob extends SyncRepositoryBaseJob
+class SyncBitbucketRepositoryJob implements ShouldQueue
 {
+    use HandlesGitSyncErrors, Queueable;
+    protected int $maxActivities = 10;
     public function __construct(
-        Integration $integration,
-        string $defaultBranch,
-        CarbonImmutable $updatedSince,
-        readonly private string $workspaceSlug,
-        readonly private string $repoSlug,
+        readonly protected Integration $integration,
+        readonly protected string $defaultBranch,
+        readonly protected CarbonImmutable $updatedSince,
+        readonly protected string $workspaceSlug,
+        readonly protected string $repoSlug,
     )
+    {}
+
+
+    public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository,BitbucketApiServiceInterface $apiService):void
     {
-        parent::__construct($integration, $defaultBranch,$updatedSince);
+        $this->executeWithHandling(function () use ($developerActivityRepository, $apiService) {
+            $client = Http::withToken($this->integration->access_token);
+            $this->syncMergedPullRequests($developerActivityRepository, $client,$apiService);
+            if ($this->maxActivities <= 0) {
+                return;
+            }
+            $this->syncCommits($developerActivityRepository, $client,$apiService);
+        });
     }
 
-    protected function sync(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository,PendingRequest $client): void
-    {
-        $this->syncMergedPullRequests($developerActivityRepository, $client);
-        if ($this->maxActivities <= 0) {
-            return;
-        }
-        $this->syncCommits($developerActivityRepository, $client);
-    }
-
-    private function syncMergedPullRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client): void
+    private function syncMergedPullRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client,BitbucketApiServiceInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 
-        $updatedSinceQuery = $this->updatedSince->toIso8601String();
-        $response = $client->get("https://api.bitbucket.org/2.0/repositories/{$this->workspaceSlug}/{$this->repoSlug}/pullrequests", [
-            'state' => 'MERGED',
-            'pagelen' => $this->maxActivities,
-            'sort' => '-updated_on',
-            'q' => "updated_on >= \"{$updatedSinceQuery}\"",
-        ]);
-        $response->throw();
-        $pullRequests = $response->json('values', []);
+        $pullRequests = $apiService->getMergedPullRequests($client,$this->workspaceSlug,$this->repoSlug,$this->maxActivities,$this->updatedSince);
+
 
         foreach ($pullRequests as $pr) {
 
@@ -53,18 +51,8 @@ class SyncBitbucketRepositoryJob extends SyncRepositoryBaseJob
 
             $this->maxActivities--;
 
-            $additions = 0;
-            $deletions = 0;
-
             if (isset($pr['links']['diffstat']['href'])) {
-                //Доп статистика для пулл реквестов
-                $diffStatResponse = $client->get($pr['links']['diffstat']['href']);
-                if ($diffStatResponse->ok()) {
-                    foreach ($diffStatResponse->json('values', []) as $stat) {
-                        $additions += $stat['lines_added'] ?? 0;
-                        $deletions += $stat['lines_removed'] ?? 0;
-                    }
-                }
+                $additionsAndDeletions = $apiService->getExtendedInfo($client,$pr['links']['diffstat']['href']);
             }
 
             $activityRepository->updateOrCreateDeveloperActivity([
@@ -75,22 +63,17 @@ class SyncBitbucketRepositoryJob extends SyncRepositoryBaseJob
                 'title' => mb_substr($pr['title'], 0, 255),
                 'url' => $pr['links']['html']['href'],
                 'completed_at' => CarbonImmutable::parse($pr['updated_on']),
-                'additions' => $additions,
-                'deletions' => $deletions,
+                'additions' => $additionsAndDeletions['additions'],
+                'deletions' => $additionsAndDeletions['deletions'],
             ]);
         }
     }
 
-    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client): void
+    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client,BitbucketApiServiceInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 
-        $response = $client->get("https://api.bitbucket.org/2.0/repositories/{$this->workspaceSlug}/{$this->repoSlug}/commits", [
-            'include' => $this->defaultBranch,
-            'pagelen' => $this->maxActivities,
-        ]);
-        $response->throw();
-        $commits = $response->json('values', []);
+        $commits = $apiService->getCommits($client,$this->workspaceSlug,$this->repoSlug,$this->maxActivities,$this->defaultBranch);
 
         foreach ($commits as $commit) {
             // Сначала фильтруем по дате, так как Bitbucket API не позволяет это в запросе
@@ -102,18 +85,9 @@ class SyncBitbucketRepositoryJob extends SyncRepositoryBaseJob
 
             $this->maxActivities--;
 
-            $additions = 0;
-            $deletions = 0;
-
+            $additionsAndDeletions = ['additions' => 0, 'deletions' => 0];
             if (isset($commit['links']['diffstat']['href'])) {
-                //Доп статистика для комитов
-                $statsResponse = $client->get($commit['links']['diffstat']['href']);
-                if ($statsResponse->ok()) {
-                    foreach ($statsResponse->json('values', []) as $stat) {
-                        $additions += $stat['lines_added'] ?? 0;
-                        $deletions += $stat['lines_removed'] ?? 0;
-                    }
-                }
+                $additionsAndDeletions = $apiService->getExtendedInfo($client,$commit['links']['diffstat']['href']);
             }
 
             $activityRepository->updateOrCreateDeveloperActivity([
@@ -124,8 +98,8 @@ class SyncBitbucketRepositoryJob extends SyncRepositoryBaseJob
                 'title' => mb_substr($commit['message'], 0, 255),
                 'url' => $commit['links']['html']['href'],
                 'completed_at' => CarbonImmutable::parse($commit['date']),
-                'additions' => $additions,
-                'deletions' => $deletions,
+                'additions' => $additionsAndDeletions['additions'],
+                'deletions' => $additionsAndDeletions['deletions'],
             ]);
         }
     }

@@ -3,47 +3,45 @@
 namespace App\Jobs\SyncDeveloperRepositories;
 
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
+use App\Contracts\Services\HttpServices\GitlabApiServiceInterface;
 use App\Models\Integration;
+use App\Traits\HandlesGitSyncErrors;
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Facades\Http;
 
-class SyncGitlabRepositoryJob extends SyncRepositoryBaseJob
+class SyncGitlabRepositoryJob implements ShouldQueue
 {
+    use HandlesGitSyncErrors, Queueable;
+    protected int $maxActivities = 10;
     public function __construct(
-        Integration $integration,
-        string $defaultBranch,
-        CarbonImmutable $updatedSince,
-        readonly private int $projectId,
-        readonly private string $repoName,
+        readonly protected Integration $integration,
+        readonly protected string $defaultBranch,
+        readonly protected CarbonImmutable $updatedSince,
+        readonly protected int $projectId,
+        readonly protected string $repoName,
     )
+    {}
+
+    public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository,GitlabApiServiceInterface $apiService):void
     {
-        parent::__construct($integration, $defaultBranch,$updatedSince);
+        $this->executeWithHandling(function () use ($developerActivityRepository, $apiService) {
+            $client = Http::withToken($this->integration->access_token);
+            $this->syncMergedMergeRequests($developerActivityRepository,$client,$apiService);
+            if ($this->maxActivities <= 0) {
+                return;
+            }
+            $this->syncCommits($developerActivityRepository,$client,$apiService);
+        });
     }
 
-    protected function sync(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository,PendingRequest $client): void
-    {
-        $this->syncMergedMergeRequests($developerActivityRepository,$client);
-        if ($this->maxActivities <= 0) {
-            return;
-        }
-        $this->syncCommits($developerActivityRepository,$client);
-    }
-
-    private function syncMergedMergeRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository,PendingRequest $client): void
+    private function syncMergedMergeRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository,PendingRequest $client,GitlabApiServiceInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
-        $response = $client
-            ->get("https://gitlab.com/api/v4/projects/{$this->projectId}/merge_requests", [
-                'state' => 'merged',
-                'updated_after' => $this->updatedSince->toIso8601String(),
-                'with_stats' => true, // Попросить GitLab сразу включить статистику
-                'per_page' => $this->maxActivities,
-                'order_by' => 'updated_at',
-                'sort' => 'desc',
-            ]);
 
-        $response->throw();
-        $mergeRequests = $response->json();
+        $mergeRequests = $apiService->getMergedPullRequests($client,$this->projectId,$this->maxActivities,$this->updatedSince);
 
         foreach ($mergeRequests as $mr) {
             if ($this->maxActivities <= 0) break;
@@ -64,20 +62,11 @@ class SyncGitlabRepositoryJob extends SyncRepositoryBaseJob
         }
     }
 
-    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository,PendingRequest $client): void
+    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository,PendingRequest $client,GitlabApiServiceInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 
-        $response = $client
-            ->get("https://gitlab.com/api/v4/projects/{$this->projectId}/repository/commits", [
-                'ref_name' => $this->defaultBranch,
-                'since' => $this->updatedSince->toIso8601String(),
-                'with_stats' => true,
-                'per_page' => $this->maxActivities,
-            ]);
-
-        $response->throw();
-        $commits = $response->json();
+        $commits = $apiService->getCommits($client,$this->projectId,$this->maxActivities,$this->updatedSince,$this->defaultBranch);
 
         foreach ($commits as $commit) {
             if ($this->maxActivities <= 0) break;

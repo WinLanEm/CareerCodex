@@ -2,51 +2,39 @@
 
 namespace App\Jobs\SyncDeveloperActivities;
 
+use App\Contracts\Services\HttpServices\BitbucketApiServiceInterface;
 use App\Jobs\SyncDeveloperRepositories\SyncBitbucketRepositoryJob;
 use App\Models\Integration;
+use App\Traits\HandlesGitSyncErrors;
 use Carbon\CarbonImmutable;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Http;
 
-class SyncBitbucketJob extends SyncGitBaseJob
+class SyncBitbucketJob implements ShouldQueue
 {
+    use HandlesGitSyncErrors, Queueable, Dispatchable;
     public function __construct(
-        protected Integration $integration,
-    ) {
-        parent::__construct($integration);
-    }
+        readonly protected Integration $integration,
+    )
+    {}
 
-    protected function sync(CarbonImmutable $updatedSince, PendingRequest $client): void
+    public function handle(BitbucketApiServiceInterface $apiService):void
     {
-        $repositories = $this->fetchUserRepositories($client);
+        $this->executeWithHandling(function () use ($apiService) {
+            $updatedSince = CarbonImmutable::now()->subDays(7);
+            $client = Http::withToken($this->integration->access_token);
 
-        foreach ($repositories as $repo) {
-            SyncBitbucketRepositoryJob::dispatch(
-                $this->integration,
-                $repo['mainbranch']['name'] ?? 'main',
-                $updatedSince,
-                $repo['workspace']['slug'],
-                $repo['slug'],
-            );
-        }
-    }
-
-    private function fetchUserRepositories(PendingRequest $client): array
-    {
-        $allRepositories = [];
-        $nextPageUrl = "https://api.bitbucket.org/2.0/repositories?role=member";
-
-        do {
-            $response = $client->get($nextPageUrl);
-            $response->throw();
-
-            $pageJson = $response->json();
-            $allRepositories = array_merge($allRepositories, $pageJson['values'] ?? []);
-            $nextPageUrl = $pageJson['next'] ?? null;
-        } while ($nextPageUrl);
-
-        return $allRepositories;
+            $apiService->syncRepositories($client, function ($repository) use ($updatedSince) {
+                SyncBitbucketRepositoryJob::dispatch(
+                    $this->integration,
+                    $repository['mainbranch']['name'] ?? 'main',
+                    $updatedSince,
+                    $repository['workspace']['slug'],
+                    $repository['slug'],
+                )->onQueue('bitbucket');
+            });
+        });
     }
 }

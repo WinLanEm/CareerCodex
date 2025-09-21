@@ -3,75 +3,47 @@
 namespace App\Jobs\SyncDeveloperRepositories;
 
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
+use App\Contracts\Services\HttpServices\GithubApiServiceInterface;
 use App\Models\Integration;
+use App\Traits\HandlesGitSyncErrors;
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Http;
 
-class SyncGithubRepositoryJob extends SyncRepositoryBaseJob
+class SyncGithubRepositoryJob implements ShouldQueue
 {
-    private const GRAPHQL_URL = 'https://api.github.com/graphql';
-
-
+    use HandlesGitSyncErrors, Queueable;
+    protected int $maxActivities = 10;
     public function __construct(
-        Integration $integration,
-        string $defaultBranch,
-        CarbonImmutable $updatedSince,
-        readonly private string $repoName,
-    ) {
-        parent::__construct($integration, $defaultBranch, $updatedSince);
-    }
+        readonly protected Integration $integration,
+        readonly protected string $defaultBranch,
+        readonly protected CarbonImmutable $updatedSince,
+        readonly protected string $repoName,
+    ) {}
 
-    protected function sync(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository, PendingRequest $client): void
+    public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository,GithubApiServiceInterface $apiService):void
     {
-        $this->syncMergedPullRequests($developerActivityRepository, $client);
-        if ($this->maxActivities <= 0) {
-            return;
-        }
-        $this->syncCommits($developerActivityRepository, $client);
+        $this->executeWithHandling(function () use ($developerActivityRepository, $apiService) {
+            $client = Http::withToken($this->integration->access_token);
+            $this->syncMergedPullRequests($developerActivityRepository, $client,$apiService);
+            if ($this->maxActivities <= 0) {
+                return;
+            }
+            $this->syncCommits($developerActivityRepository, $client,$apiService);
+        });
     }
 
-    private function syncMergedPullRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client): void
+    private function syncMergedPullRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client,GithubApiServiceInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 
         $searchQuery = "repo:{$this->repoName} is:pr is:merged updated:>" . $this->updatedSince->format('Y-m-d');
 
-        $graphqlQuery = <<<'GQL'
-        query ($searchQuery: String!, $max: Int!) {
-          search(query: $searchQuery, type: ISSUE, first: $max) {
-            nodes {
-              ... on PullRequest {
-                number
-                title
-                url
-                mergedAt
-                additions
-                deletions
-                repository {
-                  nameWithOwner
-                }
-              }
-            }
-          }
-        }
-        GQL;
-
-        $response = $client->post(self::GRAPHQL_URL, [
-            'query' => $graphqlQuery,
-            'variables' => [
-                'searchQuery' => $searchQuery,
-                'max' => $this->maxActivities,
-            ],
-        ]);
-
-        $response->throw();
-
-        // Данные лежат в data.search.nodes
-        $pullRequests = $response->json('data.search.nodes', []);
+        $pullRequests = $apiService->getMergedPullRequests($client, $searchQuery,$this->maxActivities);
 
         foreach ($pullRequests as $pr) {
-            // Пропускаем, если узел не является PR (хотя в нашем запросе это маловероятно)
             if (empty($pr)) continue;
 
             $this->maxActivities--;
@@ -90,49 +62,13 @@ class SyncGithubRepositoryJob extends SyncRepositoryBaseJob
         }
     }
 
-    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client): void
+    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client,GithubApiServiceInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 
         [$owner, $repo] = explode('/', $this->repoName);
 
-        $graphqlQuery = <<<'GQL'
-        query ($owner: String!, $repo: String!, $branch: String!, $since: GitTimestamp!, $max: Int!) {
-          repository(owner: $owner, name: $repo) {
-            ref(qualifiedName: $branch) {
-              target {
-                ... on Commit {
-                  history(since: $since, first: $max) {
-                    nodes {
-                      oid
-                      message
-                      url
-                      committedDate
-                      additions
-                      deletions
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-        GQL;
-
-        $response = $client->post(self::GRAPHQL_URL, [
-            'query' => $graphqlQuery,
-            'variables' => [
-                'owner' => $owner,
-                'repo' => $repo,
-                'branch' => $this->defaultBranch,
-                'since' => $this->updatedSince->toIso8601String(),
-                'max' => $this->maxActivities,
-            ],
-        ]);
-
-        $response->throw();
-
-        $commits = $response->json('data.repository.ref.target.history.nodes', []);
+        $commits = $apiService->getCommits($client, $owner, $repo,$this->defaultBranch,$this->updatedSince->toISOString(),$this->maxActivities);
 
         foreach ($commits as $commit) {
             $this->maxActivities--;
