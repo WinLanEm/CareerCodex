@@ -9,6 +9,7 @@ class Achievement extends Model
 {
     protected $fillable = [
         'workspace_id',
+        'integration_instance_id',
         'title',
         'description',
         'result',
@@ -17,7 +18,6 @@ class Achievement extends Model
         'skills',
         'is_approved',
         'is_from_provider',
-        'provider',
         'project_name',
         'link',
     ];

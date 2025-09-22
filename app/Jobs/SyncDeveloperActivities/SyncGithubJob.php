@@ -2,62 +2,44 @@
 
 namespace App\Jobs\SyncDeveloperActivities;
 
-use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
+
+use App\Contracts\Services\HttpServices\Github\GithubRepositorySyncInterface;
+use App\Jobs\RegisterWebhook\RegisterGithubWebhookJob;
+use App\Jobs\SyncDeveloperRepositories\SyncGithubRepositoryJob;
 use App\Models\Integration;
+use App\Traits\HandlesGitSyncErrors;
 use Carbon\CarbonImmutable;
+use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class SyncGithubJob implements ShouldQueue
 {
-    use Queueable;
-
+    use HandlesGitSyncErrors, Queueable, Dispatchable;
     public function __construct(
-        readonly private Integration $integration,
-        readonly private bool $isFirstRun,
+        readonly protected Integration $integration,
     )
+    {}
+
+    public function handle(GithubRepositorySyncInterface $apiService):void
     {
+        $this->executeWithHandling(function () use ($apiService) {
+            $updatedSince = CarbonImmutable::now()->subDays(7);
+            $client = Http::withToken($this->integration->access_token);
 
-    }
-    public function handle(): void
-    {
-        $now = CarbonImmutable::now();
-        $updatedSince = $this->isFirstRun
-            ? $now->subDays(7)
-            : CarbonImmutable::parse($this->integration->next_check_provider_instances_at)->subHour();
-
-        $repositories = $this->fetchUserRepositories();
-
-        foreach ($repositories as $repo) {
-            SyncGithubRepositoryJob::dispatch(
-                $this->integration,
-                $repo['full_name'],
-                $repo['default_branch'],
-                $updatedSince
-            );
-        }
-    }
-
-    private function fetchUserRepositories():array
-    {
-        $allRepositories = [];
-        $page = 1;
-        do {
-            $response = Http::withToken($this->integration->access_token)
-                ->get('https://api.github.com/user/repos', [
-                    'per_page' => 100,
-                    'page' => $page,
-                ]);
-
-            $response->throw();
-
-            $repositoriesOnPage = $response->json();
-            $allRepositories = array_merge($allRepositories, $repositoriesOnPage);
-            $page++;
-        } while (!empty($repositoriesOnPage));
-
-        return $allRepositories;
+            $apiService->syncRepositories($client, function ($repository) use ($updatedSince) {
+                SyncGithubRepositoryJob::dispatch(
+                    $this->integration,
+                    $repository['default_branch'],
+                    $updatedSince,
+                    $repository['full_name'],
+                )->onQueue('github');
+                RegisterGithubWebhookJob::dispatch(
+                    $this->integration,
+                    $repository['full_name'],
+                )->onQueue('github');
+            });
+        });
     }
 }

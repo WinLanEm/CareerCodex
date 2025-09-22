@@ -3,114 +3,80 @@
 namespace App\Jobs\SyncInstance;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
+use App\Contracts\Repositories\IntegrationInstance\UpdateIntegrationInstanceRepositoryInterface;
+use App\Contracts\Services\HttpServices\Jira\JiraProjectServiceInterface;
+use App\Contracts\Services\HttpServices\JiraApiServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
+use App\Traits\HandlesSyncErrors;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
-class SyncJiraInstanceJob extends SyncInstanceBaseJob
+class SyncJiraInstanceJob implements ShouldQueue
 {
-    use Queueable;
+    use Queueable, HandlesSyncErrors;
 
     public function __construct(
-        Integration $integration,
-        bool $isFirstRun,
-        private readonly string $cloudId,
-        private readonly string $siteUrl
-    ) {
-        parent::__construct($integration, $isFirstRun);
+        readonly protected int $instanceId,
+        readonly protected Integration $integration,
+        readonly protected bool $isFirstRun,
+        readonly protected string $cloudId,
+        readonly protected string $siteUrl
+    ) {}
+
+    public function handle(WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,JiraProjectServiceInterface $apiService,UpdateIntegrationInstanceRepositoryInterface $integrationRepository):void
+    {
+        $this->executeWithHandling(
+            function () use ($repository, $apiService, $integrationRepository) {
+                $now = CarbonImmutable::now();
+
+                $updatedSince = $this->isFirstRun
+                    ? $now->subDays(7)
+                    : CarbonImmutable::parse($this->integration->next_check_provider_instances_at)->subHour();
+
+                $client = Http::withToken($this->integration->access_token);
+                $this->sync($repository, $apiService, $updatedSince,$client);
+                $this->updateNextCheckTime($integrationRepository, $now);
+            }
+        );
     }
 
 
     protected function sync(
         WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
-        CarbonImmutable $updatedSince
+        JiraProjectServiceInterface $apiService,
+        CarbonImmutable $updatedSince,
+        PendingRequest $client
     ): void {
-        $projects = $this->getProjects();
+        $projects = $apiService->getProjects($this->integration->access_token, $this->cloudId,$client);
         foreach ($projects as $project) {
-            $this->syncCompletedIssuesForProject(
-                $project['key'],
-                $repository,
-                $updatedSince
+            $apiService->syncCompletedIssuesForProject($repository,$updatedSince,$this->integration->access_token,$project['key'],$this->cloudId,$client,
+                function ($issue) use($repository){
+                    $descriptionAdf = $issue['fields']['description'] ?? null;
+                    $descriptionText = $descriptionAdf ? $this->extractTextFromAdf($descriptionAdf) : '';
+
+                    $resolutionDateString = $issue['fields']['resolutiondate'];
+                    $carbonDate = Carbon::parse($resolutionDateString);
+
+                    $link = rtrim($this->siteUrl, '/') . '/browse/' . $issue['key'];
+
+                    $repository->updateOrCreate([
+                        'title' => $issue['fields']['summary'],
+                        'description' => $descriptionText,
+                        'date' => $carbonDate,
+                        'is_approved' => false,
+                        'is_from_provider' => true,
+                        'integration_instance_id' => $this->instanceId,
+                        'project_name' => $issue['fields']['project']['name'],
+                        'link' => $link,
+                    ]);
+                }
             );
         }
-    }
-
-    private function getProjects(): array
-    {
-        $allProjects = [];
-        $startAt = 0;
-        $maxResults = 50;
-
-        do {
-            $url = "https://api.atlassian.com/ex/jira/{$this->cloudId}/rest/api/3/project/search";
-            $response = Http::withToken($this->integration->access_token)->timeout($this->timeout)->asJson()->get($url, [
-                'startAt' => $startAt,
-                'maxResults' => $maxResults,
-            ]);
-            $response->throw();
-
-            $data = $response->json();
-            $projects = $data['values'] ?? [];
-            $allProjects = array_merge($allProjects, $projects);
-            $startAt += count($projects);
-            $isLast = $data['isLast'] ?? true;
-        } while (!$isLast);
-
-        return $allProjects;
-    }
-
-    private function syncCompletedIssuesForProject(
-        string $projectKey,
-        WorkspaceAchievementUpdateOrCreateRepositoryInterface $achievementUpdateOrCreateRepository,
-        CarbonImmutable $updatedSince
-    )
-    {
-        $startAt = 0;
-        $maxResults = 100;
-
-        $updatedSinceFormatted = $updatedSince->format('Y-m-d H:i');
-        $jql = "project = \"{$projectKey}\" AND status = Done AND updated >= \"{$updatedSinceFormatted}\"";
-
-        do {
-            $url = "https://api.atlassian.com/ex/jira/{$this->cloudId}/rest/api/3/search";
-
-            $response = Http::withToken($this->integration->access_token)->timeout($this->timeout)->asJson()->get($url, [
-                'jql' => $jql,
-                'fields' => 'summary,resolutiondate,description,project,issuetype,status',
-                'startAt' => $startAt,
-                'maxResults' => $maxResults
-            ]);
-
-            $response->throw();
-            $data = $response->json();
-            $issues = $data['issues'] ?? [];
-            foreach ($issues as $issue) {
-                $descriptionAdf = $issue['fields']['description'] ?? null;
-                $descriptionText = $descriptionAdf ? $this->extractTextFromAdf($descriptionAdf) : '';
-
-                $resolutionDateString = $issue['fields']['resolutiondate'];
-                $carbonDate = Carbon::parse($resolutionDateString);
-
-                $link = rtrim($this->siteUrl, '/') . '/browse/' . $issue['key'];
-
-                $achievementUpdateOrCreateRepository->updateOrCreate([
-                    'title' => $issue['fields']['summary'],
-                    'description' => $descriptionText,
-                    'date' => $carbonDate,
-                    'is_approved' => false,
-                    'is_from_provider' => true,
-                    'provider' => ServiceConnectionsEnum::JIRA->value,
-                    'project_name' => $issue['fields']['project']['name'],
-                    'link' => $link,
-                ]);
-            }
-
-            $startAt += count($issues);
-
-        } while ($startAt < $data['total']);
     }
 
     private function extractTextFromAdf(array $node): string
@@ -131,5 +97,12 @@ class SyncJiraInstanceJob extends SyncInstanceBaseJob
         }
 
         return $text;
+    }
+
+    private function updateNextCheckTime(UpdateIntegrationInstanceRepositoryInterface $repository, CarbonImmutable $checkTime): void
+    {
+        $repository->update($this->integration, [
+            'next_check_provider_instances_at' => $checkTime->addHour()
+        ]);
     }
 }
