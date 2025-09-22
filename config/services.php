@@ -59,6 +59,7 @@ return [
         'redirect' => env('GITHUB_SERVICE_REDIRECT_URI'),
         'graph_ql_url' => 'https://api.github.com/graphql',
         'sync_repositories_url' => 'https://api.github.com/user/repos',
+        'get_hooks_url' => "https://api.github.com/repos/{fullRepoName}/hooks",
     ],
 
     'gitlab_integration' => [
@@ -68,7 +69,8 @@ return [
         'redirect' => env('GITLAB_SERVICE_REDIRECT_URI'),
         'sync_repositories_url' => 'https://gitlab.com/api/v4/projects',
         'get_merged_pull_requests_url' => "https://gitlab.com/api/v4/projects/{projectId}/merge_requests",
-        'get_commits_url' => "https://gitlab.com/api/v4/projects/{projectId}/repository/commits"
+        'get_commits_url' => "https://gitlab.com/api/v4/projects/{projectId}/repository/commits",
+        'get_hooks_url' => "https://gitlab.com/api/v4/projects/{projectId}/hooks",
     ],
 
     'bitbucket_integration' => [
@@ -78,6 +80,7 @@ return [
         'sync_repositories_url' => 'https://api.bitbucket.org/2.0/repositories?role=member',
         'get_merged_pull_requests_url' => "https://api.bitbucket.org/2.0/repositories/{workspaceSlug}/{repoSlug}/pullrequests",
         'get_commits_url' => "https://api.bitbucket.org/2.0/repositories/{workspaceSlug}/{repoSlug}/commits",
+        'get_hooks_url' => "https://api.bitbucket.org/2.0/repositories/{workspace}/{repoSlug}/hooks",
     ],
     'jira_integration' => [
         'scopes' => 'read:jira-user read:jira-work offline_access read:me manage:jira-webhook',

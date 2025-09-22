@@ -17,6 +17,7 @@ use App\Contracts\Repositories\User\CreateUserRepositoryInterface;
 use App\Contracts\Repositories\User\FindUserRepositoryInterface;
 use App\Contracts\Repositories\User\UpdateOrCreateUserRepositoryInterface;
 use App\Contracts\Repositories\User\UpdateUserRepositoryInterface;
+use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Contracts\Repositories\Workspace\CreateWorkspaceRepositoryInterface;
 use App\Contracts\Repositories\Workspace\DeleteWorkspaceRepositoryInterface;
 use App\Contracts\Repositories\Workspace\FindWorkspaceRepositoryInterface;
@@ -52,6 +53,7 @@ use App\Repositories\User\CreateUserRepository;
 use App\Repositories\User\FindUserRepository;
 use App\Repositories\User\UpdateOrCreateUserRepository;
 use App\Repositories\User\UpdateUserRepository;
+use App\Repositories\Webhook\UpdateOrCreateWebhookRepository;
 use App\Repositories\Workspace\CreateWorkspaceRepository;
 use App\Repositories\Workspace\DeleteWorkspaceRepository;
 use App\Repositories\Workspace\FindWorkspaceRepository;
@@ -222,6 +224,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ThrottleServiceInterface::class,
             ThrottleService::class
+        );
+        $this->app->bind(
+            UpdateOrCreateWebhookRepositoryInterface::class,
+            UpdateOrCreateWebhookRepository::class
         );
     }
 

@@ -38,7 +38,8 @@ class SyncBitbucketJob implements ShouldQueue
                 )->onQueue('bitbucket');
                 RegisterBitbucketWebhookJob::dispatch(
                     $this->integration,
-                    $repository['mainbranch']['name'] ?? 'main',
+                    $repository['workspace']['slug'],
+                    $repository['slug'],
                 )->onQueue('bitbucket');
             });
         });

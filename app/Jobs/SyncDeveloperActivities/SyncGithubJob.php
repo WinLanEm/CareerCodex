@@ -3,7 +3,6 @@
 namespace App\Jobs\SyncDeveloperActivities;
 
 
-use App\Contracts\Services\HttpServices\Github\GithubRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Github\GithubRepositorySyncInterface;
 use App\Jobs\RegisterWebhook\RegisterGithubWebhookJob;
 use App\Jobs\SyncDeveloperRepositories\SyncGithubRepositoryJob;
