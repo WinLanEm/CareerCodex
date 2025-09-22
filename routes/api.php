@@ -16,6 +16,7 @@ use App\Http\Controllers\User\MeController;
 use App\Http\Controllers\User\RegisterController;
 use App\Http\Controllers\User\ResendVerifyEmailController;
 use App\Http\Controllers\User\VerifyEmailController;
+use App\Http\Controllers\Webhook\WebhookCallbackController;
 use App\Http\Controllers\Workspace\WorkspaceCreateController;
 use App\Http\Controllers\Workspace\WorkspaceDeleteController;
 use App\Http\Controllers\Workspace\WorkspaceFindController;
@@ -28,7 +29,7 @@ Route::post('/login',LoginController::class)->name('login');
 Route::get('/auth/{provider}/redirect', SocialRedirectController::class)->name('auth.redirect');
 Route::get('/auth/{provider}/callback', SocialAuthController::class)->name('auth.callback');
 Route::get('/service/{service}/callback', IntegrationCallbackController::class)->name('service.callback');
-Route::get('/{service}/webhook', IntegrationCallbackController::class)->name('webhook');
+Route::get('/webhook/{service}', WebhookCallbackController::class)->name('webhook');
 Route::post('/email/verify', VerifyEmailController::class)->name('verify');
 Route::post('/email/verify/resend', ResendVerifyEmailController::class)->middleware(['throttle:1,2'])->name('resend');
 

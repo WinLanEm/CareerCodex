@@ -21,11 +21,13 @@ class IntegrationCallbackController extends Controller
     {
     }
 
-    public function __invoke(ValidateServiceIntegrationRequest $request)
+    public function __invoke(ValidateServiceIntegrationRequest $request,string $stringService)
     {
         try {
-            $stringService = $request->get('service');
             $serviceEnum = ServiceConnectionsEnum::tryFrom($stringService);
+            if (!$serviceEnum) {
+                return new MessageResource('Service not supported',false,404);
+            }
             $providerUser = Socialite::driver($stringService . "_integration")->stateless()->user();
             $integration = $this->connectionRepository->updateOrCreate($serviceEnum,$providerUser);
             if(!$integration){

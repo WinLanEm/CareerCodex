@@ -12,11 +12,13 @@ use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivi
 use App\Contracts\Repositories\Email\GenerateVerificationCodeRepositoryInterface;
 use App\Contracts\Repositories\IntegrationInstance\UpdateOrCreateIntegrationInstanceRepositoryInterface;
 use App\Contracts\Repositories\IntegrationInstance\UpdateIntegrationInstanceRepositoryInterface;
+use App\Contracts\Repositories\Integrations\FindIntegrationByClosureRepositoryInterface;
 use App\Contracts\Repositories\Integrations\UpdateOrCreateIntegrationRepositoryInterface;
 use App\Contracts\Repositories\User\CreateUserRepositoryInterface;
 use App\Contracts\Repositories\User\FindUserRepositoryInterface;
 use App\Contracts\Repositories\User\UpdateOrCreateUserRepositoryInterface;
 use App\Contracts\Repositories\User\UpdateUserRepositoryInterface;
+use App\Contracts\Repositories\Webhook\EloquentWebhookRepositoryInterface;
 use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Contracts\Repositories\Workspace\CreateWorkspaceRepositoryInterface;
 use App\Contracts\Repositories\Workspace\DeleteWorkspaceRepositoryInterface;
@@ -38,6 +40,7 @@ use App\Contracts\Services\HttpServices\Jira\JiraProjectServiceInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraWorkspaceServiceInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Contracts\Services\ProviderInstanceStrategy\GetIntegrationInstanceStrategyInterface;
+use App\Contracts\Services\Webhook\WebhookHandlerFactoryInterface;
 use App\Repositories\Achievement\WorkspaceAchievementCreateRepository;
 use App\Repositories\Achievement\WorkspaceAchievementDeleteRepository;
 use App\Repositories\Achievement\WorkspaceAchievementFindRepository;
@@ -47,12 +50,14 @@ use App\Repositories\Achievement\WorkspaceAchievementUpdateRepository;
 use App\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivity;
 use App\Repositories\Email\GenerateVerificationCodeRepository;
 use App\Repositories\IntegrationInstances\UpdateOrCreateIntegrationInstanceRepository;
+use App\Repositories\Integrations\FindIntegrationByClosureRepository;
 use App\Repositories\Integrations\UpdateOrCreateIntegrationRepository;
 use App\Repositories\Integrations\UpdateIntegrationRepository;
 use App\Repositories\User\CreateUserRepository;
 use App\Repositories\User\FindUserRepository;
 use App\Repositories\User\UpdateOrCreateUserRepository;
 use App\Repositories\User\UpdateUserRepository;
+use App\Repositories\Webhook\EloquentWebhookRepository;
 use App\Repositories\Webhook\UpdateOrCreateWebhookRepository;
 use App\Repositories\Workspace\CreateWorkspaceRepository;
 use App\Repositories\Workspace\DeleteWorkspaceRepository;
@@ -66,6 +71,7 @@ use App\Services\HttpServices\GitlabApiService;
 use App\Services\HttpServices\JiraApiService;
 use App\Services\HttpServices\ThrottleService;
 use App\Services\IntegrationInstanceStrategy\GetIntegrationInstanceStrategy;
+use App\Services\Webhook\WebhookHandlerFactory;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Socialite\Facades\Socialite;
@@ -228,6 +234,18 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             UpdateOrCreateWebhookRepositoryInterface::class,
             UpdateOrCreateWebhookRepository::class
+        );
+        $this->app->bind(
+            WebhookHandlerFactoryInterface::class,
+            WebhookHandlerFactory::class
+        );
+        $this->app->bind(
+            EloquentWebhookRepositoryInterface::class,
+            EloquentWebhookRepository::class
+        );
+        $this->app->bind(
+            FindIntegrationByClosureRepositoryInterface::class,
+            FindIntegrationByClosureRepository::class
         );
     }
 

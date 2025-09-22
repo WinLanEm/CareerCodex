@@ -233,7 +233,8 @@ return [
                     'gitlab',
                     'bitbucket',
                     'jira',
-                    'asana'
+                    'asana',
+                    'webhooks'
                 ],
                 'balance' => 'auto',
                 'minProcesses' => 1,
