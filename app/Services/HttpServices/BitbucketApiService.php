@@ -2,15 +2,16 @@
 
 namespace App\Services\HttpServices;
 
-use App\Contracts\Services\HttpServices\BitbucketApiServiceInterface;
+use App\Contracts\Services\HttpServices\Bitbucket\BitbucketActivityFetchInterface;
+use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRegisterWebhookInterface;
+use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
-use App\Exceptions\ApiRateLimitExceededException;
+use App\Models\Integration;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Facades\Redis;
 
-class BitbucketApiService implements BitbucketApiServiceInterface
+class BitbucketApiService implements BitbucketRepositorySyncInterface, BitbucketRegisterWebhookInterface, BitbucketActivityFetchInterface
 {
     public function __construct(
         private ThrottleServiceInterface $throttleService,
@@ -91,5 +92,9 @@ class BitbucketApiService implements BitbucketApiServiceInterface
                 return $response->json('values', []);
             },
         );
+    }
+    public function registerWebhook(Integration $integration,string $fullRepoName):void
+    {
+
     }
 }

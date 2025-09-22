@@ -3,13 +3,15 @@
 namespace App\Services\HttpServices;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
+use App\Contracts\Services\HttpServices\Jira\JiraProjectServiceInterface;
+use App\Contracts\Services\HttpServices\Jira\JiraWorkspaceServiceInterface;
 use App\Contracts\Services\HttpServices\JiraApiServiceInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\PendingRequest;
 
-class JiraApiService implements JiraApiServiceInterface
+class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectServiceInterface
 {
     public function __construct(
         private ThrottleServiceInterface $throttleService,

@@ -2,13 +2,16 @@
 
 namespace App\Services\HttpServices;
 
-use App\Contracts\Services\HttpServices\GitlabApiServiceInterface;
+use App\Contracts\Services\HttpServices\Gitlab\GitlabActivityFetchInterface;
+use App\Contracts\Services\HttpServices\Gitlab\GitlabRegisterWebhookInterface;
+use App\Contracts\Services\HttpServices\Gitlab\GitlabRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
+use App\Models\Integration;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\PendingRequest;
 
-class GitlabApiService implements GitlabApiServiceInterface
+class GitlabApiService implements GitlabActivityFetchInterface, GitlabRegisterWebhookInterface, GitlabRepositorySyncInterface
 {
     public function __construct(
         private ThrottleServiceInterface $throttleService,
@@ -81,5 +84,10 @@ class GitlabApiService implements GitlabApiServiceInterface
                 return $response->json();
             },
         );
+    }
+
+    public function registerWebhook(Integration $integration, string $fullRepoName): void
+    {
+        // TODO: Implement registerWebhook() method.
     }
 }

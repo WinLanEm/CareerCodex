@@ -3,7 +3,7 @@
 namespace App\Jobs\SyncDeveloperRepositories;
 
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
-use App\Contracts\Services\HttpServices\GithubApiServiceInterface;
+use App\Contracts\Services\HttpServices\Github\GithubActivityFetchInterface;
 use App\Models\Integration;
 use App\Traits\HandlesGitSyncErrors;
 use Carbon\CarbonImmutable;
@@ -23,7 +23,7 @@ class SyncGithubRepositoryJob implements ShouldQueue
         readonly protected string $repoName,
     ) {}
 
-    public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository,GithubApiServiceInterface $apiService):void
+    public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository, GithubActivityFetchInterface $apiService):void
     {
         $this->executeWithHandling(function () use ($developerActivityRepository, $apiService) {
             $client = Http::withToken($this->integration->access_token);
@@ -35,7 +35,7 @@ class SyncGithubRepositoryJob implements ShouldQueue
         });
     }
 
-    private function syncMergedPullRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client,GithubApiServiceInterface $apiService): void
+    private function syncMergedPullRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client, GithubActivityFetchInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 
@@ -62,7 +62,7 @@ class SyncGithubRepositoryJob implements ShouldQueue
         }
     }
 
-    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client,GithubApiServiceInterface $apiService): void
+    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client, GithubActivityFetchInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 

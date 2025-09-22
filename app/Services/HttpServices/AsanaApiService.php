@@ -3,12 +3,13 @@
 namespace App\Services\HttpServices;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
-use App\Contracts\Services\HttpServices\AsanaApiServiceInterface;
+use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
+use App\Contracts\Services\HttpServices\Asana\AsanaWorkspaceServiceInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use Illuminate\Http\Client\PendingRequest;
 
-class AsanaApiService implements AsanaApiServiceInterface
+class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectServiceInterface
 {
     public function __construct(
         private ThrottleServiceInterface $throttleService,

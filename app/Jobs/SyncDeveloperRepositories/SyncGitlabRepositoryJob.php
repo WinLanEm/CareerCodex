@@ -3,6 +3,7 @@
 namespace App\Jobs\SyncDeveloperRepositories;
 
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
+use App\Contracts\Services\HttpServices\Gitlab\GitlabActivityFetchInterface;
 use App\Contracts\Services\HttpServices\GitlabApiServiceInterface;
 use App\Models\Integration;
 use App\Traits\HandlesGitSyncErrors;
@@ -25,7 +26,7 @@ class SyncGitlabRepositoryJob implements ShouldQueue
     )
     {}
 
-    public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository,GitlabApiServiceInterface $apiService):void
+    public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository,GitlabActivityFetchInterface $apiService):void
     {
         $this->executeWithHandling(function () use ($developerActivityRepository, $apiService) {
             $client = Http::withToken($this->integration->access_token);
@@ -37,7 +38,7 @@ class SyncGitlabRepositoryJob implements ShouldQueue
         });
     }
 
-    private function syncMergedMergeRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository,PendingRequest $client,GitlabApiServiceInterface $apiService): void
+    private function syncMergedMergeRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository,PendingRequest $client,GitlabActivityFetchInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 
@@ -62,7 +63,7 @@ class SyncGitlabRepositoryJob implements ShouldQueue
         }
     }
 
-    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository,PendingRequest $client,GitlabApiServiceInterface $apiService): void
+    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository,PendingRequest $client,GitlabActivityFetchInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 

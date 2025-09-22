@@ -3,12 +3,15 @@
 namespace App\Services\HttpServices;
 
 
-use App\Contracts\Services\HttpServices\GithubApiServiceInterface;
+use App\Contracts\Services\HttpServices\Github\GithubActivityFetchInterface;
+use App\Contracts\Services\HttpServices\Github\GithubRegisterWebhookInterface;
+use App\Contracts\Services\HttpServices\Github\GithubRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
+use App\Models\Integration;
 use Illuminate\Http\Client\PendingRequest;
 
-class GithubApiService implements GithubApiServiceInterface
+class GithubApiService implements GithubRepositorySyncInterface, GithubActivityFetchInterface, GithubRegisterWebhookInterface
 {
     private const GRAPHQL_URL = 'https://api.github.com/graphql';
 
@@ -120,5 +123,9 @@ class GithubApiService implements GithubApiServiceInterface
                 return $response->json('data.repository.ref.target.history.nodes', []);
             },
         );
+    }
+    public function registerWebhook(Integration $integration,string $fullRepoName): void
+    {
+
     }
 }

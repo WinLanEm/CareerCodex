@@ -3,7 +3,7 @@
 namespace App\Jobs\SyncDeveloperRepositories;
 
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
-use App\Contracts\Services\HttpServices\BitbucketApiServiceInterface;
+use App\Contracts\Services\HttpServices\Bitbucket\BitbucketActivityFetchInterface;
 use App\Models\Integration;
 use App\Traits\HandlesGitSyncErrors;
 use Carbon\CarbonImmutable;
@@ -26,7 +26,7 @@ class SyncBitbucketRepositoryJob implements ShouldQueue
     {}
 
 
-    public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository,BitbucketApiServiceInterface $apiService):void
+    public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository,BitbucketActivityFetchInterface $apiService):void
     {
         $this->executeWithHandling(function () use ($developerActivityRepository, $apiService) {
             $client = Http::withToken($this->integration->access_token);
@@ -38,7 +38,7 @@ class SyncBitbucketRepositoryJob implements ShouldQueue
         });
     }
 
-    private function syncMergedPullRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client,BitbucketApiServiceInterface $apiService): void
+    private function syncMergedPullRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client,BitbucketActivityFetchInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 
@@ -69,7 +69,7 @@ class SyncBitbucketRepositoryJob implements ShouldQueue
         }
     }
 
-    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client,BitbucketApiServiceInterface $apiService): void
+    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client,BitbucketActivityFetchInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 

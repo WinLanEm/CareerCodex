@@ -1,22 +1,21 @@
 <?php
 
-namespace App\Contracts\Services\HttpServices;
+namespace App\Contracts\Services\HttpServices\Jira;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\PendingRequest;
 
-interface AsanaApiServiceInterface
+interface JiraProjectServiceInterface
 {
-    public function getWorkspaces(string $token,PendingRequest $client): array;
     public function getProjects(string $token,string $cloudId,PendingRequest $client): array;
-
     public function syncCompletedIssuesForProject(
-        string $projectKey,
         WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
-        string $projectName,
-        string $updatedSince,
+        CarbonImmutable $updatedSince,
         string $token,
+        string $projectKey,
+        string $cloudId,
         PendingRequest $client,
         \Closure $closure
-    );
+    ):void;
 }

@@ -27,11 +27,11 @@ class IntegrationCallbackController extends Controller
             $stringService = $request->get('service');
             $serviceEnum = ServiceConnectionsEnum::tryFrom($stringService);
             $providerUser = Socialite::driver($stringService . "_integration")->stateless()->user();
-            $serviceConnection = $this->connectionRepository->updateOrCreate($serviceEnum,$providerUser);
-            if(!$serviceConnection){
+            $integration = $this->connectionRepository->updateOrCreate($serviceEnum,$providerUser);
+            if(!$integration){
                 return new MessageResource("$stringService email not equal to your email",false,401);
             }
-            $this->getProviderInstanceStrategy->getInstance($serviceConnection,true);
+            $this->getProviderInstanceStrategy->getInstance($integration,true);
             return new MessageResource("provider successful updated",true,201);
         }catch (Exception $exception){
             Log::error("An error occurred during authentication with the $stringService.",[

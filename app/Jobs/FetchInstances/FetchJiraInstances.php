@@ -3,6 +3,7 @@
 namespace App\Jobs\FetchInstances;
 
 use App\Contracts\Repositories\IntegrationInstance\UpdateOrCreateIntegrationInstanceRepositoryInterface;
+use App\Contracts\Services\HttpServices\Jira\JiraWorkspaceServiceInterface;
 use App\Contracts\Services\HttpServices\JiraApiServiceInterface;
 use App\Jobs\SyncInstance\SyncJiraInstanceJob;
 use App\Models\Integration;
@@ -23,7 +24,7 @@ class FetchJiraInstances implements ShouldQueue
     {
     }
 
-    public function handle(UpdateOrCreateIntegrationInstanceRepositoryInterface $instanceRepository,JiraApiServiceInterface $apiService): void
+    public function handle(UpdateOrCreateIntegrationInstanceRepositoryInterface $instanceRepository,JiraWorkspaceServiceInterface $apiService): void
     {
         $this->executeWithHandling(function () use ($instanceRepository,$apiService) {
             $client = Http::withToken($this->integration->access_token);

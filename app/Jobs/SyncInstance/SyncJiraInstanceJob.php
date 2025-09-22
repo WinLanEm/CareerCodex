@@ -4,6 +4,7 @@ namespace App\Jobs\SyncInstance;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\IntegrationInstance\UpdateIntegrationInstanceRepositoryInterface;
+use App\Contracts\Services\HttpServices\Jira\JiraProjectServiceInterface;
 use App\Contracts\Services\HttpServices\JiraApiServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
@@ -27,7 +28,7 @@ class SyncJiraInstanceJob implements ShouldQueue
         readonly protected string $siteUrl
     ) {}
 
-    public function handle(WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,JiraApiServiceInterface $apiService,UpdateIntegrationInstanceRepositoryInterface $integrationRepository):void
+    public function handle(WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,JiraProjectServiceInterface $apiService,UpdateIntegrationInstanceRepositoryInterface $integrationRepository):void
     {
         $this->executeWithHandling(
             function () use ($repository, $apiService, $integrationRepository) {
@@ -47,7 +48,7 @@ class SyncJiraInstanceJob implements ShouldQueue
 
     protected function sync(
         WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
-        JiraApiServiceInterface $apiService,
+        JiraProjectServiceInterface $apiService,
         CarbonImmutable $updatedSince,
         PendingRequest $client
     ): void {

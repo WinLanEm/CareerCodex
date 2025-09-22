@@ -3,7 +3,7 @@
 namespace App\Jobs\FetchInstances;
 
 use App\Contracts\Repositories\IntegrationInstance\UpdateOrCreateIntegrationInstanceRepositoryInterface;
-use App\Contracts\Services\HttpServices\AsanaApiServiceInterface;
+use App\Contracts\Services\HttpServices\Asana\AsanaWorkspaceServiceInterface;
 use App\Jobs\SyncInstance\SyncAsanaInstanceJob;
 use App\Models\Integration;
 use App\Traits\HandlesSyncErrors;
@@ -23,16 +23,16 @@ class FetchAsanaInstances implements ShouldQueue
     {
     }
 
-    public function handle(UpdateOrCreateIntegrationInstanceRepositoryInterface $instanceRepository,AsanaApiServiceInterface $apiService): void
+    public function handle(UpdateOrCreateIntegrationInstanceRepositoryInterface $instanceRepository,AsanaWorkspaceServiceInterface $apiService): void
     {
         $this->executeWithHandling(function () use ($instanceRepository, $apiService) {
             $client = Http::withToken($this->integration->access_token);
             $workspaces = $apiService->getWorkspaces($this->integration->access_token,$client);
-            $this->makeProviderInstance($workspaces, $instanceRepository,$apiService);
+            $this->makeProviderInstance($workspaces, $instanceRepository);
         });
     }
 
-    private function makeProviderInstance(array $workspaces, UpdateOrCreateIntegrationInstanceRepositoryInterface $instanceRepository,AsanaApiServiceInterface $apiService)
+    private function makeProviderInstance(array $workspaces, UpdateOrCreateIntegrationInstanceRepositoryInterface $instanceRepository)
     {
         foreach ($workspaces as $workspace) {
             $workspaceGid = $workspace['gid']; // В Asana это 'gid'

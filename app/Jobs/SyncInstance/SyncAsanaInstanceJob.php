@@ -4,6 +4,7 @@ namespace App\Jobs\SyncInstance;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\IntegrationInstance\UpdateIntegrationInstanceRepositoryInterface;
+use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
 use App\Contracts\Services\HttpServices\AsanaApiServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
@@ -28,7 +29,7 @@ class SyncAsanaInstanceJob implements ShouldQueue
     ) {}
 
     public function handle(WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
-                           AsanaApiServiceInterface $apiService,
+                           AsanaProjectServiceInterface $apiService,
                            UpdateIntegrationInstanceRepositoryInterface $integrationRepository
     )
     {
@@ -45,7 +46,7 @@ class SyncAsanaInstanceJob implements ShouldQueue
             $this->updateNextCheckTime($integrationRepository, $now);
         });
     }
-    private function sync(WorkspaceAchievementUpdateOrCreateRepository $repository,AsanaApiServiceInterface $apiService,CarbonImmutable $updatedSince,PendingRequest $client):void
+    private function sync(WorkspaceAchievementUpdateOrCreateRepository $repository,AsanaProjectServiceInterface $apiService,CarbonImmutable $updatedSince,PendingRequest $client):void
     {
         $projects = $apiService->getProjects($this->integration->access_token,$this->cloudId,$client);
         foreach ($projects as $project) {

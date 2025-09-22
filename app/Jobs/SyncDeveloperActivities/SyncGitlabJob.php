@@ -2,7 +2,9 @@
 
 namespace App\Jobs\SyncDeveloperActivities;
 
+use App\Contracts\Services\HttpServices\Gitlab\GitlabRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\GitlabApiServiceInterface;
+use App\Jobs\RegisterWebhook\RegisterGitlabWebhookJob;
 use App\Jobs\SyncDeveloperRepositories\SyncGitlabRepositoryJob;
 use App\Models\Integration;
 use App\Traits\HandlesGitSyncErrors;
@@ -19,7 +21,7 @@ class SyncGitlabJob implements ShouldQueue
         readonly protected Integration $integration,
     ) {}
 
-    public function handle(GitlabApiServiceInterface $apiService):void
+    public function handle(GitlabRepositorySyncInterface $apiService):void
     {
         $this->executeWithHandling(function () use ($apiService) {
             $updatedSince = CarbonImmutable::now()->subDays(7);
@@ -32,6 +34,10 @@ class SyncGitlabJob implements ShouldQueue
                     $updatedSince,
                     $repository['id'],
                     $repository['path_with_namespace'],
+                )->onQueue('gitlab');
+                RegisterGitlabWebhookJob::dispatch(
+                    $this->integration,
+                    $repository['id'],
                 )->onQueue('gitlab');
             });
         });
