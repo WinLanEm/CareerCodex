@@ -20,6 +20,7 @@ class SyncJiraInstanceJob implements ShouldQueue
     use Queueable, HandlesSyncErrors;
 
     public function __construct(
+        readonly protected int $instanceId,
         readonly protected Integration $integration,
         readonly protected bool $isFirstRun,
         readonly protected string $cloudId,
@@ -68,7 +69,7 @@ class SyncJiraInstanceJob implements ShouldQueue
                         'date' => $carbonDate,
                         'is_approved' => false,
                         'is_from_provider' => true,
-                        'provider' => ServiceConnectionsEnum::JIRA->value,
+                        'integration_instance_id' => $this->instanceId,
                         'project_name' => $issue['fields']['project']['name'],
                         'link' => $link,
                     ]);

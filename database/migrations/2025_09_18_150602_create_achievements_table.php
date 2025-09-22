@@ -14,6 +14,7 @@ return new class extends Migration
     {
         Schema::create('achievements', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('integration_instance_id')->nullable()->constrained('integration_instances')->onDelete('cascade');
             $table->foreignId('workspace_id')->nullable()->constrained('workspaces')->onDelete('cascade');
             $table->string('title');
             $table->text('description');
@@ -23,7 +24,6 @@ return new class extends Migration
             $table->jsonb('skills')->nullable();
             $table->boolean('is_approved')->default(true);
             $table->boolean('is_from_provider')->default(false);
-            $table->enum('provider',['jira','asana'])->nullable();
             $table->string('project_name')->nullable();
             $table->string('link')->nullable();
             $table->timestamps();

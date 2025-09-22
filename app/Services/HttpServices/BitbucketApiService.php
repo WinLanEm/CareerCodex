@@ -3,6 +3,8 @@
 namespace App\Services\HttpServices;
 
 use App\Contracts\Services\HttpServices\BitbucketApiServiceInterface;
+use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
+use App\Enums\ServiceConnectionsEnum;
 use App\Exceptions\ApiRateLimitExceededException;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\PendingRequest;
@@ -10,12 +12,17 @@ use Illuminate\Support\Facades\Redis;
 
 class BitbucketApiService implements BitbucketApiServiceInterface
 {
+    public function __construct(
+        private ThrottleServiceInterface $throttleService,
+    )
+    {}
     public function syncRepositories(PendingRequest $client,\Closure $closure):void
     {
-        $nextPageUrl = "https://api.bitbucket.org/2.0/repositories?role=member";
+        $nextPageUrl = config('services.bitbucket_integration.sync_repositories_url');
 
         do {
-            $repositoriesOnPage = Redis::throttle('bitbucket-api')->allow(20)->every(60)->then(
+            $repositoriesOnPage = $this->throttleService->for(
+                ServiceConnectionsEnum::BITBUCKET,
                 function () use ($client, &$nextPageUrl)
                 {
                     $response = $client->get($nextPageUrl);
@@ -26,9 +33,6 @@ class BitbucketApiService implements BitbucketApiServiceInterface
 
                     return $pageJson['values'];
                 },
-                function () {
-                    throw new ApiRateLimitExceededException('GitHub API rate limit exceeded.',30);
-                }
             );
 
             foreach ($repositoriesOnPage as $repository) {
@@ -38,9 +42,12 @@ class BitbucketApiService implements BitbucketApiServiceInterface
     }
     public function getMergedPullRequests(PendingRequest $client,string $workspaceSlug, string $repoSlug,int $limit,CarbonImmutable $updatedSince): array
     {
-        return Redis::throttle('bitbucket-api')->allow(20)->every(60)->then(
+        return $this->throttleService->for(
+            ServiceConnectionsEnum::BITBUCKET,
             function () use($client, $workspaceSlug,$repoSlug, $limit,$updatedSince) {
-                $response = $client->get("https://api.bitbucket.org/2.0/repositories/{$workspaceSlug}/{$repoSlug}/pullrequests", [
+                $url = config('services.bitbucket_integration.get_merged_pull_requests_url');
+                $url = str_replace(['{workspaceSlug}','{repoSlug}'],[$workspaceSlug,$repoSlug],$url);
+                $response = $client->get($url, [
                     'state' => 'MERGED',
                     'pagelen' => $limit,
                     'sort' => '-updated_on',
@@ -49,16 +56,14 @@ class BitbucketApiService implements BitbucketApiServiceInterface
                 $response->throw();
                 return $response->json('values', []);
             },
-            function(){
-                throw new ApiRateLimitExceededException('GitLab API rate limit exceeded.',30);
-            }
         );
     }
     public function getExtendedInfo(PendingRequest $client,string $url):array
     {
         $additions = 0;
         $deletions = 0;
-        Redis::throttle('bitbucket-api')->allow(20)->every(60)->then(
+        $this->throttleService->for(
+            ServiceConnectionsEnum::BITBUCKET,
             function () use($client, $url,&$additions,&$deletions) {
                 $statsResponse = $client->get($url);
                 if ($statsResponse->ok()) {
@@ -68,26 +73,23 @@ class BitbucketApiService implements BitbucketApiServiceInterface
                     }
                 }
             },
-            function(){
-                throw new ApiRateLimitExceededException('GitLab API rate limit exceeded.',30);
-            }
         );
         return ['additions' => $additions, 'deletions' => $deletions];
     }
     public function getCommits(PendingRequest $client,string $workspaceSlug, string $repoSlug,int $limit,string $defaultBranch): array
     {
-        return Redis::throttle('bitbucket-api')->allow(20)->every(60)->then(
+        return $this->throttleService->for(
+            ServiceConnectionsEnum::BITBUCKET,
             function () use($client, $workspaceSlug,$repoSlug,$limit,$defaultBranch) {
-                $response = $client->get("https://api.bitbucket.org/2.0/repositories/{$workspaceSlug}/{$repoSlug}/commits", [
+                $url = config('services.bitbucket_integration.get_merged_pull_requests_url');
+                $url = str_replace(['{workspaceSlug}','{repoSlug}'],[$workspaceSlug,$repoSlug],$url);
+                $response = $client->get($url, [
                     'include' => $defaultBranch,
                     'pagelen' => $limit,
                 ]);
                 $response->throw();
                 return $response->json('values', []);
             },
-            function(){
-                throw new ApiRateLimitExceededException('GitLab API rate limit exceeded.',30);
-            }
         );
     }
 }

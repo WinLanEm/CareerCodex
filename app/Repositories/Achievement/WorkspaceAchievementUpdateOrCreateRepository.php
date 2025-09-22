@@ -19,7 +19,7 @@ class WorkspaceAchievementUpdateOrCreateRepository implements WorkspaceAchieveme
                 'skills' => $data['skills'] ?? null,
                 'is_approved' => $data['is_approved'] ?? true,
                 'is_from_provider' => $data['is_from_provider'] ?? false,
-                'provider' => $data['provider'] ?? null,
+                'integration_instance_id' => $data['integration_instance_id'] ?? null,
                 'project_name' => $data['project_name'] ?? null,
             ]
         );

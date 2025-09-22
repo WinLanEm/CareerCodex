@@ -21,6 +21,7 @@ class SyncAsanaInstanceJob implements ShouldQueue
 {
     use Queueable, HandlesSyncErrors, Dispatchable;
     public function __construct(
+        readonly protected int $instanceId,
         readonly protected Integration $integration,
         readonly protected bool $isFirstRun,
         readonly protected string $cloudId,
@@ -65,7 +66,7 @@ class SyncAsanaInstanceJob implements ShouldQueue
                             'date' => $carbonDate,
                             'is_approved' => false,
                             'is_from_provider' => true,
-                            'provider' => ServiceConnectionsEnum::ASANA->value,
+                            'integration_instance_id' => $this->instanceId,
                             'project_name' => $project['name'],
                         ]);
                     }

@@ -4,28 +4,30 @@ namespace App\Services\HttpServices;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Services\HttpServices\AsanaApiServiceInterface;
-use App\Exceptions\ApiRateLimitExceededException;
+use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
+use App\Enums\ServiceConnectionsEnum;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Redis;
 
 class AsanaApiService implements AsanaApiServiceInterface
 {
+    public function __construct(
+        private ThrottleServiceInterface $throttleService,
+    )
+    {}
+
     public function getWorkspaces(string $token,PendingRequest $client): array
     {
-        return Redis::throttle('asana-api')->allow(150)->every(60)->then(
+        return $this->throttleService->for(
+            ServiceConnectionsEnum::ASANA,
             function () use($token,$client) {
-            $providerInstanceUrl = config('services.asana_integration.provider_instance_url');
-            $response = $client
-                ->withHeaders(['accept' => 'application/json'])
-                ->get($providerInstanceUrl);
+                $providerInstanceUrl = config('services.asana_integration.provider_instance_url');
+                $response = $client
+                    ->withHeaders(['accept' => 'application/json'])
+                    ->get($providerInstanceUrl);
 
-            $response->throw();
+                $response->throw();
 
-            return $response->json()['data'];
-            },
-            function () {
-                throw new ApiRateLimitExceededException('Asana API rate limit exceeded.',100);
+                return $response->json()['data'];
             }
         );
     }
@@ -33,7 +35,7 @@ class AsanaApiService implements AsanaApiServiceInterface
     public function getProjects(string $token,string $cloudId,PendingRequest $client): array
     {
         $allProjects = [];
-        $url = 'https://app.asana.com/api/1.0/projects';
+        $url = config('services.asana_integration.projects_url');
         $params = [
             'workspace' => $cloudId,
             'limit' => 100,
@@ -45,16 +47,13 @@ class AsanaApiService implements AsanaApiServiceInterface
             if ($nextPageOffset) {
                 $params['offset'] = $nextPageOffset;
             }
-            $responseJson = Redis::throttle('asana-api')->allow(150)->every(60)->block(10)->then(
-                function () use ($token, $url, $params,$client) {
+            $responseJson = $this->throttleService->for(
+                ServiceConnectionsEnum::ASANA,
+                function () use($client,$url,$params,$token){
                     $response = $client->asJson()->get($url, $params);
                     $response->throw();
                     return $response->json();
-                },
-                function () {
-                    throw new ApiRateLimitExceededException('Asana API rate limit exceeded.', 100);
-                }
-            );
+                });
 
             $projectsOnPage = $responseJson['data'] ?? [];
             $allProjects = array_merge($allProjects, $projectsOnPage);
@@ -75,7 +74,7 @@ class AsanaApiService implements AsanaApiServiceInterface
         \Closure $closure
     )
     {
-        $url = 'https://app.asana.com/api/1.0/tasks';
+        $url = config('services.asana_integration.sync_issue');
         $params = [
             'project' => $projectKey,
             'completed_since' => $updatedSince,
@@ -89,16 +88,13 @@ class AsanaApiService implements AsanaApiServiceInterface
                 $params['offset'] = $nextPageOffset;
             }
 
-            $responseJson = Redis::throttle('asana-api')->allow(150)->every(60)->block(10)->then(
-                function () use ($token, $url, $params,$client) {
+            $responseJson = $this->throttleService->for(
+                ServiceConnectionsEnum::ASANA,
+                function () use($client,$url,$params,$token){
                     $response = $client->asJson()->get($url, $params);
                     $response->throw();
                     return $response->json();
-                },
-                function () {
-                    throw new ApiRateLimitExceededException('Asana API rate limit exceeded.', 100);
-                }
-            );
+                });
 
             $tasks = $responseJson['data'] ?? [];
             foreach ($tasks as $task) {

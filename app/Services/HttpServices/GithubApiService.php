@@ -4,21 +4,28 @@ namespace App\Services\HttpServices;
 
 
 use App\Contracts\Services\HttpServices\GithubApiServiceInterface;
-use App\Exceptions\ApiRateLimitExceededException;
+use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
+use App\Enums\ServiceConnectionsEnum;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Facades\Redis;
 
 class GithubApiService implements GithubApiServiceInterface
 {
     private const GRAPHQL_URL = 'https://api.github.com/graphql';
 
+    public function __construct(
+        private ThrottleServiceInterface $throttleService,
+    )
+    {}
+
     public function syncRepositories(PendingRequest $client, \Closure $closure): void
     {
         $page = 1;
         do {
-            $repositoriesOnPage = Redis::throttle('github-api')->allow(50)->every(60)->block(5)->then(
+            $repositoriesOnPage = $this->throttleService->for(
+                ServiceConnectionsEnum::GITHUB,
                 function () use ($client, &$page) {
-                    $response = $client->get('https://api.github.com/user/repos', [
+                    $url = config('services.github_integration.sync_repositories_url');
+                    $response = $client->get($url, [
                         'per_page' => 100,
                         'page' => $page,
                     ]);
@@ -26,9 +33,6 @@ class GithubApiService implements GithubApiServiceInterface
                     $page++;
                     return $response->json();
                 },
-                function () {
-                    throw new ApiRateLimitExceededException('GitHub API rate limit exceeded while fetching repositories.',30);
-                }
             );
 
             foreach ($repositoriesOnPage as $repo) {
@@ -39,7 +43,8 @@ class GithubApiService implements GithubApiServiceInterface
     }
     public function getMergedPullRequests(PendingRequest $client,string $searchQuery, int $limit): array
     {
-        return Redis::throttle('github-api')->allow(50)->every(60)->block(5)->then(
+        return $this->throttleService->for(
+            ServiceConnectionsEnum::GITHUB,
             function () use ($searchQuery, $limit,$client) {
                 $graphqlQuery = <<<'GQL'
                     query ($searchQuery: String!, $max: Int!) {
@@ -60,7 +65,8 @@ class GithubApiService implements GithubApiServiceInterface
                       }
                     }
                     GQL;
-                $response = $client->post(self::GRAPHQL_URL, [
+                $url = config('services.github_integration.graph_ql_url');
+                $response = $client->post($url, [
                     'query' => $graphqlQuery,
                     'variables' => [
                         'searchQuery' => $searchQuery,
@@ -70,14 +76,12 @@ class GithubApiService implements GithubApiServiceInterface
                 $response->throw();
                 return $response->json('data.search.nodes', []);
             },
-            function () {
-                throw new ApiRateLimitExceededException('GitHub API rate limit exceeded.',30);
-            }
         );
     }
     public function getCommits(PendingRequest $client,string $owner, string $repo, string $branch, string $since, int $limit): array
     {
-        return Redis::throttle('github-api')->allow(50)->every(60)->block(5)->then(
+        return $this->throttleService->for(
+            ServiceConnectionsEnum::GITHUB,
             function () use ($owner, $repo, $branch, $since, $limit,$client) {
                 $graphqlQuery = <<<'GQL'
                     query ($owner: String!, $repo: String!, $branch: String!, $since: GitTimestamp!, $max: Int!) {
@@ -101,7 +105,8 @@ class GithubApiService implements GithubApiServiceInterface
                       }
                     }
                     GQL;
-                $response = $client->post(self::GRAPHQL_URL, [
+                $url = config('services.github_integration.graph_ql_url');
+                $response = $client->post($url, [
                     'query' => $graphqlQuery,
                     'variables' => [
                         'owner' => $owner,
@@ -114,9 +119,6 @@ class GithubApiService implements GithubApiServiceInterface
                 $response->throw();
                 return $response->json('data.repository.ref.target.history.nodes', []);
             },
-            function () {
-                throw new ApiRateLimitExceededException('GitHub API rate limit exceeded.',30);
-            }
         );
     }
 }

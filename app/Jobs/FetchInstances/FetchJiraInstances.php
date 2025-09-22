@@ -38,13 +38,14 @@ class FetchJiraInstances implements ShouldQueue
         foreach ($sites as $site) {
             $cloudId = $site['id'];
 
-            $instanceRepository->updateOrCreate(
+            $instance = $instanceRepository->updateOrCreate(
                 $this->integration->id,
                 $cloudId,
                 $site['url']
             );
 
             SyncJiraInstanceJob::dispatch(
+                $instance->id,
                 $this->integration,
                 $this->isFirstRun,
                 $cloudId,

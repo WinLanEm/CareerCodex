@@ -4,27 +4,30 @@ namespace App\Services\HttpServices;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Services\HttpServices\JiraApiServiceInterface;
-use App\Exceptions\ApiRateLimitExceededException;
+use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
+use App\Enums\ServiceConnectionsEnum;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Facades\Redis;
 
 class JiraApiService implements JiraApiServiceInterface
 {
+    public function __construct(
+        private ThrottleServiceInterface $throttleService,
+    )
+    {}
     public function getWorkspaces(string $token,PendingRequest $client): array
     {
-        return Redis::throttle('asana-api')->allow(20)->every(60)->then(
+        return $this->throttleService->for(
+            ServiceConnectionsEnum::JIRA,
             function () use($token,$client) {
                 $providerInstanceUrl = config('services.jira_integration.provider_instance_url');
                 $response = $client
+                    ->timeout(30)
                     ->get($providerInstanceUrl);
                 $response->throw();
 
                 return $response->json();
             },
-            function () {
-                throw new ApiRateLimitExceededException('Jira API rate limit exceeded.',100);
-            }
         );
     }
 
@@ -35,19 +38,18 @@ class JiraApiService implements JiraApiServiceInterface
         $maxResults = 50;
 
         do {
-            $responseJson = Redis::throttle('jira-api')->allow(20)->every(60)->block(10)->then(
+            $responseJson = $this->throttleService->for(
+                ServiceConnectionsEnum::JIRA,
                 function () use ($token, $cloudId, $startAt, $maxResults,$client) {
-                    $url = "https://api.atlassian.com/ex/jira/{$cloudId}/rest/api/3/project/search";
-                    $response = $client->asJson()->get($url, [
+                    $url = config('services.jira_integration.projects_url');
+                    $url = str_replace('{cloudId}', $cloudId, $url);
+                    $response = $client->asJson()->timeout(30)->get($url, [
                         'startAt' => $startAt,
                         'maxResults' => $maxResults,
                     ]);
                     $response->throw();
                     return $response->json();
                 },
-                function () {
-                    throw new ApiRateLimitExceededException('Jira API rate limit exceeded.', 100);
-                }
             );
 
             $projects = $responseJson['values'] ?? [];
@@ -77,11 +79,12 @@ class JiraApiService implements JiraApiServiceInterface
         $jql = "project = \"{$projectKey}\" AND status = Done AND updated >= \"{$updatedSinceFormatted}\"";
 
         do {
-            // 3. Троттлинг также перенесен внутрь этого цикла
-            $responseJson = Redis::throttle('jira-api')->allow(20)->every(60)->block(10)->then(
+            $responseJson = $this->throttleService->for(
+                ServiceConnectionsEnum::JIRA,
                 function () use ($token, $client,$cloudId, $jql, $startAt, $maxResults) {
-                    $url = "https://api.atlassian.com/ex/jira/{$cloudId}/rest/api/3/search";
-                    $response = $client->asJson()->get($url, [
+                    $url = config('services.jira_integration.sync_issue');
+                    $url = str_replace('{cloudId}', $cloudId, $url);
+                    $response = $client->asJson()->timeout(30)->get($url, [
                         'jql' => $jql,
                         'fields' => 'summary,resolutiondate,description,project,issuetype,status',
                         'startAt' => $startAt,
@@ -90,9 +93,6 @@ class JiraApiService implements JiraApiServiceInterface
                     $response->throw();
                     return $response->json();
                 },
-                function () {
-                    throw new ApiRateLimitExceededException('Jira API rate limit exceeded.', 100);
-                }
             );
 
             $issues = $responseJson['issues'] ?? [];

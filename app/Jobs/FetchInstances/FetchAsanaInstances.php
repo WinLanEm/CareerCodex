@@ -40,13 +40,14 @@ class FetchAsanaInstances implements ShouldQueue
             // В Asana нет прямого URL для workspace в API-ответе,
             $siteUrl = 'https://app.asana.com/0/' . $workspaceGid . '/list';
 
-            $instanceRepository->updateOrCreate(
+            $instance = $instanceRepository->updateOrCreate(
                 $this->integration->id,
                 $workspaceGid,
                 $siteUrl
             );
 
             SyncAsanaInstanceJob::dispatch(
+                $instance->id,
                 $this->integration,
                 $this->isFirstRun,
                 $workspaceGid,

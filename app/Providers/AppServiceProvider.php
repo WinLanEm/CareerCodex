@@ -29,6 +29,7 @@ use App\Contracts\Services\HttpServices\GithubRepositoryActivityFetcherInterface
 use App\Contracts\Services\HttpServices\GithubRepositoryListFetcherInterface;
 use App\Contracts\Services\HttpServices\GitlabApiServiceInterface;
 use App\Contracts\Services\HttpServices\JiraApiServiceInterface;
+use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Contracts\Services\ProviderInstanceStrategy\GetIntegrationInstanceStrategyInterface;
 use App\Jobs\SyncDeveloperActivities\SyncGitBaseJob;
 use App\Jobs\SyncDeveloperActivities\SyncGithubJob;
@@ -61,6 +62,7 @@ use App\Services\HttpServices\BitbucketApiService;
 use App\Services\HttpServices\GithubApiService;
 use App\Services\HttpServices\GitlabApiService;
 use App\Services\HttpServices\JiraApiService;
+use App\Services\HttpServices\ThrottleService;
 use App\Services\IntegrationInstanceStrategy\GetIntegrationInstanceStrategy;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\ServiceProvider;
@@ -182,6 +184,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             AsanaApiServiceInterface::class,
             AsanaApiService::class
+        );
+        $this->app->bind(
+            ThrottleServiceInterface::class,
+            ThrottleService::class
         );
     }
 
