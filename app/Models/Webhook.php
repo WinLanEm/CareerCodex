@@ -9,6 +9,7 @@ class Webhook extends Model
     protected $fillable = [
         'integration_id',
         'secret',
+        'repository_id',
         'events',
         'active',
         'repository',

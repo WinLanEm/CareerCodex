@@ -5,6 +5,7 @@ namespace App\Services\HttpServices;
 
 use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Github\GithubActivityFetchInterface;
+use App\Contracts\Services\HttpServices\Github\GithubCheckIfAppInstalledInterface;
 use App\Contracts\Services\HttpServices\Github\GithubRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Github\GithubRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
@@ -12,8 +13,9 @@ use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Laravel\Socialite\Contracts\User;
 
-class GithubApiService implements GithubRepositorySyncInterface, GithubActivityFetchInterface, GithubRegisterWebhookInterface
+class GithubApiService implements GithubRepositorySyncInterface, GithubActivityFetchInterface, GithubRegisterWebhookInterface,GithubCheckIfAppInstalledInterface
 {
     private const GRAPHQL_URL = 'https://api.github.com/graphql';
 
@@ -126,61 +128,82 @@ class GithubApiService implements GithubRepositorySyncInterface, GithubActivityF
             },
         );
     }
-    public function registerWebhook(Integration $integration,string $fullRepoName,UpdateOrCreateWebhookRepositoryInterface $repository): void
+    public function registerWebhook(Integration $integration,string $fullRepoName):array
     {
-        $token = $integration->access_token;
-        $client = Http::withToken($token);
-        $webhookUrl = route('webhook', ['service' => 'github']);
+        return $this->throttleService->for(ServiceConnectionsEnum::GITHUB,function () use ($integration,$fullRepoName){
+            $token = $integration->access_token;
+            $client = Http::withToken($token)->acceptJson();
+            $webhookUrl = route('webhook', ['service' => 'github']);
+            $webhookSecret = config('services.github_integration.webhook_secret');
 
-        $url = config('services.github_integration.get_hooks_url');
-        $url = str_replace('{fullRepoName}', $fullRepoName, $url);
+            $url = config('services.github_integration.get_hooks_url');
+            $url = str_replace('{fullRepoName}', $fullRepoName, $url);
 
-        $existingHooksResponse = $client->get($url);
-        $existingHooksResponse->throw();
-        $existingHooks = $existingHooksResponse->json();
+            $existingHooksResponse = $client->get($url);
+            $existingHooksResponse->throw();
+            $existingHooks = $existingHooksResponse->json();
 
-        foreach ($existingHooks as $hook) {
-            if (isset($hook['config']['url']) && $hook['config']['url'] === $webhookUrl) {
-                // Если не активен — активируем
-                if (!$hook['active']) {
-                    $client->patch("{$url}/{$hook['id']}", ['active' => true])->throw();
+            foreach ($existingHooks as $hook) {
+                if (isset($hook['config']['url']) && $hook['config']['url'] === $webhookUrl) {
+                    if (!$hook['active']) {
+                        $client->patch("{$url}/{$hook['id']}", ['active' => true])->throw();
+                    }
+                    return [];
                 }
-                return;
             }
-        }
 
-        $webhookSecret = bin2hex(random_bytes(32));
+            $payload = [
+                'name' => 'web',
+                'active' => true,
+                'events' => [
+                    'push',
+                    'pull_request',
+                ],
+                'config' => [
+                    'url' => $webhookUrl,
+                    'content_type' => 'json',
+                    'secret' => $webhookSecret,
+                    'insecure_ssl' => config('app.env') !== 'production' ? '1' : '0', // Безопасное определение insecure_ssl
+                ],
+            ];
 
-        $payload = [
-            'name' => 'web',
-            'active' => true,
-            'events' => [
-                'push',
-                'pull_request',
-            ],
-            'config' => [
-                'url' => $webhookUrl,
-                'content_type' => 'json',
-                'secret' => $webhookSecret,
-                'insecure_ssl' => '1',
-                //изменить на 0 в проде
-            ],
-        ];
+            $response = $client->post($url, $payload);
+            $response->throw();
 
-        $response = $client->post($url, $payload);
-        $response->throw();
+            if(!$response->successful()) {
+                return [];
+            }
+            $newHook = $response->json();
 
-        $hook = $response->json();
-
-        $repository->updateOrCreateWebhook(
-            [
+            return [
                 'integration_id' => $integration->id,
                 'repository' => $fullRepoName,
-                'webhook_id' => $hook['id'],
+                'webhook_id' => $newHook['id'],
                 'secret' => $webhookSecret,
-                'events' => $hook['events'] ? json_encode($hook['events']) : json_encode(['push', 'pull_request']),
-                'active' => $hook['active'],
-            ]
-        );
+                'events' => json_encode($newHook['events']),
+                'active' => $newHook['active'],
+            ];
+        });
+    }
+
+    public function checkIfAppIsInstalled(User $user):bool
+    {
+        return $this->throttleService->for(ServiceConnectionsEnum::GITHUB,function () use ($user){
+            $client = Http::withToken($user->token)
+                ->withHeaders(['Accept' => 'application/vnd.github.v3+json']);
+
+            $response = $client->get('https://api.github.com/user/installations');
+
+            $response->throw();
+
+            $appSlug = config('services.github_integration.app_slug');
+            foreach ($response->json('installations', []) as $installation) {
+                if (isset($installation['app_slug']) && $installation['app_slug'] === $appSlug) {
+                    return true;
+                }
+            }
+
+            return false;
+        });
     }
 }

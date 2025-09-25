@@ -7,7 +7,7 @@ use App\Models\IntegrationInstance;
 
 class UpdateOrCreateIntegrationInstanceRepository implements UpdateOrCreateIntegrationInstanceRepositoryInterface
 {
-    public function updateOrCreate(string $serviceId, string $providerInstanceId, string $siteUrl = null): IntegrationInstance
+    public function updateOrCreate(string $serviceId, string $providerInstanceId, bool $hasWebsocket ,string $siteUrl = null): IntegrationInstance
     {
         return IntegrationInstance::updateOrCreate(
             [
@@ -15,6 +15,7 @@ class UpdateOrCreateIntegrationInstanceRepository implements UpdateOrCreateInteg
                 'external_id' => $providerInstanceId,
             ],
             [
+                'has_websocket' => $hasWebsocket,
                 'site_url' => $siteUrl,
             ]
         );

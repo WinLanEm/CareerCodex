@@ -31,6 +31,7 @@ use App\Contracts\Services\HttpServices\Bitbucket\BitbucketActivityFetchInterfac
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\Github\GithubActivityFetchInterface;
+use App\Contracts\Services\HttpServices\Github\GithubCheckIfAppInstalledInterface;
 use App\Contracts\Services\HttpServices\Github\GithubRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Github\GithubRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\Gitlab\GitlabActivityFetchInterface;
@@ -209,6 +210,10 @@ class AppServiceProvider extends ServiceProvider
         );
         $this->app->bind(
             GithubRegisterWebhookInterface::class,
+            GithubApiService::class
+        );
+        $this->app->bind(
+            GithubCheckIfAppInstalledInterface::class,
             GithubApiService::class
         );
         $this->app->bind(
