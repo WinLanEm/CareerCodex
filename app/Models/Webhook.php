@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Webhook extends Model
 {
@@ -20,4 +21,9 @@ class Webhook extends Model
         'events' => 'array',
         'secret' => 'encrypted'
     ];
+
+    public function integration():BelongsTo
+    {
+        return $this->belongsTo(Integration::class);
+    }
 }

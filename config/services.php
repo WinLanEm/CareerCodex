@@ -99,13 +99,14 @@ return [
     ],
 
     'asana_integration' => [
-        'scopes' => 'tasks:read projects:read users:read stories:read workspaces:read',
+        'scopes' => 'tasks:read projects:read users:read stories:read workspaces:read webhooks:read webhooks:write webhooks:delete',
         'client_id' => env('ASANA_SERVICE_CLIENT_ID'),
         'client_secret' => env('ASANA_SERVICE_CLIENT_SECRET'),
         'redirect' => env('ASANA_SERVICE_REDIRECT_URI'),
         'provider_instance_url' => 'https://app.asana.com/api/1.0/workspaces',
         'projects_url' => "https://app.asana.com/api/1.0/projects",
         'sync_issue' => "https://app.asana.com/api/1.0/tasks",
+        'set_webhook_url' => 'https://app.asana.com/api/1.0/webhooks'
     ],
 
     'trello_integration' => [

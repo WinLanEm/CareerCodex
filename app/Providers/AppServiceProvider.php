@@ -26,6 +26,7 @@ use App\Contracts\Repositories\Workspace\FindWorkspaceRepositoryInterface;
 use App\Contracts\Repositories\Workspace\IndexWorkspaceRepositoryInterface;
 use App\Contracts\Repositories\Workspace\UpdateWorkspaceRepositoryInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
+use App\Contracts\Services\HttpServices\Asana\AsanaRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaWorkspaceServiceInterface;
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketActivityFetchInterface;
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRegisterWebhookInterface;
@@ -230,6 +231,10 @@ class AppServiceProvider extends ServiceProvider
         );
         $this->app->bind(
             AsanaProjectServiceInterface::class,
+            AsanaApiService::class
+        );
+        $this->app->bind(
+            AsanaRegisterWebhookInterface::class,
             AsanaApiService::class
         );
         $this->app->bind(

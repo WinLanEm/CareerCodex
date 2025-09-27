@@ -5,6 +5,7 @@ namespace App\Services\Webhook;
 use App\Contracts\Services\Webhook\WebhookHandlerFactoryInterface;
 use App\Contracts\Services\Webhook\WebhookHandlerInterface;
 use App\Enums\ServiceConnectionsEnum;
+use App\Services\Webhook\Handlers\AsanaWebhookHandler;
 use App\Services\Webhook\Handlers\BitbucketWebhookHandler;
 use App\Services\Webhook\Handlers\GithubWebhookHandler;
 use App\Services\Webhook\Handlers\GitlabWebhookHandler;
@@ -17,6 +18,7 @@ class WebhookHandlerFactory implements WebhookHandlerFactoryInterface
             ServiceConnectionsEnum::GITHUB->value => app(GithubWebhookHandler::class),
             ServiceConnectionsEnum::GITLAB->value => app(GitlabWebhookHandler::class),
             ServiceConnectionsEnum::BITBUCKET->value => app(BitbucketWebhookHandler::class),
+            ServiceConnectionsEnum::ASANA->value => app(AsanaWebhookHandler::class),
             default => throw new \InvalidArgumentException("Webhook handler for service '{$serviceConnectionsEnum->value}' not found."),
         };
     }

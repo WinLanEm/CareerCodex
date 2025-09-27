@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class GithubWebhookHandler extends AbstractWebhookHandler
 {
-    public function verify(array $payload, array $headers): bool
+    public function verify(array $payload,string $rawPayload, array $headers): bool
     {
         $signature = $headers['x-hub-signature-256'][0] ?? null;
         if (!$signature) {
@@ -23,7 +23,6 @@ class GithubWebhookHandler extends AbstractWebhookHandler
             return $query->where('repository', $repoName)
                 ->where('integration_id', function ($subQuery) use ($payload) {
                     $subQuery->select('id')->from('integrations')
-                        ->where('external_user_id', $payload['sender']['id'])
                         ->where('service', ServiceConnectionsEnum::GITHUB->value);
                 });
         });
@@ -32,9 +31,7 @@ class GithubWebhookHandler extends AbstractWebhookHandler
             Log::warning('Webhook secret not found for repository', ['repo' => $repoName]);
             return false; // В проде лучше true, чтобы не блокировать другие хуки
         }
-
-        $expectedSignature = 'sha256=' . hash_hmac('sha256', json_encode($payload), $webhook->secret);
-
+        $expectedSignature = 'sha256=' . hash_hmac('sha256',$rawPayload, $webhook->secret);
         return hash_equals($expectedSignature, $signature);
     }
 
@@ -52,14 +49,15 @@ class GithubWebhookHandler extends AbstractWebhookHandler
     private function handlePush(array $payload): void
     {
         $repoName = $payload['repository']['full_name'];
-        $integrationId = $this->findIntegrationId($payload['sender']['id'],ServiceConnectionsEnum::GITHUB);
 
-        if (!$integrationId) return;
+        $integration = $this->findIntegrationById($payload['sender']['id'],ServiceConnectionsEnum::GITHUB);
+
+        if (!$integration) return;
 
         foreach ($payload['commits'] as $commit) {
             if ($commit['distinct']) {
                 $this->activityRepository->updateOrCreateDeveloperActivity([
-                    'integration_id' => $integrationId,
+                    'integration_id' => $integration->id,
                     'type' => 'commit',
                     'external_id' => $commit['id'],
                     'repository_name' => $repoName,

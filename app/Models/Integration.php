@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 
 class Integration extends Model
@@ -21,12 +22,8 @@ class Integration extends Model
         'site_url'
     ];
 
-    protected $hidden = [
-        'access_token',
-        'refresh_token',
-    ];
-
     protected $casts = [
+        'expires_at' => 'datetime',
         'access_token' => 'encrypted',
         'refresh_token' => 'encrypted',
         'next_check_provider_instances_at' => 'datetime',
@@ -40,5 +37,10 @@ class Integration extends Model
     public function providerInstance(): BelongsToMany
     {
         return $this->belongsToMany(IntegrationInstance::class);
+    }
+
+    public function webhook():HasOne
+    {
+        return $this->hasOne(Webhook::class);
     }
 }

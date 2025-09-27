@@ -5,8 +5,6 @@ namespace App\Jobs\SyncInstance;
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\IntegrationInstance\UpdateIntegrationInstanceRepositoryInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
-use App\Contracts\Services\HttpServices\AsanaApiServiceInterface;
-use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
 use App\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepository;
 use App\Traits\HandlesSyncErrors;
@@ -25,7 +23,7 @@ class SyncAsanaInstanceJob implements ShouldQueue
         readonly protected int $instanceId,
         readonly protected Integration $integration,
         readonly protected bool $isFirstRun,
-        readonly protected string $cloudId,
+        readonly protected array $project,
     ) {}
 
     public function handle(WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
@@ -48,16 +46,15 @@ class SyncAsanaInstanceJob implements ShouldQueue
     }
     private function sync(WorkspaceAchievementUpdateOrCreateRepository $repository,AsanaProjectServiceInterface $apiService,CarbonImmutable $updatedSince,PendingRequest $client):void
     {
-        $projects = $apiService->getProjects($this->integration->access_token,$this->cloudId,$client);
-        foreach ($projects as $project) {
+        $this->executeWithHandling(function () use ($apiService,$repository,$updatedSince,$client) {
             $apiService->syncCompletedIssuesForProject(
-                $project['gid'],
+                $this->project['gid'],
                 $repository,
-                $project['name'],
+                $this->project['name'],
                 $updatedSince->toIso8601String(),
                 $this->integration->access_token,
                 $client,
-                function ($task) use ($repository, $project) {
+                function ($task) use ($repository) {
                     if ($task['completed']) {
                         $carbonDate = Carbon::parse($task['completed_at']);
                         $repository->updateOrCreate([
@@ -68,12 +65,12 @@ class SyncAsanaInstanceJob implements ShouldQueue
                             'is_approved' => false,
                             'is_from_provider' => true,
                             'integration_instance_id' => $this->instanceId,
-                            'project_name' => $project['name'],
+                            'project_name' => $this->project['name'],
                         ]);
                     }
                 }
             );
-        }
+        });
     }
     private function updateNextCheckTime(UpdateIntegrationInstanceRepositoryInterface $repository, CarbonImmutable $checkTime): void
     {
