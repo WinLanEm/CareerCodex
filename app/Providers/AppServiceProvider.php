@@ -39,6 +39,7 @@ use App\Contracts\Services\HttpServices\Gitlab\GitlabActivityFetchInterface;
 use App\Contracts\Services\HttpServices\Gitlab\GitlabRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Gitlab\GitlabRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraProjectServiceInterface;
+use App\Contracts\Services\HttpServices\Jira\JiraRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraWorkspaceServiceInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Contracts\Services\ProviderInstanceStrategy\GetIntegrationInstanceStrategyInterface;
@@ -223,6 +224,10 @@ class AppServiceProvider extends ServiceProvider
         );
         $this->app->bind(
             JiraProjectServiceInterface::class,
+            JiraApiService::class
+        );
+        $this->app->bind(
+            JiraRegisterWebhookInterface::class,
             JiraApiService::class
         );
         $this->app->bind(

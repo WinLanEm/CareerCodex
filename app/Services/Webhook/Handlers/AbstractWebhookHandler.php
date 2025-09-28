@@ -9,7 +9,6 @@ use App\Contracts\Repositories\Webhook\EloquentWebhookRepositoryInterface;
 use App\Contracts\Services\Webhook\WebhookHandlerInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
-use App\Repositories\Integrations\FindIntegrationByClosureRepository;
 use Illuminate\Database\Eloquent\Builder;
 
 abstract class AbstractWebhookHandler implements WebhookHandlerInterface
@@ -22,7 +21,7 @@ abstract class AbstractWebhookHandler implements WebhookHandlerInterface
     ) {
     }
 
-    abstract public function verify(array $payload,string $rawPayload, array $headers): bool;
+    abstract public function verify(array $payload,string $rawPayload, array $headers,string $secret): bool;
 
     abstract public function handle(array $payload, array $headers): void;
 

@@ -5,7 +5,7 @@ namespace App\Services\IntegrationInstanceStrategy;
 use App\Contracts\Services\ProviderInstanceStrategy\GetIntegrationInstanceStrategyInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Jobs\FetchInstances\FetchAsanaData;
-use App\Jobs\FetchInstances\FetchJiraInstances;
+use App\Jobs\FetchInstances\FetchJiraData;
 use App\Jobs\SyncDeveloperActivities\SyncBitbucketJob;
 use App\Jobs\SyncDeveloperActivities\SyncGithubJob;
 use App\Jobs\SyncDeveloperActivities\SyncGitlabJob;
@@ -18,7 +18,7 @@ class GetIntegrationInstanceStrategy implements GetIntegrationInstanceStrategyIn
     {
         switch ($integration->service) {
             case ServiceConnectionsEnum::JIRA->value:
-                FetchJiraInstances::dispatch($integration,$isFirstRun)->onQueue('jira');
+                FetchJiraData::dispatch($integration,$isFirstRun)->onQueue('jira');
                 break;
             case ServiceConnectionsEnum::ASANA->value:
                 FetchAsanaData::dispatch($integration,$isFirstRun)->onQueue('asana');

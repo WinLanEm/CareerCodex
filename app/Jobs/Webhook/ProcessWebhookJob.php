@@ -16,7 +16,8 @@ class ProcessWebhookJob implements ShouldQueue
         protected ServiceConnectionsEnum $service,
         protected array $payload,
         protected string $rawPayload,
-        protected array $headers
+        protected array $headers,
+        protected string $secret
     ) {}
 
     public function handle(WebhookHandlerFactoryInterface $handlerFactory): void
@@ -24,7 +25,7 @@ class ProcessWebhookJob implements ShouldQueue
         try {
             $handler = $handlerFactory->make($this->service);
 
-            if (!$handler->verify($this->payload,$this->rawPayload, $this->headers)) {
+            if (!$handler->verify($this->payload,$this->rawPayload, $this->headers,$this->secret)) {
                 Log::warning('Webhook verification failed.', ['service' => $this->service->value]);
                 return;
             }

@@ -9,6 +9,7 @@ use App\Services\Webhook\Handlers\AsanaWebhookHandler;
 use App\Services\Webhook\Handlers\BitbucketWebhookHandler;
 use App\Services\Webhook\Handlers\GithubWebhookHandler;
 use App\Services\Webhook\Handlers\GitlabWebhookHandler;
+use App\Services\Webhook\Handlers\JiraWebhookHandler;
 
 class WebhookHandlerFactory implements WebhookHandlerFactoryInterface
 {
@@ -19,6 +20,7 @@ class WebhookHandlerFactory implements WebhookHandlerFactoryInterface
             ServiceConnectionsEnum::GITLAB->value => app(GitlabWebhookHandler::class),
             ServiceConnectionsEnum::BITBUCKET->value => app(BitbucketWebhookHandler::class),
             ServiceConnectionsEnum::ASANA->value => app(AsanaWebhookHandler::class),
+            ServiceConnectionsEnum::JIRA->value => app(JiraWebhookHandler::class),
             default => throw new \InvalidArgumentException("Webhook handler for service '{$serviceConnectionsEnum->value}' not found."),
         };
     }

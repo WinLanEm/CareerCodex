@@ -88,7 +88,7 @@ return [
         'get_hooks_url' => "https://api.bitbucket.org/2.0/repositories/{workspaceSlug}/{repoSlug}/hooks",
     ],
     'jira_integration' => [
-        'scopes' => 'read:jira-user read:jira-work offline_access read:me',
+        'scopes' => 'read:jira-user read:jira-work offline_access read:me manage:jira-webhook manage:jira-configuration',
         //manage:jira-webhook
         'client_id' => env('JIRA_SERVICE_CLIENT_ID'),
         'client_secret' => env('JIRA_SERVICE_CLIENT_SECRET'),
