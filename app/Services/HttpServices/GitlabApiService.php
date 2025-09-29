@@ -9,9 +9,11 @@ use App\Contracts\Services\HttpServices\Gitlab\GitlabRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
+use App\Models\Webhook;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class GitlabApiService implements GitlabActivityFetchInterface, GitlabRegisterWebhookInterface, GitlabRepositorySyncInterface
 {
@@ -106,6 +108,10 @@ class GitlabApiService implements GitlabActivityFetchInterface, GitlabRegisterWe
 
             foreach ($existingHooks as $hook) {
                 if (isset($hook['url']) && $hook['url'] === $webhookUrl) {
+                    $webhook = Webhook::where('webhook_id',$hook['id'])->first();
+                    if($webhook) {
+                        return $webhook->toArray();
+                    }
                     return [];
                 }
             }

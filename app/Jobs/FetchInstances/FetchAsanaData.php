@@ -17,7 +17,6 @@ class FetchAsanaData implements ShouldQueue
 
     public function __construct(
         readonly private Integration $integration,
-        readonly private bool        $isFirstRun
     )
     {
     }
@@ -34,7 +33,6 @@ class FetchAsanaData implements ShouldQueue
                     ProcessAsanaProjectJob::dispatch(
                         $this->integration,
                         $project,
-                        $this->isFirstRun,
                         $workspace['gid']
                     )->onQueue('asana');;
                 }

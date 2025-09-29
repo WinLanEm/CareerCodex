@@ -20,7 +20,6 @@ return new class extends Migration
             $table->text('access_token');
             $table->text('refresh_token');
             $table->timestamp('expires_at');
-            $table->timestamp('next_check_provider_instances_at');
             $table->timestamps();
             $table->unique(['user_id', 'service']);
 

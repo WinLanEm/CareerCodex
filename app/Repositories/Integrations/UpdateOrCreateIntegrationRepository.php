@@ -6,7 +6,6 @@ use App\Contracts\Repositories\Integrations\UpdateOrCreateIntegrationRepositoryI
 use App\Contracts\Repositories\User\FindUserRepositoryInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
-use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Contracts\User;
 
 class UpdateOrCreateIntegrationRepository implements UpdateOrCreateIntegrationRepositoryInterface
@@ -40,7 +39,6 @@ class UpdateOrCreateIntegrationRepository implements UpdateOrCreateIntegrationRe
                 'access_token' => $socialiteUser->token,
                 'refresh_token' => $socialiteUser->refreshToken,
                 'expires_at' => $expiresAtTimestamp,
-                'next_check_provider_instances_at' => now()->addHour()
             ]
         );
     }

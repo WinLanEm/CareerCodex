@@ -14,14 +14,14 @@ use InvalidArgumentException;
 
 class GetIntegrationInstanceStrategy implements GetIntegrationInstanceStrategyInterface
 {
-    public function getInstance(Integration $integration, bool $isFirstRun = false):void
+    public function getInstance(Integration $integration):void
     {
         switch ($integration->service) {
             case ServiceConnectionsEnum::JIRA->value:
-                FetchJiraData::dispatch($integration,$isFirstRun)->onQueue('jira');
+                FetchJiraData::dispatch($integration)->onQueue('jira');
                 break;
             case ServiceConnectionsEnum::ASANA->value:
-                FetchAsanaData::dispatch($integration,$isFirstRun)->onQueue('asana');
+                FetchAsanaData::dispatch($integration)->onQueue('asana');
                 break;
             case ServiceConnectionsEnum::GITHUB->value:
                 SyncGithubJob::dispatch($integration)->onQueue('github');

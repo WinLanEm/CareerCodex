@@ -11,8 +11,6 @@ use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
 use App\Models\Webhook;
-use Carbon\CarbonImmutable;
-use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -20,7 +18,6 @@ class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectService
 {
     public function __construct(
         private ThrottleServiceInterface $throttleService,
-        private UpdateOrCreateWebhookRepositoryInterface $updateOrCreateWebhookRepository,
     )
     {}
     public function getWorkspaces(Integration $integration): array
@@ -75,7 +72,6 @@ class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectService
 
     public function syncCompletedIssuesForProject(
         WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
-        CarbonImmutable $updatedSince,
         Integration $integration,
         string $projectKey,
         string $cloudId,
@@ -84,7 +80,7 @@ class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectService
     {
         $startAt = 0;
         $maxResults = 100;
-        $updatedSinceFormatted = $updatedSince->format('Y-m-d H:i');
+        $updatedSinceFormatted = now()->subDays(7)->format('Y-m-d H:i');
         $jql = "project = {$projectKey} AND status = Done AND updated >= '{$updatedSinceFormatted}'";
 
         do {
@@ -132,6 +128,7 @@ class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectService
                             if($webhook){
                                 return $webhook->toArray();
                             }
+                            return [];
                         }
                     }
                 }

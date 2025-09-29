@@ -2,22 +2,16 @@
 
 namespace App\Jobs\FetchInstances;
 
-use App\Contracts\Repositories\IntegrationInstance\UpdateOrCreateIntegrationInstanceRepositoryInterface;
 use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraProjectServiceInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraWorkspaceServiceInterface;
-use App\Contracts\Services\HttpServices\JiraApiServiceInterface;
-use App\Jobs\ProcessProjectJobs\ProcessAsanaProjectJob;
 use App\Jobs\ProcessProjectJobs\ProcessJiraProjectJob;
-use App\Jobs\SyncInstance\SyncJiraInstanceJob;
 use App\Models\Integration;
 use App\Traits\HandlesSyncErrors;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class FetchJiraData implements ShouldQueue
 {
@@ -25,7 +19,6 @@ class FetchJiraData implements ShouldQueue
 
     public function __construct(
         readonly private Integration $integration,
-        readonly private bool        $isFirstRun
     )
     {
     }
@@ -56,7 +49,6 @@ class FetchJiraData implements ShouldQueue
                     ProcessJiraProjectJob::dispatch(
                         $this->integration,
                         $project,
-                        $this->isFirstRun,
                         $cloudId,
                         $siteUrl,
                         $hasWebhook

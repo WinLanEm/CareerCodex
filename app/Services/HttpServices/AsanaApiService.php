@@ -3,7 +3,7 @@
 namespace App\Services\HttpServices;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
-use App\Contracts\Repositories\IntegrationInstance\UpdateIntegrationInstanceRepositoryInterface;
+use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectRefreshTokenInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
@@ -15,14 +15,12 @@ use App\Models\Integration;
 use App\Models\Webhook;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectServiceInterface, AsanaRegisterWebhookInterface, AsanaProjectRefreshTokenInterface
 {
     public function __construct(
-        private ThrottleServiceInterface $throttleService,
-        private UpdateIntegrationInstanceRepositoryInterface $integrationRepository,
-        private UpdateOrCreateWebhookRepositoryInterface $updateOrCreateWebhookRepository,
+        private ThrottleServiceInterface                 $throttleService,
+        private UpdateIntegrationRepositoryInterface     $integrationRepository,
     )
     {}
 
@@ -79,12 +77,12 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
         string $projectKey,
         WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
         string $projectName,
-        string $updatedSince,
         string $token,
-        PendingRequest $client,
         \Closure $closure
     )
     {
+        $updatedSince = now()->subDays(7)->toIso8601String();
+        $client = Http::withToken($token);
         $url = config('services.asana_integration.sync_issue');
         $params = [
             'project' => $projectKey,
@@ -137,14 +135,14 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
             $client = Http::withToken($integration->access_token);
 
             $getWebhooksResponse = $client->get($getWebhooksUrl);
-
             foreach ($getWebhooksResponse->json('data') as $existingWebhook) {
                 $webhook = Webhook::where('webhook_id', $existingWebhook['gid'])->first();
                 if ($webhook) {
-//                    $client->delete("https://app.asana.com/api/1.0/webhooks/" . $existingWebhook['gid'])->throw();
-//                    $webhook->delete();
+                    //$client->delete("https://app.asana.com/api/1.0/webhooks/" . $existingWebhook['gid'])->throw();
+                    //$webhook->delete();
                     return $webhook->toArray();
                 }
+                return [];
             }
 
             $response = $client

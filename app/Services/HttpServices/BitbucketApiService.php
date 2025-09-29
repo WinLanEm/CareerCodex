@@ -9,9 +9,11 @@ use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRepositorySyncInterfa
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
+use App\Models\Webhook;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class BitbucketApiService implements BitbucketRepositorySyncInterface, BitbucketRegisterWebhookInterface, BitbucketActivityFetchInterface
 {
@@ -39,7 +41,6 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
             );
 
             foreach ($repositoriesOnPage as $repository) {
-                \Illuminate\Support\Facades\Log::info('Bitbucket Repo Data:', $repository);
                 $closure($repository);
             }
         } while ($nextPageUrl);
@@ -113,6 +114,10 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
 
             foreach ($existingHooks as $hook) {
                 if (isset($hook['url']) && $hook['url'] === $webhookUrl) {
+                    $webhook = Webhook::where('webhook_id',$hook['uuid'])->first();
+                    if ($webhook) {
+                        return $webhook->toArray();
+                    }
                     return [];
                 }
             }

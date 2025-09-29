@@ -10,7 +10,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Services\ValidateServiceIntegrationRequest;
 use App\Http\Resources\MessageResource;
 use App\Http\Resources\UrlResource;
-use App\Traits\HandlesSyncErrors;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
@@ -48,7 +47,7 @@ class IntegrationCallbackController extends Controller
                     return new UrlResource($installationUrl,false,403);
                 }
             }
-            $this->getProviderInstanceStrategy->getInstance($integration,true);
+            $this->getProviderInstanceStrategy->getInstance($integration);
             return new MessageResource("provider successful updated",true,201);
         }catch (Exception $exception){
             Log::error("An error occurred during authentication with the $stringService.",[

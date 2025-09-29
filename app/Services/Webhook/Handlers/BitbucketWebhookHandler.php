@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 class BitbucketWebhookHandler extends AbstractWebhookHandler
 {
 
-    public function verify(array $payload, array $headers): bool
+    public function verify(array $payload, string $rawPayload,array $headers,?string $secret): bool
     {
         $signature = $headers['x-hub-signature'][0] ?? null;
         if (!$signature) {
@@ -60,7 +60,7 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
     private function handlePush(array $payload): void
     {
         $repoName = $payload['repository']['full_name'];
-        $integrationId = $this->findIntegrationId($payload['actor']['uuid'],ServiceConnectionsEnum::BITBUCKET);
+        $integrationId = $this->findIntegrationById($payload['actor']['uuid'],ServiceConnectionsEnum::BITBUCKET);
 
         if (!$integrationId) return;
 
@@ -85,7 +85,7 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
     {
         $pr = $payload['pullrequest'];
         $repoName = $payload['repository']['full_name'];
-        $integrationId = $this->findIntegrationId($pr['author']['uuid'],ServiceConnectionsEnum::BITBUCKET);
+        $integrationId = $this->findIntegrationById($pr['author']['uuid'],ServiceConnectionsEnum::BITBUCKET);
 
         if (!$integrationId) return;
 

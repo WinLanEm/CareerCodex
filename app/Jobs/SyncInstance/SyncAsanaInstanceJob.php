@@ -3,18 +3,14 @@
 namespace App\Jobs\SyncInstance;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
-use App\Contracts\Repositories\IntegrationInstance\UpdateIntegrationInstanceRepositoryInterface;
+use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
 use App\Models\Integration;
-use App\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepository;
 use App\Traits\HandlesSyncErrors;
-use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Http;
 
 class SyncAsanaInstanceJob implements ShouldQueue
 {
@@ -22,38 +18,20 @@ class SyncAsanaInstanceJob implements ShouldQueue
     public function __construct(
         readonly protected int $instanceId,
         readonly protected Integration $integration,
-        readonly protected bool $isFirstRun,
         readonly protected array $project,
     ) {}
 
     public function handle(WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
                            AsanaProjectServiceInterface $apiService,
-                           UpdateIntegrationInstanceRepositoryInterface $integrationRepository
+                           UpdateIntegrationRepositoryInterface $integrationRepository
     )
     {
         $this->executeWithHandling(function () use ($repository, $apiService,$integrationRepository) {
-            $now = CarbonImmutable::now();
-
-            $updatedSince = $this->isFirstRun
-                ? $now->subDays(7)
-                : CarbonImmutable::parse($this->integration->next_check_provider_instances_at)->subHour();
-
-            $client = Http::withToken($this->integration->access_token);
-            $this->sync($repository, $apiService, $updatedSince,$client);
-
-            $this->updateNextCheckTime($integrationRepository, $now);
-        });
-    }
-    private function sync(WorkspaceAchievementUpdateOrCreateRepository $repository,AsanaProjectServiceInterface $apiService,CarbonImmutable $updatedSince,PendingRequest $client):void
-    {
-        $this->executeWithHandling(function () use ($apiService,$repository,$updatedSince,$client) {
             $apiService->syncCompletedIssuesForProject(
                 $this->project['gid'],
                 $repository,
                 $this->project['name'],
-                $updatedSince->toIso8601String(),
                 $this->integration->access_token,
-                $client,
                 function ($task) use ($repository) {
                     if ($task['completed']) {
                         $carbonDate = Carbon::parse($task['completed_at']);
@@ -71,11 +49,5 @@ class SyncAsanaInstanceJob implements ShouldQueue
                 }
             );
         });
-    }
-    private function updateNextCheckTime(UpdateIntegrationInstanceRepositoryInterface $repository, CarbonImmutable $checkTime): void
-    {
-        $repository->update($this->integration, [
-            'next_check_provider_instances_at' => $checkTime->addHour()
-        ]);
     }
 }

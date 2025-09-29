@@ -13,9 +13,7 @@ interface AsanaProjectServiceInterface
         string $projectKey,
         WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
         string $projectName,
-        string $updatedSince,
         string $token,
-        PendingRequest $client,
         \Closure $closure
     );
 }

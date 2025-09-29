@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class GithubWebhookHandler extends AbstractWebhookHandler
 {
-    public function verify(array $payload,string $rawPayload, array $headers): bool
+    public function verify(array $payload, string $rawPayload,array $headers,?string $secret): bool
     {
         $signature = $headers['x-hub-signature-256'][0] ?? null;
         if (!$signature) {
@@ -80,7 +80,7 @@ class GithubWebhookHandler extends AbstractWebhookHandler
         }
 
         $pr = $payload['pull_request'];
-        $integrationId = $this->findIntegrationId($pr['user']['id'],ServiceConnectionsEnum::GITHUB);
+        $integrationId = $this->findIntegrationById($pr['user']['id'],ServiceConnectionsEnum::GITHUB);
         if (!$integrationId) return;
 
         $this->activityRepository->updateOrCreateDeveloperActivity([

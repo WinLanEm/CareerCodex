@@ -11,8 +11,10 @@ use App\Contracts\Services\HttpServices\Github\GithubRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
+use App\Models\Webhook;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Contracts\User;
 
 class GithubApiService implements GithubRepositorySyncInterface, GithubActivityFetchInterface, GithubRegisterWebhookInterface,GithubCheckIfAppInstalledInterface
@@ -147,6 +149,10 @@ class GithubApiService implements GithubRepositorySyncInterface, GithubActivityF
                 if (isset($hook['config']['url']) && $hook['config']['url'] === $webhookUrl) {
                     if (!$hook['active']) {
                         $client->patch("{$url}/{$hook['id']}", ['active' => true])->throw();
+                    }
+                    $webhook = Webhook::where('webhook_id',$hook['id'])->first();
+                    if ($webhook) {
+                        return $webhook->toArray();
                     }
                     return [];
                 }

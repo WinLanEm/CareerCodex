@@ -11,7 +11,6 @@ interface JiraProjectServiceInterface
     public function getProjects(Integration $integration,string $cloudId): array;
     public function syncCompletedIssuesForProject(
         WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
-        CarbonImmutable $updatedSince,
         Integration $integration,
         string $projectKey,
         string $cloudId,

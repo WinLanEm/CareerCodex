@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Contracts\Repositories\IntegrationInstance;
+namespace App\Contracts\Repositories\Integrations;
 
 use App\Models\Integration;
 
-interface UpdateIntegrationInstanceRepositoryInterface
+interface UpdateIntegrationRepositoryInterface
 {
     public function update(Integration $serviceConnection, array $data): Integration;
 }

@@ -19,7 +19,6 @@ class ProcessAsanaProjectJob implements ShouldQueue
     public function __construct(
         readonly private Integration $integration,
         readonly private array       $project,
-        readonly private bool        $isFirstRun,
         readonly private string      $workspaceGid,
     ) {
     }
@@ -63,7 +62,6 @@ class ProcessAsanaProjectJob implements ShouldQueue
             SyncAsanaInstanceJob::dispatch(
                 $instance->id,
                 $this->integration,
-                $this->isFirstRun,
                 $this->project,
             )->onQueue('asana');
         });

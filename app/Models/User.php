@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Validation\Rule;
@@ -66,5 +67,10 @@ class User extends Authenticatable
             ],
             'provider_id' => 'nullable|string|unique:users',
         ];
+    }
+
+    public function integrations(): HasMany
+    {
+        return $this->hasMany(Integration::class);
     }
 }

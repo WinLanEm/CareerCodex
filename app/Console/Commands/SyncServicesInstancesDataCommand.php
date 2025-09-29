@@ -4,10 +4,10 @@ namespace App\Console\Commands;
 
 use App\Contracts\Services\ProviderInstanceStrategy\GetIntegrationInstanceStrategyInterface;
 use App\Models\Integration;
+use App\Models\IntegrationInstance;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 
-class SyncServicesDataCommand extends Command
+class SyncServicesInstancesDataCommand extends Command
 {
     public function __construct(
         readonly private GetIntegrationInstanceStrategyInterface $providerInstanceStrategy,
@@ -15,13 +15,12 @@ class SyncServicesDataCommand extends Command
     {
         parent::__construct();
     }
-
     /**
      * The name and signature of the console command.
      *
      * @var string
      */
-    protected $signature = 'app:sync-services-data-command';
+    protected $signature = 'app:sync-services-instances-data-command';
 
     /**
      * The console command description.
@@ -35,16 +34,12 @@ class SyncServicesDataCommand extends Command
      */
     public function handle()
     {
-        $chunkSize = 200;
-        $totalProcessed = 0;
-        Integration::query()
-            ->chunkById($chunkSize, function ($services) use (&$totalProcessed) {
-                $totalProcessed += $services->count();
-                foreach ($services as $service) {
-                    $this->providerInstanceStrategy->getInstance($service);
-                }
-            });
+        IntegrationInstance::where('has_websocket',true)
+            ->get()
+            ->chunkById(200,function ($integrationInstances) {
 
+        });
+        $totalProcessed = 2;
         $this->info("Finished processing all due services. Total processed: {$totalProcessed}");
     }
 }

@@ -11,8 +11,8 @@ use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateRepositoryI
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
 use App\Contracts\Repositories\Email\GenerateVerificationCodeRepositoryInterface;
 use App\Contracts\Repositories\IntegrationInstance\UpdateOrCreateIntegrationInstanceRepositoryInterface;
-use App\Contracts\Repositories\IntegrationInstance\UpdateIntegrationInstanceRepositoryInterface;
 use App\Contracts\Repositories\Integrations\FindIntegrationByClosureRepositoryInterface;
+use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Contracts\Repositories\Integrations\UpdateOrCreateIntegrationRepositoryInterface;
 use App\Contracts\Repositories\User\CreateUserRepositoryInterface;
 use App\Contracts\Repositories\User\FindUserRepositoryInterface;
@@ -54,8 +54,8 @@ use App\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivity;
 use App\Repositories\Email\GenerateVerificationCodeRepository;
 use App\Repositories\IntegrationInstances\UpdateOrCreateIntegrationInstanceRepository;
 use App\Repositories\Integrations\FindIntegrationByClosureRepository;
-use App\Repositories\Integrations\UpdateOrCreateIntegrationRepository;
 use App\Repositories\Integrations\UpdateIntegrationRepository;
+use App\Repositories\Integrations\UpdateOrCreateIntegrationRepository;
 use App\Repositories\User\CreateUserRepository;
 use App\Repositories\User\FindUserRepository;
 use App\Repositories\User\UpdateOrCreateUserRepository;
@@ -169,7 +169,7 @@ class AppServiceProvider extends ServiceProvider
             WorkspaceAchievementUpdateOrCreateRepository::class
         );
         $this->app->bind(
-            UpdateIntegrationInstanceRepositoryInterface::class,
+            UpdateIntegrationRepositoryInterface::class,
             UpdateIntegrationRepository::class
         );;
         $this->app->bind(

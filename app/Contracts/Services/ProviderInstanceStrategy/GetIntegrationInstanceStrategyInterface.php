@@ -8,5 +8,5 @@ use Laravel\Socialite\Contracts\User;
 
 interface GetIntegrationInstanceStrategyInterface
 {
-    public function getInstance(Integration $integration, bool $isFirstRun = false):void;
+    public function getInstance(Integration $integration):void;
 }

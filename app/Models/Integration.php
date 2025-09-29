@@ -18,7 +18,6 @@ class Integration extends Model
         'refresh_token',
         'expires_at',
         'provider_instance_id',
-        'next_check_provider_instances_at',
         'site_url'
     ];
 
@@ -26,7 +25,6 @@ class Integration extends Model
         'expires_at' => 'datetime',
         'access_token' => 'encrypted',
         'refresh_token' => 'encrypted',
-        'next_check_provider_instances_at' => 'datetime',
     ];
 
     public function user(): BelongsTo

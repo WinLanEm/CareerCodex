@@ -21,7 +21,7 @@ abstract class AbstractWebhookHandler implements WebhookHandlerInterface
     ) {
     }
 
-    abstract public function verify(array $payload,string $rawPayload, array $headers,string $secret): bool;
+    abstract public function verify(array $payload,string $rawPayload, array $headers,?string $secret): bool;
 
     abstract public function handle(array $payload, array $headers): void;
 

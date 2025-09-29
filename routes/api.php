@@ -9,6 +9,7 @@ use App\Http\Controllers\Services\Auth\SocialAuthController;
 use App\Http\Controllers\Services\Auth\SocialRedirectController;
 use App\Http\Controllers\Services\Service\IntegrationCallbackController;
 use App\Http\Controllers\Services\Service\IntegrationRedirectController;
+use App\Http\Controllers\Services\Service\SyncIntegrationController;
 use App\Http\Controllers\User\AttachPasswordController;
 use App\Http\Controllers\User\LoginController;
 use App\Http\Controllers\User\LogoutController;
@@ -53,4 +54,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/workspace/achievements/{id}',WorkspaceAchievementDeleteController::class)->name('achievement.delete');
 
     Route::get('/service/{service}/redirect', IntegrationRedirectController::class)->name('service.redirect');
+    Route::get('/service/sync', SyncIntegrationController::class)->middleware(['throttle:1,5'])->name('service.sync');
 });

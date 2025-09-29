@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Log;
 
 class JiraWebhookHandler extends AbstractWebhookHandler
 {
-    public function verify(array $payload, string $rawPayload, array $headers,string $secret): bool
+    public function verify(array $payload, string $rawPayload, array $headers,?string $secret): bool
     {
         if(!isset($payload['matchedWebhookIds'][0])){
             return false;

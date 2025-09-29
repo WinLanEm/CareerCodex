@@ -18,7 +18,6 @@ class ProcessJiraProjectJob implements ShouldQueue
     public function __construct(
         readonly private Integration $integration,
         readonly private array       $project,
-        readonly private bool        $isFirstRun,
         readonly private string      $cloudId,
         readonly private string      $siteUrl,
         readonly private bool        $hasWebhook,
@@ -40,7 +39,6 @@ class ProcessJiraProjectJob implements ShouldQueue
             SyncJiraInstanceJob::dispatch(
                 $instance->id,
                 $this->integration,
-                $this->isFirstRun,
                 $this->project,
                 $this->cloudId,
                 $this->siteUrl
