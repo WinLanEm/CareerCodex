@@ -3,6 +3,9 @@
 namespace App\Jobs\FetchInstances;
 
 use App\Contracts\Repositories\IntegrationInstance\UpdateOrCreateIntegrationInstanceRepositoryInterface;
+use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
+use App\Contracts\Services\HttpServices\Jira\JiraProjectServiceInterface;
+use App\Contracts\Services\HttpServices\Jira\JiraRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraWorkspaceServiceInterface;
 use App\Contracts\Services\HttpServices\JiraApiServiceInterface;
 use App\Jobs\ProcessProjectJobs\ProcessAsanaProjectJob;
@@ -14,6 +17,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FetchJiraData implements ShouldQueue
 {
@@ -27,21 +31,37 @@ class FetchJiraData implements ShouldQueue
     }
 
     public function handle(
-        JiraWorkspaceServiceInterface $apiService,
+        JiraWorkspaceServiceInterface $workspaceApiService,
+        JiraProjectServiceInterface $projectApiService,
+        JiraRegisterWebhookInterface $jiraRegisterWebhook,
+        UpdateOrCreateWebhookRepositoryInterface $webhookRepository,
     ): void {
-        $this->executeWithHandling(function () use ($apiService) {
-            $sites = $apiService->getWorkspaces($this->integration->access_token);
+        $this->executeWithHandling(function () use ($workspaceApiService, $projectApiService,$jiraRegisterWebhook,$webhookRepository) {
+            $sites = $workspaceApiService->getWorkspaces($this->integration);
 
             foreach ($sites as $site) {
                 $cloudId = $site['id'];
                 $siteUrl = $site['url'];
+                $webhookData = $jiraRegisterWebhook->registerWebhook($this->integration, $cloudId, $siteUrl);
 
-                SyncJiraInstanceJob::dispatch(
-                    $this->integration,
-                    $this->isFirstRun,
-                    $cloudId,
-                    $siteUrl
-                )->onQueue('jira');
+                $hasWebhook = !empty($webhookData);
+
+                if ($hasWebhook) {
+                    $webhookRepository->updateOrCreateWebhook($webhookData);
+                }
+
+                $projects = $projectApiService->getProjects($this->integration, $cloudId);
+
+                foreach ($projects as $project) {
+                    ProcessJiraProjectJob::dispatch(
+                        $this->integration,
+                        $project,
+                        $this->isFirstRun,
+                        $cloudId,
+                        $siteUrl,
+                        $hasWebhook
+                    )->onQueue('jira');
+                }
             }
         });
     }

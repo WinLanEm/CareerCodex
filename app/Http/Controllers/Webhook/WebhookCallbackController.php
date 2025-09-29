@@ -11,7 +11,7 @@ use App\Jobs\Webhook\ProcessWebhookJob;
 
 class WebhookCallbackController extends Controller
 {
-    public function __invoke(ValidateServiceIntegrationRequest $request,string $service, ?string $secret = null)
+    public function __invoke(ValidateServiceIntegrationRequest $request,string $service)
     {
         $serviceEnum = ServiceConnectionsEnum::tryFrom($service);
         if (!$serviceEnum) {
@@ -22,6 +22,7 @@ class WebhookCallbackController extends Controller
             return response(null, 200)->header('X-Hook-Secret', $secret);
         }
 
+        $secret = $request->query('secret');
         $rawPayload = $request->getContent();
         $payload = json_decode($rawPayload, true);
         $headers = $request->header();

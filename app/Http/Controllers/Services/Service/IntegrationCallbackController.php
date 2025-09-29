@@ -33,6 +33,7 @@ class IntegrationCallbackController extends Controller
                 return new MessageResource('Service not supported',false,404);
             }
             $providerUser = Socialite::driver($stringService . "_integration")->stateless()->user();
+
             $integration = $this->connectionRepository->updateOrCreate($serviceEnum,$providerUser);
             if(!$integration){
                 return new MessageResource("$stringService email not equal to your email",false,401);

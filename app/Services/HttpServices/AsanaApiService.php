@@ -4,6 +4,7 @@ namespace App\Services\HttpServices;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\IntegrationInstance\UpdateIntegrationInstanceRepositoryInterface;
+use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectRefreshTokenInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaRegisterWebhookInterface;
@@ -14,12 +15,14 @@ use App\Models\Integration;
 use App\Models\Webhook;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectServiceInterface, AsanaRegisterWebhookInterface, AsanaProjectRefreshTokenInterface
 {
     public function __construct(
         private ThrottleServiceInterface $throttleService,
         private UpdateIntegrationInstanceRepositoryInterface $integrationRepository,
+        private UpdateOrCreateWebhookRepositoryInterface $updateOrCreateWebhookRepository,
     )
     {}
 
@@ -120,19 +123,6 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
             $targetUrl = route('webhook', ['service' => 'asana']);
             $url = config('services.asana_integration.set_webhook_url');
 
-            $getWebhooksUrl = "https://app.asana.com/api/1.0/webhooks?workspace=$workspaceGid";
-            $client = Http::withToken($integration->access_token);
-
-            $getWebhooksResponse = $client->get($getWebhooksUrl);
-
-            foreach ($getWebhooksResponse->json('data') as $existingWebhook) {
-                $webhook = Webhook::where('webhook_id', $existingWebhook['gid'])->first();
-                //$client->delete("https://app.asana.com/api/1.0/webhooks/" . $existingWebhook['gid'])->throw();
-                if ($webhook) {
-                    $client->delete("https://app.asana.com/api/1.0/webhooks/" . $existingWebhook['gid'])->throw();
-                    $webhook->delete();
-                }
-            }
             $events = [
                 [
                     'resource_type' => 'task',
@@ -142,6 +132,21 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
                     ]
                 ],
             ];
+
+            $getWebhooksUrl = "https://app.asana.com/api/1.0/webhooks?workspace=$workspaceGid";
+            $client = Http::withToken($integration->access_token);
+
+            $getWebhooksResponse = $client->get($getWebhooksUrl);
+
+            foreach ($getWebhooksResponse->json('data') as $existingWebhook) {
+                $webhook = Webhook::where('webhook_id', $existingWebhook['gid'])->first();
+                if ($webhook) {
+//                    $client->delete("https://app.asana.com/api/1.0/webhooks/" . $existingWebhook['gid'])->throw();
+//                    $webhook->delete();
+                    return $webhook->toArray();
+                }
+            }
+
             $response = $client
                 ->asJson()
                 ->post($url, [

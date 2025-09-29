@@ -17,7 +17,7 @@ class ProcessWebhookJob implements ShouldQueue
         protected array $payload,
         protected string $rawPayload,
         protected array $headers,
-        protected string $secret
+        protected ?string $secret = null,
     ) {}
 
     public function handle(WebhookHandlerFactoryInterface $handlerFactory): void

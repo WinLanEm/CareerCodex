@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Log;
 
 class AsanaWebhookHandler extends AbstractWebhookHandler
 {
-    public function verify(array $payload, string $rawPayload, array $headers): bool
+    public function verify(array $payload, string $rawPayload, array $headers, ?string $secret): bool
     {
         $signature = $headers['x-hook-signature'][0] ?? null;
 

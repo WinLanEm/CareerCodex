@@ -24,10 +24,7 @@ class JiraWebhookHandler extends AbstractWebhookHandler
         if(!$webhook){
             return false;
         }
-        if(!hash_equals($webhook->secret,$secret)){
-            return false;
-        }
-        return true;
+        return hash_equals($webhook->secret,$secret);
     }
 
     public function handle(array $payload, array $headers): void
@@ -67,7 +64,9 @@ class JiraWebhookHandler extends AbstractWebhookHandler
             return;
         }
 
-        $siteUrl = $urlParts['scheme'] . '://' . $urlParts['host'];
+        $projectName = $fields['project']['key'] ?? null;
+
+        $siteUrl = $urlParts['scheme'] . '://' . $urlParts['host'] . '/browse/' . $projectName;
 
         $integrationInstance = IntegrationInstance::where('site_url', $siteUrl)
             ->where('integration_id', $integration->id)
@@ -79,7 +78,13 @@ class JiraWebhookHandler extends AbstractWebhookHandler
         $descriptionText = $descriptionAdf ? trim($this->extractTextFromAdf($descriptionAdf)) : '';
         $resolutionDateString = $fields['resolutiondate'];
         $carbonDate = Carbon::parse($resolutionDateString);
-        $link = $integrationInstance->site_url . '/browse/' . $issue['key'];
+
+        $urlParts = parse_url($issue['self']);
+        $baseUrl = $urlParts['scheme'] . '://' . $urlParts['host'];
+
+        $issueKey = $issue['key'];
+
+        $link = $baseUrl . '/browse/' . $issueKey;
 
         $this->achievementRepository->updateOrCreate([
             'title' => $fields['summary'],
