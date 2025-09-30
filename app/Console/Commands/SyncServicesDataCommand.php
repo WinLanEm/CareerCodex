@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Contracts\Services\ProviderInstanceStrategy\GetIntegrationInstanceStrategyInterface;
 use App\Models\Integration;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 
 class SyncServicesDataCommand extends Command
 {

@@ -20,7 +20,8 @@ class SyncJiraInstanceJob implements ShouldQueue
     public function __construct(
         readonly protected int         $instanceId,
         readonly protected Integration $integration,
-        readonly protected array       $project,
+        readonly protected string       $projectKey,
+        readonly protected string       $projectName,
         readonly protected string      $cloudId,
         readonly protected string      $siteUrl
     ) {}
@@ -34,7 +35,7 @@ class SyncJiraInstanceJob implements ShouldQueue
             $apiService->syncCompletedIssuesForProject(
                 $repository,
                 $this->integration,
-                $this->project['key'],
+                $this->projectKey,
                 $this->cloudId,
                 function ($issue) use ($repository) {
                     $descriptionAdf = $issue['fields']['description'] ?? null;
@@ -52,7 +53,7 @@ class SyncJiraInstanceJob implements ShouldQueue
                         'is_approved' => false,
                         'is_from_provider' => true,
                         'integration_instance_id' => $this->instanceId,
-                        'project_name' => $this->project['name'],
+                        'project_name' => $this->projectName,
                         'link' => $link,
                     ]);
                 }

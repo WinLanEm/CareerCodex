@@ -28,13 +28,13 @@ class ProcessJiraProjectJob implements ShouldQueue
     ): void {
         $this->executeWithHandling(function () use ($instanceRepository) {
             $projectKey = $this->project['key'];
-
+            $projectName = $this->project['name'];
             $instance = $instanceRepository->updateOrCreate(
                 $this->integration->id,
                 $projectKey,
                 $this->hasWebhook,
                 rtrim($this->siteUrl, '/') . '/browse/' . $projectKey,
-                $projectKey,
+                $projectName,
                 null,
                 ['cloudId' => $this->cloudId],
             );
@@ -42,7 +42,8 @@ class ProcessJiraProjectJob implements ShouldQueue
             SyncJiraInstanceJob::dispatch(
                 $instance->id,
                 $this->integration,
-                $this->project,
+                $this->project['key'],
+                $this->project['name'],
                 $this->cloudId,
                 $this->siteUrl
             )->onQueue('jira');
