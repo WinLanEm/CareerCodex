@@ -116,7 +116,6 @@ class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectService
                 $client = Http::withToken($integration->access_token);
                 $apiUrl = "https://api.atlassian.com/ex/jira/{$cloudId}/rest/api/3/webhook";
                 $response = $client->get($apiUrl);
-
                 $secret = bin2hex(random_bytes(32));
                 $webhookUrl = route('webhook', ['service' => 'jira']) . '?secret=' . $secret;
                 if ($response->successful()) {

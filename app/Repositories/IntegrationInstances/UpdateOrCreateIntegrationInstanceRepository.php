@@ -7,7 +7,7 @@ use App\Models\IntegrationInstance;
 
 class UpdateOrCreateIntegrationInstanceRepository implements UpdateOrCreateIntegrationInstanceRepositoryInterface
 {
-    public function updateOrCreate(string $serviceId, string $providerInstanceId, bool $hasWebsocket ,string $siteUrl = null): IntegrationInstance
+    public function updateOrCreate(string $serviceId, string $providerInstanceId, bool $hasWebsocket ,string $siteUrl,string $repoName,?string $defaultBranch = null,?array $meta = null): IntegrationInstance
     {
         return IntegrationInstance::updateOrCreate(
             [
@@ -15,8 +15,11 @@ class UpdateOrCreateIntegrationInstanceRepository implements UpdateOrCreateInteg
                 'external_id' => $providerInstanceId,
             ],
             [
+                'repository_name' => $repoName,
                 'has_websocket' => $hasWebsocket,
                 'site_url' => $siteUrl,
+                'default_branch' => $defaultBranch,
+                'meta' => $meta,
             ]
         );
     }

@@ -138,8 +138,8 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
             foreach ($getWebhooksResponse->json('data') as $existingWebhook) {
                 $webhook = Webhook::where('webhook_id', $existingWebhook['gid'])->first();
                 if ($webhook) {
-                    //$client->delete("https://app.asana.com/api/1.0/webhooks/" . $existingWebhook['gid'])->throw();
-                    //$webhook->delete();
+//                    $client->delete("https://app.asana.com/api/1.0/webhooks/" . $existingWebhook['gid'])->throw();
+//                    $webhook->delete();
                     return $webhook->toArray();
                 }
                 return [];

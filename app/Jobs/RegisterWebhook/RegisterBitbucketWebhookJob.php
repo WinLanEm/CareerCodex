@@ -20,6 +20,7 @@ class RegisterBitbucketWebhookJob implements ShouldQueue
         readonly private string $repoSlug,
         readonly private string $repositoryId,
         readonly private string $webUrl,
+        readonly private string $defaultBranch
     )
     {
     }
@@ -37,6 +38,8 @@ class RegisterBitbucketWebhookJob implements ShouldQueue
                     $this->repositoryId,
                     false,
                     $this->webUrl,
+                    "$this->workspaceSlug/$this->repoSlug",
+                    $this->defaultBranch
                 );
             }else{
                 $instanceRepository->updateOrCreate(
@@ -44,6 +47,8 @@ class RegisterBitbucketWebhookJob implements ShouldQueue
                     $this->repositoryId,
                     true,
                     $this->webUrl,
+                    "$this->workspaceSlug/$this->repoSlug",
+                    $this->defaultBranch
                 );
                 $repository->updateOrCreateWebhook(
                     [

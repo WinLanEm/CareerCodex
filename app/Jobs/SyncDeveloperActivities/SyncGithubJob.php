@@ -40,6 +40,7 @@ class SyncGithubJob implements ShouldQueue
                     $this->integration,
                     $repository['full_name'],
                     $repository['html_url'],
+                    $repository['default_branch'],
                 )->onQueue('github');
             });
         });

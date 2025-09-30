@@ -19,6 +19,7 @@ class RegisterGitlabWebhookJob implements ShouldQueue
         readonly private string $repoId,
         readonly private string $repoFullName,
         readonly private string $webUrl,
+        readonly private string $defaultBranch,
     )
     {
     }
@@ -37,6 +38,8 @@ class RegisterGitlabWebhookJob implements ShouldQueue
                     $this->repoId,
                     false,
                     $this->webUrl,
+                    $this->repoFullName,
+                    $this->defaultBranch,
                 );
             }else{
                 $integrationRepository->updateOrCreate(
@@ -44,6 +47,8 @@ class RegisterGitlabWebhookJob implements ShouldQueue
                     $this->repoId,
                     true,
                     $this->webUrl,
+                    $this->repoFullName,
+                    $this->defaultBranch,
                 );
                 $repository->updateOrCreateWebhook(
                     [

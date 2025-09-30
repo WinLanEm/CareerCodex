@@ -40,6 +40,7 @@ class SyncGitlabJob implements ShouldQueue
                     $repository['id'],
                     $repository['path_with_namespace'],
                     $repository['web_url'],
+                    $repository['default_branch'],
                 )->onQueue('gitlab');
             });
         });

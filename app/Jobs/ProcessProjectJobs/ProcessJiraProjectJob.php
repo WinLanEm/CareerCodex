@@ -33,7 +33,10 @@ class ProcessJiraProjectJob implements ShouldQueue
                 $this->integration->id,
                 $projectKey,
                 $this->hasWebhook,
-                rtrim($this->siteUrl, '/') . '/browse/' . $projectKey, // Прямая ссылка на проект
+                rtrim($this->siteUrl, '/') . '/browse/' . $projectKey,
+                $projectKey,
+                null,
+                ['cloudId' => $this->cloudId],
             );
 
             SyncJiraInstanceJob::dispatch(

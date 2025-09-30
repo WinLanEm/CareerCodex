@@ -56,13 +56,15 @@ class ProcessAsanaProjectJob implements ShouldQueue
                 $this->integration->id,
                 $projectGid,
                 $hasWebsocket,
-                $siteUrl
+                $siteUrl,
+                $this->project['name'],
             );
 
             SyncAsanaInstanceJob::dispatch(
                 $instance->id,
                 $this->integration,
-                $this->project,
+                $projectGid,
+                $this->project['name'],
             )->onQueue('asana');
         });
     }

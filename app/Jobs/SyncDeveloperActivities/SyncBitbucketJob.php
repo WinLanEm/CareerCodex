@@ -41,7 +41,8 @@ class SyncBitbucketJob implements ShouldQueue
                     $repository['workspace']['slug'],
                     $repository['slug'],
                     $repository['uuid'],
-                    $repository['links']['html']['href']
+                    $repository['links']['html']['href'],
+                    $repository['mainbranch']['name'] ?? 'main',
                 )->onQueue('bitbucket');
             });
         });

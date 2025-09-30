@@ -18,6 +18,7 @@ class RegisterGithubWebhookJob implements ShouldQueue
         readonly private Integration $integration,
         readonly private string $fullName,
         readonly private string $webUrl,
+        readonly private string $defaultBranch,
     )
     {
     }
@@ -34,6 +35,8 @@ class RegisterGithubWebhookJob implements ShouldQueue
                     $this->fullName,
                     false,
                     $this->webUrl,
+                    $this->fullName,
+                    $this->defaultBranch,
                 );
             }else{
                 $instanceRepository->updateOrCreate(
@@ -41,6 +44,8 @@ class RegisterGithubWebhookJob implements ShouldQueue
                     $this->fullName,
                     true,
                     $this->webUrl,
+                    $this->fullName,
+                    $this->defaultBranch,
                 );
                 $repository->updateOrCreateWebhook(
                     [

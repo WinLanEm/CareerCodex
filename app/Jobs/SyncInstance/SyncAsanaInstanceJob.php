@@ -18,7 +18,8 @@ class SyncAsanaInstanceJob implements ShouldQueue
     public function __construct(
         readonly protected int $instanceId,
         readonly protected Integration $integration,
-        readonly protected array $project,
+        readonly private string $projectGid,
+        readonly private string $projectName,
     ) {}
 
     public function handle(WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
@@ -28,9 +29,9 @@ class SyncAsanaInstanceJob implements ShouldQueue
     {
         $this->executeWithHandling(function () use ($repository, $apiService,$integrationRepository) {
             $apiService->syncCompletedIssuesForProject(
-                $this->project['gid'],
+                $this->projectGid,
                 $repository,
-                $this->project['name'],
+                $this->projectName,
                 $this->integration->access_token,
                 function ($task) use ($repository) {
                     if ($task['completed']) {
@@ -43,7 +44,7 @@ class SyncAsanaInstanceJob implements ShouldQueue
                             'is_approved' => false,
                             'is_from_provider' => true,
                             'integration_instance_id' => $this->instanceId,
-                            'project_name' => $this->project['name'],
+                            'project_name' => $this->projectName,
                         ]);
                     }
                 }
