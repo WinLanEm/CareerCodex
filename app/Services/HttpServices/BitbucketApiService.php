@@ -9,9 +9,11 @@ use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRepositorySyncInterfa
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
+use App\Models\Webhook;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class BitbucketApiService implements BitbucketRepositorySyncInterface, BitbucketRegisterWebhookInterface, BitbucketActivityFetchInterface
 {
@@ -95,52 +97,62 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
             },
         );
     }
-    public function registerWebhook(Integration $integration,string $workspaceSlug,string $repoSlug,UpdateOrCreateWebhookRepositoryInterface $repository):void
+    public function registerWebhook(Integration $integration,string $workspaceSlug,string $repoSlug,string $repositoryId):array
     {
-        $token = $integration->access_token;
-        $client = Http::withToken($token);
+        return $this->throttleService->for(ServiceConnectionsEnum::BITBUCKET,function () use($repositoryId,$integration,$workspaceSlug,$repoSlug){
+            $token = $integration->access_token;
+            $client = Http::withToken($token);
 
-        $url = config('services.bitbucket_integration.get_hooks_url');
-        $url = str_replace(['{workspaceSluh}','{repoSluh}'],[$workspaceSlug,$repoSlug],$url);
+            $url = config('services.bitbucket_integration.get_hooks_url');
+            $url = str_replace(['{workspaceSlug}','{repoSlug}'],[$workspaceSlug,$repoSlug],$url);
 
-        $webhookUrl = route('webhook', ['service' => 'bitbucket']);
+            $webhookUrl = route('webhook', ['service' => 'bitbucket']);
 
-        $existingHooksResponse = $client->get($url);
-        $existingHooksResponse->throw();
-        $existingHooks = $existingHooksResponse->json('values') ?? [];
+            $existingHooksResponse = $client->get($url);
+            $existingHooksResponse->throw();
+            $existingHooks = $existingHooksResponse->json('values') ?? [];
 
-        foreach ($existingHooks as $hook) {
-            if (isset($hook['url']) && $hook['url'] === $webhookUrl) {
-                return;
+            foreach ($existingHooks as $hook) {
+                if (isset($hook['url']) && $hook['url'] === $webhookUrl) {
+                    $webhook = Webhook::where('webhook_id',$hook['uuid'])->first();
+                    if ($webhook) {
+                        return $webhook->toArray();
+                    }
+                    return [];
+                }
             }
-        }
 
-        $webhookSecret = bin2hex(random_bytes(32));
+            $webhookSecret = bin2hex(random_bytes(32));
 
-        $payload = [
-            'description' => 'Webhook for app integration',
-            'url' => $webhookUrl,
-            'active' => true,
-            'events' => [
-                'repo:push',
-                'pullrequest:fulfilled'
-            ],
-            'secret' => $webhookSecret,
-        ];
+            $payload = [
+                'description' => 'Webhook for app integration',
+                'url' => $webhookUrl,
+                'active' => true,
+                'events' => [
+                    'repo:push',
+                    'pullrequest:fulfilled'
+                ],
+                'secret' => $webhookSecret,
+            ];
 
-        $response = $client->post($url, $payload);
-        $response->throw();
+            $response = $client->post($url, $payload);
+            $response->throw();
 
-        $hook = $response->json();
+            if(!$response->successful()) {
+                return [];
+            }
 
-        // Сохраняем webhook в базу
-        $repository->updateOrCreateWebhook([
-            'integration_id' => $integration->id,
-            'repository' => "$webhookSecret" . "_" ."$repoSlug",
-            'webhook_id' => $hook['uuid'],
-            'secret' => $webhookSecret,
-            'events' => json_encode($payload['events']),
-            'active' => $hook['active'] ?? true,
-        ]);
+            $hook = $response->json();
+
+            return [
+                'integration_id' => $integration->id,
+                'repository' => "$workspaceSlug" . "/" ."$repoSlug",
+                'repository_id' => $repositoryId,
+                'webhook_id' => $hook['uuid'],
+                'secret' => $webhookSecret,
+                'events' => json_encode($payload['events']),
+                'active' => $hook['active'] ?? true,
+            ];
+        });
     }
 }

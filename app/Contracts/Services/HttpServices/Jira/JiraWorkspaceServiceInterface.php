@@ -2,9 +2,10 @@
 
 namespace App\Contracts\Services\HttpServices\Jira;
 
-use Illuminate\Http\Client\PendingRequest;
+
+use App\Models\Integration;
 
 interface JiraWorkspaceServiceInterface
 {
-    public function getWorkspaces(string $token,PendingRequest $client): array;
+    public function getWorkspaces(Integration $integration): array;
 }

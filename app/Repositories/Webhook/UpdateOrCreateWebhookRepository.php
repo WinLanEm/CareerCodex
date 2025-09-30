@@ -17,6 +17,7 @@ class UpdateOrCreateWebhookRepository implements UpdateOrCreateWebhookRepository
             ],
             [
                 'secret' => $data['secret'],
+                'repository_id' => $data['repository_id'] ?? $data['repository'],
                 'events' => $data['events'],
                 'active' => $data['active'],
             ]

@@ -7,5 +7,5 @@ use App\Models\Integration;
 
 interface GitlabRegisterWebhookInterface
 {
-    public function registerWebhook(Integration $integration,string $projectId,UpdateOrCreateWebhookRepositoryInterface $repository): void;
+    public function registerWebhook(Integration $integration,string $projectId,string $fullName): array;
 }

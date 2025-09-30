@@ -3,19 +3,17 @@
 namespace App\Contracts\Services\HttpServices\Jira;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
+use App\Models\Integration;
 use Carbon\CarbonImmutable;
-use Illuminate\Http\Client\PendingRequest;
 
 interface JiraProjectServiceInterface
 {
-    public function getProjects(string $token,string $cloudId,PendingRequest $client): array;
+    public function getProjects(Integration $integration,string $cloudId): array;
     public function syncCompletedIssuesForProject(
         WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
-        CarbonImmutable $updatedSince,
-        string $token,
+        Integration $integration,
         string $projectKey,
         string $cloudId,
-        PendingRequest $client,
         \Closure $closure
     ):void;
 }

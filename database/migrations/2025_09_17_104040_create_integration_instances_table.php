@@ -15,7 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('integration_id')->constrained('integrations')->onDelete('cascade');
             $table->string('external_id');
+            $table->boolean('has_websocket')->default(false);
             $table->string('site_url');
+            $table->string('default_branch')->nullable();
+            $table->string('repository_name')->nullable();
+            $table->jsonb('meta')->nullable();
             $table->timestamps();
         });
     }

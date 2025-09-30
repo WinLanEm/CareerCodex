@@ -12,11 +12,12 @@ use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Http;
 
 class SyncGithubJob implements ShouldQueue
 {
-    use HandlesGitSyncErrors, Queueable, Dispatchable;
+    use HandlesGitSyncErrors, Queueable, Dispatchable, InteractsWithQueue;
     public function __construct(
         readonly protected Integration $integration,
     )
@@ -38,6 +39,8 @@ class SyncGithubJob implements ShouldQueue
                 RegisterGithubWebhookJob::dispatch(
                     $this->integration,
                     $repository['full_name'],
+                    $repository['html_url'],
+                    $repository['default_branch'],
                 )->onQueue('github');
             });
         });

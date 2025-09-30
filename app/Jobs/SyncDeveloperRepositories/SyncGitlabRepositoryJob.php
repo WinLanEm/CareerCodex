@@ -4,7 +4,6 @@ namespace App\Jobs\SyncDeveloperRepositories;
 
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
 use App\Contracts\Services\HttpServices\Gitlab\GitlabActivityFetchInterface;
-use App\Contracts\Services\HttpServices\GitlabApiServiceInterface;
 use App\Models\Integration;
 use App\Traits\HandlesGitSyncErrors;
 use Carbon\CarbonImmutable;

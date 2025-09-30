@@ -2,6 +2,7 @@
 
 namespace App\Jobs\RegisterWebhook;
 
+use App\Contracts\Repositories\IntegrationInstance\UpdateOrCreateIntegrationInstanceRepositoryInterface;
 use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Github\GithubRegisterWebhookInterface;
 use App\Models\Integration;
@@ -15,15 +16,48 @@ class RegisterGithubWebhookJob implements ShouldQueue
 
     public function __construct(
         readonly private Integration $integration,
-        readonly private string $repoFullName,
+        readonly private string $fullName,
+        readonly private string $webUrl,
+        readonly private string $defaultBranch,
     )
     {
     }
 
-    public function handle(GithubRegisterWebhookInterface $apiService,UpdateOrCreateWebhookRepositoryInterface $repository): void
+    public function handle(GithubRegisterWebhookInterface $apiService,
+                           UpdateOrCreateWebhookRepositoryInterface $repository,
+                            UpdateOrCreateIntegrationInstanceRepositoryInterface $instanceRepository): void
     {
-        $this->executeWithHandling(function () use ($apiService,$repository) {
-            $apiService->registerWebhook($this->integration, $this->repoFullName,$repository);
+        $this->executeWithHandling(function () use ($apiService,$repository,$instanceRepository) {
+            $webhookData = $apiService->registerWebhook($this->integration, $this->fullName);
+            if(empty($webhookData)){
+                $instanceRepository->updateOrCreate(
+                    $this->integration->id,
+                    $this->fullName,
+                    false,
+                    $this->webUrl,
+                    $this->fullName,
+                    $this->defaultBranch,
+                );
+            }else{
+                $instanceRepository->updateOrCreate(
+                    $this->integration->id,
+                    $this->fullName,
+                    true,
+                    $this->webUrl,
+                    $this->fullName,
+                    $this->defaultBranch,
+                );
+                $repository->updateOrCreateWebhook(
+                    [
+                        'integration_id' => $webhookData['integration_id'],
+                        'repository' => $webhookData['repository'],
+                        'webhook_id' => $webhookData['webhook_id'],
+                        'secret' => $webhookData['secret'],
+                        'events' => $webhookData['events'],
+                        'active' => $webhookData['active'],
+                    ]
+                );
+            }
         });
     }
 }

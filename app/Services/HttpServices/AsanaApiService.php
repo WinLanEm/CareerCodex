@@ -3,16 +3,24 @@
 namespace App\Services\HttpServices;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
+use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
+use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
+use App\Contracts\Services\HttpServices\Asana\AsanaProjectRefreshTokenInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
+use App\Contracts\Services\HttpServices\Asana\AsanaRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaWorkspaceServiceInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
+use App\Models\Integration;
+use App\Models\Webhook;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Facades\Http;
 
-class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectServiceInterface
+class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectServiceInterface, AsanaRegisterWebhookInterface, AsanaProjectRefreshTokenInterface
 {
     public function __construct(
-        private ThrottleServiceInterface $throttleService,
+        private ThrottleServiceInterface                 $throttleService,
+        private UpdateIntegrationRepositoryInterface     $integrationRepository,
     )
     {}
 
@@ -69,12 +77,12 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
         string $projectKey,
         WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
         string $projectName,
-        string $updatedSince,
         string $token,
-        PendingRequest $client,
         \Closure $closure
     )
     {
+        $updatedSince = now()->subDays(7)->toIso8601String();
+        $client = Http::withToken($token);
         $url = config('services.asana_integration.sync_issue');
         $params = [
             'project' => $projectKey,
@@ -104,5 +112,83 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
             $nextPageOffset = $responseJson['next_page']['offset'] ?? null;
 
         } while ($nextPageOffset);
+    }
+    public function registerWebhook(Integration $integration,array $project,string $workspaceGid):array
+    {
+        return $this->throttleService->for(ServiceConnectionsEnum::ASANA,function () use($integration,$project,$workspaceGid){
+            $projectGid = $project['gid'];
+            $projectName = $project['name'];
+            $targetUrl = route('webhook', ['service' => 'asana']);
+            $url = config('services.asana_integration.set_webhook_url');
+
+            $events = [
+                [
+                    'resource_type' => 'task',
+                    'action'        => 'changed',
+                    'fields'        => [
+                        'completed',
+                    ]
+                ],
+            ];
+
+            $getWebhooksUrl = "https://app.asana.com/api/1.0/webhooks?workspace=$workspaceGid";
+            $client = Http::withToken($integration->access_token);
+
+            $getWebhooksResponse = $client->get($getWebhooksUrl);
+            foreach ($getWebhooksResponse->json('data') as $existingWebhook) {
+                $webhook = Webhook::where('webhook_id', $existingWebhook['gid'])->first();
+                if ($webhook) {
+//                    $client->delete("https://app.asana.com/api/1.0/webhooks/" . $existingWebhook['gid'])->throw();
+//                    $webhook->delete();
+                    return $webhook->toArray();
+                }
+                return [];
+            }
+
+            $response = $client
+                ->asJson()
+                ->post($url, [
+                    'data' => [
+                        'resource' => $projectGid,
+                        'target'   => $targetUrl,
+                        'filters' => $events
+                    ],
+                ]);
+
+            $response->throw();
+            $newHook = $response->json('data');
+            return [
+                'integration_id' => $integration->id,
+                'repository' => $projectName,
+                'repository_id' => $projectGid,
+                'webhook_id' => $newHook['gid'],
+                'secret' => $response->json('X-Hook-Secret'),
+                'events' => $events,
+                'active' => $newHook['active'] ?? false,
+            ];
+        });
+    }
+    public function refreshAccessToken(Integration $integration):bool
+    {
+        return $this->throttleService->for(ServiceConnectionsEnum::ASANA,function () use($integration){
+            $response = Http::asForm()->post('https://app.asana.com/-/oauth_token', [
+                'grant_type'    => 'refresh_token',
+                'client_id'     => config('services.asana.client_id'),
+                'client_secret' => config('services.asana.client_secret'),
+                'refresh_token' => $integration->refresh_token,
+            ]);
+
+            $response->throw();
+
+            $data = $response->json();
+
+            $this->integrationRepository->update($integration,[
+                'access_token'  => $data['access_token'],
+                'refresh_token' => $data['refresh_token'],
+                'expires_at'    => now()->addSeconds($data['expires_in']),
+            ]);
+
+            return true;
+        });
     }
 }

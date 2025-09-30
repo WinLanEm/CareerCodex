@@ -38,6 +38,9 @@ class SyncGitlabJob implements ShouldQueue
                 RegisterGitlabWebhookJob::dispatch(
                     $this->integration,
                     $repository['id'],
+                    $repository['path_with_namespace'],
+                    $repository['web_url'],
+                    $repository['default_branch'],
                 )->onQueue('gitlab');
             });
         });

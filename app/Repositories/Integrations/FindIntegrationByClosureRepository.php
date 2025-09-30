@@ -13,6 +13,6 @@ class FindIntegrationByClosureRepository implements FindIntegrationByClosureRepo
 
         $integration = $closure($query);
 
-        return $integration->firsh();
+        return $integration->first();
     }
 }

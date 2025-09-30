@@ -11,8 +11,8 @@ use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateRepositoryI
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
 use App\Contracts\Repositories\Email\GenerateVerificationCodeRepositoryInterface;
 use App\Contracts\Repositories\IntegrationInstance\UpdateOrCreateIntegrationInstanceRepositoryInterface;
-use App\Contracts\Repositories\IntegrationInstance\UpdateIntegrationInstanceRepositoryInterface;
 use App\Contracts\Repositories\Integrations\FindIntegrationByClosureRepositoryInterface;
+use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Contracts\Repositories\Integrations\UpdateOrCreateIntegrationRepositoryInterface;
 use App\Contracts\Repositories\User\CreateUserRepositoryInterface;
 use App\Contracts\Repositories\User\FindUserRepositoryInterface;
@@ -26,17 +26,20 @@ use App\Contracts\Repositories\Workspace\FindWorkspaceRepositoryInterface;
 use App\Contracts\Repositories\Workspace\IndexWorkspaceRepositoryInterface;
 use App\Contracts\Repositories\Workspace\UpdateWorkspaceRepositoryInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
+use App\Contracts\Services\HttpServices\Asana\AsanaRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaWorkspaceServiceInterface;
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketActivityFetchInterface;
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\Github\GithubActivityFetchInterface;
+use App\Contracts\Services\HttpServices\Github\GithubCheckIfAppInstalledInterface;
 use App\Contracts\Services\HttpServices\Github\GithubRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Github\GithubRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\Gitlab\GitlabActivityFetchInterface;
 use App\Contracts\Services\HttpServices\Gitlab\GitlabRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Gitlab\GitlabRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraProjectServiceInterface;
+use App\Contracts\Services\HttpServices\Jira\JiraRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraWorkspaceServiceInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Contracts\Services\ProviderInstanceStrategy\GetIntegrationInstanceStrategyInterface;
@@ -51,8 +54,8 @@ use App\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivity;
 use App\Repositories\Email\GenerateVerificationCodeRepository;
 use App\Repositories\IntegrationInstances\UpdateOrCreateIntegrationInstanceRepository;
 use App\Repositories\Integrations\FindIntegrationByClosureRepository;
-use App\Repositories\Integrations\UpdateOrCreateIntegrationRepository;
 use App\Repositories\Integrations\UpdateIntegrationRepository;
+use App\Repositories\Integrations\UpdateOrCreateIntegrationRepository;
 use App\Repositories\User\CreateUserRepository;
 use App\Repositories\User\FindUserRepository;
 use App\Repositories\User\UpdateOrCreateUserRepository;
@@ -166,7 +169,7 @@ class AppServiceProvider extends ServiceProvider
             WorkspaceAchievementUpdateOrCreateRepository::class
         );
         $this->app->bind(
-            UpdateIntegrationInstanceRepositoryInterface::class,
+            UpdateIntegrationRepositoryInterface::class,
             UpdateIntegrationRepository::class
         );;
         $this->app->bind(
@@ -212,6 +215,10 @@ class AppServiceProvider extends ServiceProvider
             GithubApiService::class
         );
         $this->app->bind(
+            GithubCheckIfAppInstalledInterface::class,
+            GithubApiService::class
+        );
+        $this->app->bind(
             JiraWorkspaceServiceInterface::class,
             JiraApiService::class
         );
@@ -220,11 +227,19 @@ class AppServiceProvider extends ServiceProvider
             JiraApiService::class
         );
         $this->app->bind(
+            JiraRegisterWebhookInterface::class,
+            JiraApiService::class
+        );
+        $this->app->bind(
             AsanaWorkspaceServiceInterface::class,
             AsanaApiService::class
         );
         $this->app->bind(
             AsanaProjectServiceInterface::class,
+            AsanaApiService::class
+        );
+        $this->app->bind(
+            AsanaRegisterWebhookInterface::class,
             AsanaApiService::class
         );
         $this->app->bind(

@@ -2,11 +2,13 @@
 
 namespace App\Services\Webhook\Handlers;
 
+use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
+use App\Contracts\Repositories\Integrations\FindIntegrationByClosureRepositoryInterface;
 use App\Contracts\Repositories\Webhook\EloquentWebhookRepositoryInterface;
 use App\Contracts\Services\Webhook\WebhookHandlerInterface;
 use App\Enums\ServiceConnectionsEnum;
-use App\Repositories\Integrations\FindIntegrationByClosureRepository;
+use App\Models\Integration;
 use Illuminate\Database\Eloquent\Builder;
 
 abstract class AbstractWebhookHandler implements WebhookHandlerInterface
@@ -14,24 +16,23 @@ abstract class AbstractWebhookHandler implements WebhookHandlerInterface
     public function __construct(
         protected UpdateOrCreateDeveloperActivityInterface $activityRepository,
         protected EloquentWebhookRepositoryInterface $webhookRepository,
-        protected FindIntegrationByClosureRepository $integrationRepository
+        protected FindIntegrationByClosureRepositoryInterface $integrationRepository,
+        protected WorkspaceAchievementUpdateOrCreateRepositoryInterface $achievementRepository,
     ) {
     }
 
-    abstract public function verify(array $payload, array $headers): bool;
+    abstract public function verify(array $payload,string $rawPayload, array $headers,?string $secret): bool;
 
     abstract public function handle(array $payload, array $headers): void;
 
-    protected function findIntegrationId(string|int $externalUserId, ServiceConnectionsEnum $service): ?int
+    protected function findIntegrationById(string|int $externalUserId, ServiceConnectionsEnum $service): ?Integration
     {
-        $integration = $this->integrationRepository->findIntegrationByClosure(
+        return $this->integrationRepository->findIntegrationByClosure(
             function (Builder $query) use ($externalUserId, $service) {
-                return $query->where('external_user_id', $externalUserId)
+                return $query->where('service_user_id', $externalUserId)
                     ->where('service', $service->value);
             }
         );
-
-        return $integration?->id;
     }
 }
 

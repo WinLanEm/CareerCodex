@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('webhooks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('integration_id')->constrained('integrations')->onDelete('cascade');
-            $table->string('repository');
-            $table->string('webhook_id')->nullable();
-            $table->string('secret');
+            $table->text('repository');
+            $table->text('repository_id')->nullable();
+            $table->text('webhook_id')->nullable();
+            $table->text('secret');
             $table->jsonb('events');
             $table->boolean('active')->default(false);
             $table->timestamps();

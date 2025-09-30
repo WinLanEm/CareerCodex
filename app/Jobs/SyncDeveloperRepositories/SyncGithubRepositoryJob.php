@@ -11,6 +11,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SyncGithubRepositoryJob implements ShouldQueue
 {
@@ -25,23 +26,24 @@ class SyncGithubRepositoryJob implements ShouldQueue
 
     public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository, GithubActivityFetchInterface $apiService):void
     {
+        Log::info(json_encode($this->integration,JSON_PRETTY_PRINT));
+        Log::info(json_encode($this->updatedSince,JSON_PRETTY_PRINT));
+        Log::info($this->defaultBranch);
+        Log::info($this->repoName);
         $this->executeWithHandling(function () use ($developerActivityRepository, $apiService) {
             $client = Http::withToken($this->integration->access_token);
             $this->syncMergedPullRequests($developerActivityRepository, $client,$apiService);
-            if ($this->maxActivities <= 0) {
-                return;
-            }
             $this->syncCommits($developerActivityRepository, $client,$apiService);
         });
     }
 
     private function syncMergedPullRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client, GithubActivityFetchInterface $apiService): void
     {
-        if ($this->maxActivities <= 0) return;
+        $limit = 10;
 
         $searchQuery = "repo:{$this->repoName} is:pr is:merged updated:>" . $this->updatedSince->format('Y-m-d');
 
-        $pullRequests = $apiService->getMergedPullRequests($client, $searchQuery,$this->maxActivities);
+        $pullRequests = $apiService->getMergedPullRequests($client, $searchQuery,$limit);
 
         foreach ($pullRequests as $pr) {
             if (empty($pr)) continue;
@@ -64,11 +66,11 @@ class SyncGithubRepositoryJob implements ShouldQueue
 
     private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client, GithubActivityFetchInterface $apiService): void
     {
-        if ($this->maxActivities <= 0) return;
+        $limit = 10;
 
         [$owner, $repo] = explode('/', $this->repoName);
 
-        $commits = $apiService->getCommits($client, $owner, $repo,$this->defaultBranch,$this->updatedSince->toISOString(),$this->maxActivities);
+        $commits = $apiService->getCommits($client, $owner, $repo,$this->defaultBranch,$this->updatedSince->toISOString(),$limit);
 
         foreach ($commits as $commit) {
             $this->maxActivities--;

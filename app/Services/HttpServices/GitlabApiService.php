@@ -9,9 +9,11 @@ use App\Contracts\Services\HttpServices\Gitlab\GitlabRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
+use App\Models\Webhook;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class GitlabApiService implements GitlabActivityFetchInterface, GitlabRegisterWebhookInterface, GitlabRepositorySyncInterface
 {
@@ -88,51 +90,61 @@ class GitlabApiService implements GitlabActivityFetchInterface, GitlabRegisterWe
         );
     }
 
-    public function registerWebhook(Integration $integration, string $projectId,UpdateOrCreateWebhookRepositoryInterface $repository): void
+    public function registerWebhook(Integration $integration, string $projectId,string $fullName): array
     {
-        $token = $integration->access_token;
-        $client = Http::withToken($token);
+        return $this->throttleService->for(ServiceConnectionsEnum::GITLAB,function () use($integration,$projectId,$fullName) {
+            $token = $integration->access_token;
+            $client = Http::withToken($token);
 
-        $url = config('services.gitlab_integration.get_hooks_url');
-        $url = str_replace('{projectId}', $projectId, $url);
+            $url = config('services.gitlab_integration.get_hooks_url');
+            $url = str_replace('{projectId}', $projectId, $url);
 
-        $webhookUrl = route('webhook', ['service' => 'gitlab']);
+            $existingHooksResponse = $client->get($url);
+            $existingHooksResponse->throw();
+            $existingHooks = $existingHooksResponse->json();
 
-        $existingHooksResponse = $client->get($url);
-        $existingHooksResponse->throw();
-        $existingHooks = $existingHooksResponse->json();
+            $webhookUrl = route('webhook', ['service' => 'gitlab']);
 
-        foreach ($existingHooks as $hook) {
-            if (isset($hook['url']) && $hook['url'] === $webhookUrl) {
-                return;
+
+            foreach ($existingHooks as $hook) {
+                if (isset($hook['url']) && $hook['url'] === $webhookUrl) {
+                    $webhook = Webhook::where('webhook_id',$hook['id'])->first();
+                    if($webhook) {
+                        return $webhook->toArray();
+                    }
+                    return [];
+                }
             }
-        }
 
-        $webhookSecret = bin2hex(random_bytes(32));
+            $webhookSecret = bin2hex(random_bytes(32));
 
-        $payload = [
-            'url' => $webhookUrl,
-            'push_events' => true,
-            'merge_requests_events' => true,
-            'enable_ssl_verification' => false,
-            // в проде true
-            'token' => $webhookSecret,
-        ];
+            $payload = [
+                'url' => $webhookUrl,
+                'push_events' => true,
+                'merge_requests_events' => true,
+                'enable_ssl_verification' => config('app.env') !== 'production' ? true : false,
+                // в проде true
+                'token' => $webhookSecret,
+            ];
 
-        $response = $client->post($url, $payload);
-        $response->throw();
+            $response = $client->post($url, $payload);
+            $response->throw();
 
-        $hook = $response->json();
+            if(!$response->successful()) {
+                return [];
+            }
 
-        $repository->updateOrCreateWebhook(
-            [
+            $hook = $response->json();
+
+            return [
                 'integration_id' => $integration->id,
-                'repository' => $projectId,
+                'repository' => $fullName,
                 'webhook_id' => $hook['id'],
-                'secret' => $webhookSecret, // При необходимости
+                'repository_id' => $projectId,
+                'secret' => $webhookSecret,
                 'events' => json_encode(['push_events', 'merge_requests_events']),
                 'active' => true, // В GitLab нет поля active, берем true по умолчанию
-            ]
-        );
+            ];
+        });
     }
 }

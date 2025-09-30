@@ -54,16 +54,20 @@ return [
     ],
 
     'github_integration' => [
+        'app_slug' => 'careercodex',
+        'scopes' => 'repo',
         'client_id' => env('GITHUB_SERVICE_CLIENT_ID'),
         'client_secret' => env('GITHUB_SERVICE_CLIENT_SECRET'),
         'redirect' => env('GITHUB_SERVICE_REDIRECT_URI'),
         'graph_ql_url' => 'https://api.github.com/graphql',
         'sync_repositories_url' => 'https://api.github.com/user/repos',
         'get_hooks_url' => "https://api.github.com/repos/{fullRepoName}/hooks",
+        'webhook_secret' => env('GITHUB_SERVICE_WEBHOOK_SECRET'),
     ],
+    //https://github.com/settings/apps/careercodex/installations сначала надо установить приложение
 
     'gitlab_integration' => [
-        'scopes' => 'read_api read_user',
+        'scopes' => 'api read_user',
         'client_id' => env('GITLAB_SERVICE_CLIENT_ID'),
         'client_secret' => env('GITLAB_SERVICE_CLIENT_SECRET'),
         'redirect' => env('GITLAB_SERVICE_REDIRECT_URI'),
@@ -74,16 +78,18 @@ return [
     ],
 
     'bitbucket_integration' => [
+        'scopes' => 'webhook account repository pullrequest email',
         'client_id' => env('BITBUCKET_SERVICE_CLIENT_ID'),
         'client_secret' => env('BITBUCKET_SERVICE_CLIENT_SECRET'),
         'redirect' => env('BITBUCKET_SERVICE_REDIRECT_URI'),
         'sync_repositories_url' => 'https://api.bitbucket.org/2.0/repositories?role=member',
         'get_merged_pull_requests_url' => "https://api.bitbucket.org/2.0/repositories/{workspaceSlug}/{repoSlug}/pullrequests",
         'get_commits_url' => "https://api.bitbucket.org/2.0/repositories/{workspaceSlug}/{repoSlug}/commits",
-        'get_hooks_url' => "https://api.bitbucket.org/2.0/repositories/{workspace}/{repoSlug}/hooks",
+        'get_hooks_url' => "https://api.bitbucket.org/2.0/repositories/{workspaceSlug}/{repoSlug}/hooks",
     ],
     'jira_integration' => [
-        'scopes' => 'read:jira-user read:jira-work offline_access read:me manage:jira-webhook',
+        'scopes' => 'read:jira-user read:jira-work offline_access read:me manage:jira-webhook manage:jira-configuration',
+        //manage:jira-webhook
         'client_id' => env('JIRA_SERVICE_CLIENT_ID'),
         'client_secret' => env('JIRA_SERVICE_CLIENT_SECRET'),
         'redirect' => env('JIRA_SERVICE_REDIRECT_URI'),
@@ -93,13 +99,14 @@ return [
     ],
 
     'asana_integration' => [
-        'scopes' => 'tasks:read projects:read users:read stories:read workspaces:read',
+        'scopes' => 'tasks:read projects:read users:read stories:read workspaces:read webhooks:read webhooks:write webhooks:delete',
         'client_id' => env('ASANA_SERVICE_CLIENT_ID'),
         'client_secret' => env('ASANA_SERVICE_CLIENT_SECRET'),
         'redirect' => env('ASANA_SERVICE_REDIRECT_URI'),
         'provider_instance_url' => 'https://app.asana.com/api/1.0/workspaces',
         'projects_url' => "https://app.asana.com/api/1.0/projects",
         'sync_issue' => "https://app.asana.com/api/1.0/tasks",
+        'set_webhook_url' => 'https://app.asana.com/api/1.0/webhooks'
     ],
 
     'trello_integration' => [

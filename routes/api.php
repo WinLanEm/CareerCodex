@@ -9,6 +9,7 @@ use App\Http\Controllers\Services\Auth\SocialAuthController;
 use App\Http\Controllers\Services\Auth\SocialRedirectController;
 use App\Http\Controllers\Services\Service\IntegrationCallbackController;
 use App\Http\Controllers\Services\Service\IntegrationRedirectController;
+use App\Http\Controllers\Services\Service\SyncIntegrationController;
 use App\Http\Controllers\User\AttachPasswordController;
 use App\Http\Controllers\User\LoginController;
 use App\Http\Controllers\User\LogoutController;
@@ -29,7 +30,8 @@ Route::post('/login',LoginController::class)->name('login');
 Route::get('/auth/{provider}/redirect', SocialRedirectController::class)->name('auth.redirect');
 Route::get('/auth/{provider}/callback', SocialAuthController::class)->name('auth.callback');
 Route::get('/service/{service}/callback', IntegrationCallbackController::class)->name('service.callback');
-Route::get('/webhook/{service}', WebhookCallbackController::class)->name('webhook');
+Route::post('/webhook/{service}', WebhookCallbackController::class)->name('webhook');
+//https://github.com/apps/ВАШЕ-ПРИЛОЖЕНИЕ/installations/new для гитхаба перед переходом и service/redirect нужно сначала чтобы пользователь скачал приложение к своему гитхаб и дал разрешения на получение уведов с конкретных репозиториев
 Route::post('/email/verify', VerifyEmailController::class)->name('verify');
 Route::post('/email/verify/resend', ResendVerifyEmailController::class)->middleware(['throttle:1,2'])->name('resend');
 
@@ -52,4 +54,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/workspace/achievements/{id}',WorkspaceAchievementDeleteController::class)->name('achievement.delete');
 
     Route::get('/service/{service}/redirect', IntegrationRedirectController::class)->name('service.redirect');
+    Route::get('/service/sync', SyncIntegrationController::class)->middleware(['throttle:1,5'])->name('service.sync');
 });

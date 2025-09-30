@@ -4,8 +4,8 @@ namespace App\Services\IntegrationInstanceStrategy;
 
 use App\Contracts\Services\ProviderInstanceStrategy\GetIntegrationInstanceStrategyInterface;
 use App\Enums\ServiceConnectionsEnum;
-use App\Jobs\FetchInstances\FetchAsanaInstances;
-use App\Jobs\FetchInstances\FetchJiraInstances;
+use App\Jobs\FetchInstances\FetchAsanaData;
+use App\Jobs\FetchInstances\FetchJiraData;
 use App\Jobs\SyncDeveloperActivities\SyncBitbucketJob;
 use App\Jobs\SyncDeveloperActivities\SyncGithubJob;
 use App\Jobs\SyncDeveloperActivities\SyncGitlabJob;
@@ -14,14 +14,14 @@ use InvalidArgumentException;
 
 class GetIntegrationInstanceStrategy implements GetIntegrationInstanceStrategyInterface
 {
-    public function getInstance(Integration $integration, bool $isFirstRun = false):void
+    public function getInstance(Integration $integration):void
     {
         switch ($integration->service) {
             case ServiceConnectionsEnum::JIRA->value:
-                FetchJiraInstances::dispatch($integration,$isFirstRun)->onQueue('jira');
+                FetchJiraData::dispatch($integration)->onQueue('jira');
                 break;
             case ServiceConnectionsEnum::ASANA->value:
-                FetchAsanaInstances::dispatch($integration,$isFirstRun)->onQueue('asana');
+                FetchAsanaData::dispatch($integration)->onQueue('asana');
                 break;
             case ServiceConnectionsEnum::GITHUB->value:
                 SyncGithubJob::dispatch($integration)->onQueue('github');

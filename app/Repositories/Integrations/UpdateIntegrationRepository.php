@@ -2,10 +2,10 @@
 
 namespace App\Repositories\Integrations;
 
-use App\Contracts\Repositories\IntegrationInstance\UpdateIntegrationInstanceRepositoryInterface;
+use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Models\Integration;
 
-class UpdateIntegrationRepository implements UpdateIntegrationInstanceRepositoryInterface
+class UpdateIntegrationRepository implements UpdateIntegrationRepositoryInterface
 {
     public function update(Integration $serviceConnection, array $data): Integration
     {

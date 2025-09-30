@@ -12,7 +12,7 @@ trait HandlesSyncErrors
     {
         try {
             $callback();
-        } catch (ApiRateLimitExceededException $e) {
+        }catch (ApiRateLimitExceededException $e) {
             $this->release($e->retryAfter);
         } catch (Exception $e) {
             Log::error("Job failed", [

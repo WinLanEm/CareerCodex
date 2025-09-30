@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 
 class GitlabWebhookHandler extends AbstractWebhookHandler
 {
-    public function verify(array $payload, array $headers): bool
+    public function verify(array $payload, string $rawPayload,array $headers,?string $secret): bool
     {
         $token = $headers['x-gitlab-token'][0] ?? null;
         if (!$token) {
@@ -52,7 +52,7 @@ class GitlabWebhookHandler extends AbstractWebhookHandler
     private function handlePush(array $payload): void
     {
         $repoName = $payload['project']['path_with_namespace'];
-        $integrationId = $this->findIntegrationId($payload['user_id'],ServiceConnectionsEnum::GITLAB);
+        $integrationId = $this->findIntegrationById($payload['user_id'],ServiceConnectionsEnum::GITLAB);
 
         if (!$integrationId) return;
 
@@ -79,7 +79,7 @@ class GitlabWebhookHandler extends AbstractWebhookHandler
             return;
         }
 
-        $integrationId = $this->findIntegrationId($mr['author_id'],ServiceConnectionsEnum::GITLAB);
+        $integrationId = $this->findIntegrationById($mr['author_id'],ServiceConnectionsEnum::GITLAB);
         if (!$integrationId) return;
 
         $this->activityRepository->updateOrCreateDeveloperActivity([
