@@ -9,6 +9,7 @@ use App\Http\Controllers\DeveloperActivity\DeveloperActivityDeleteController;
 use App\Http\Controllers\DeveloperActivity\DeveloperActivityFindController;
 use App\Http\Controllers\DeveloperActivity\DeveloperActivityIndexController;
 use App\Http\Controllers\DeveloperActivity\DeveloperActivityUpdateController;
+use App\Http\Controllers\Report\DownloadReportController;
 use App\Http\Controllers\Services\Auth\SocialAuthController;
 use App\Http\Controllers\Services\Auth\SocialRedirectController;
 use App\Http\Controllers\Services\Service\IntegrationCallbackController;
@@ -65,5 +66,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::patch('/developer-activities/{id}',DeveloperActivityUpdateController::class)->name('developer.activity.update');
     Route::delete('/developer-activities/{id}',DeveloperActivityDeleteController::class)->name('developer.activity.delete');
 
-
+    Route::get('/reports/download',DownloadReportController::class)->name('report.download');
 });

@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Contracts\Repositories\Achievement\AchievementIndexRepositoryInterface;
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementCreateRepositoryInterface;
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementDeleteRepositoryInterface;
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementFindRepositoryInterface;
@@ -50,7 +51,9 @@ use App\Contracts\Services\HttpServices\Jira\JiraRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraWorkspaceServiceInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Contracts\Services\ProviderInstanceStrategy\GetIntegrationInstanceStrategyInterface;
+use App\Contracts\Services\Report\DownloadReportStrategyInterface;
 use App\Contracts\Services\Webhook\WebhookHandlerFactoryInterface;
+use App\Repositories\Achievement\AchievementIndexRepository;
 use App\Repositories\Achievement\WorkspaceAchievementCreateRepository;
 use App\Repositories\Achievement\WorkspaceAchievementDeleteRepository;
 use App\Repositories\Achievement\WorkspaceAchievementFindRepository;
@@ -88,6 +91,7 @@ use App\Services\HttpServices\GitlabApiService;
 use App\Services\HttpServices\JiraApiService;
 use App\Services\HttpServices\ThrottleService;
 use App\Services\IntegrationInstanceStrategy\GetIntegrationInstanceStrategy;
+use App\Services\Report\DownloadReportStrategy;
 use App\Services\Webhook\WebhookHandlerFactory;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\ServiceProvider;
@@ -299,6 +303,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             DeveloperActivityWithIntegrationDataRepositoryInterface::class,
             DeveloperActivityWithIntegrationDataRepository::class
+        );
+        $this->app->bind(
+            DownloadReportStrategyInterface::class,
+            DownloadReportStrategy::class
+        );
+        $this->app->bind(
+            AchievementIndexRepositoryInterface::class,
+            AchievementIndexRepository::class
         );
     }
 
