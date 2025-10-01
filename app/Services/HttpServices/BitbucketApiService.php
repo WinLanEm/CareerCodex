@@ -10,7 +10,9 @@ use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
 use App\Models\Webhook;
+use App\Repositories\Webhook\EloquentWebhookRepository;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -19,12 +21,13 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
 {
     public function __construct(
         private ThrottleServiceInterface $throttleService,
+        private EloquentWebhookRepository $webhookRepository,
     )
     {}
-    public function syncRepositories(PendingRequest $client,\Closure $closure):void
+    public function syncRepositories(string $token,\Closure $closure):void
     {
         $nextPageUrl = config('services.bitbucket_integration.sync_repositories_url');
-
+        $client = Http::withToken($token);
         do {
             $repositoriesOnPage = $this->throttleService->for(
                 ServiceConnectionsEnum::BITBUCKET,
@@ -45,8 +48,9 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
             }
         } while ($nextPageUrl);
     }
-    public function getMergedPullRequests(PendingRequest $client,string $workspaceSlug, string $repoSlug,int $limit,CarbonImmutable $updatedSince): array
+    public function getMergedPullRequests(string $token,string $workspaceSlug, string $repoSlug,int $limit,CarbonImmutable $updatedSince): array
     {
+        $client = Http::withToken($token);
         return $this->throttleService->for(
             ServiceConnectionsEnum::BITBUCKET,
             function () use($client, $workspaceSlug,$repoSlug, $limit,$updatedSince) {
@@ -63,10 +67,11 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
             },
         );
     }
-    public function getExtendedInfo(PendingRequest $client,string $url):array
+    public function getExtendedInfo(string $token,string $url):array
     {
         $additions = 0;
         $deletions = 0;
+        $client = Http::withToken($token);
         $this->throttleService->for(
             ServiceConnectionsEnum::BITBUCKET,
             function () use($client, $url,&$additions,&$deletions) {
@@ -81,8 +86,9 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
         );
         return ['additions' => $additions, 'deletions' => $deletions];
     }
-    public function getCommits(PendingRequest $client,string $workspaceSlug, string $repoSlug,int $limit,string $defaultBranch): array
+    public function getCommits(string $token,string $workspaceSlug, string $repoSlug,int $limit,string $defaultBranch): array
     {
+        $client = Http::withToken($token);
         return $this->throttleService->for(
             ServiceConnectionsEnum::BITBUCKET,
             function () use($client, $workspaceSlug,$repoSlug,$limit,$defaultBranch) {
@@ -114,7 +120,11 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
 
             foreach ($existingHooks as $hook) {
                 if (isset($hook['url']) && $hook['url'] === $webhookUrl) {
-                    $webhook = Webhook::where('webhook_id',$hook['uuid'])->first();
+                    $webhook = $this->webhookRepository->find(
+                        function (Builder $query) use($hook){
+                            return $query->where('webhook_id', $hook['uuid']);
+                        }
+                    );
                     if ($webhook) {
                         return $webhook->toArray();
                     }

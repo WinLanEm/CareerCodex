@@ -114,7 +114,8 @@ class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectService
         {
             return $this->throttleService->for(ServiceConnectionsEnum::JIRA,function () use($integration, $cloudId, $siteUrl) {
                 $client = Http::withToken($integration->access_token);
-                $apiUrl = "https://api.atlassian.com/ex/jira/{$cloudId}/rest/api/3/webhook";
+                $apiUrl = config('services.jira_integration.register_webhook_url');
+                $apiUrl = str_replace('{cloudId}', $cloudId, $apiUrl);
                 $response = $client->get($apiUrl);
                 $secret = bin2hex(random_bytes(32));
                 $webhookUrl = route('webhook', ['service' => 'jira']) . '?secret=' . $secret;

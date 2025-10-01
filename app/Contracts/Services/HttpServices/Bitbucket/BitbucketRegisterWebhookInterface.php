@@ -2,7 +2,6 @@
 
 namespace App\Contracts\Services\HttpServices\Bitbucket;
 
-use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Models\Integration;
 
 interface BitbucketRegisterWebhookInterface

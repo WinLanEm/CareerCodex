@@ -2,9 +2,8 @@
 
 namespace App\Contracts\Services\HttpServices\Gitlab;
 
-use Illuminate\Http\Client\PendingRequest;
 
 interface GitlabRepositorySyncInterface
 {
-    public function syncRepositories(PendingRequest $client, \Closure $closure): void;
+    public function syncRepositories(string $token, \Closure $closure): void;
 }

@@ -83,8 +83,10 @@ class AsanaWebhookHandler extends AbstractWebhookHandler
                     $projectGid = $data['projects'][0]['gid'] ?? null;
                     if (!$projectGid) continue;
 
-                    $integrationInstance = IntegrationInstance::where('external_id', $projectGid)
-                        ->first();
+                    $integrationInstance = $this->integrationInstanceByClosureRepository->findIntegrationInstanceByClosure(function (Builder $query) use ($projectGid) {
+                        return $query->where('external_id', $projectGid);
+                    });
+
                     if (!$integrationInstance) continue;
 
                     $this->achievementRepository->updateOrCreate([

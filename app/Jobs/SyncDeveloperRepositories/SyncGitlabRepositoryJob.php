@@ -9,8 +9,6 @@ use App\Traits\HandlesGitSyncErrors;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Facades\Http;
 
 class SyncGitlabRepositoryJob implements ShouldQueue
 {
@@ -28,20 +26,19 @@ class SyncGitlabRepositoryJob implements ShouldQueue
     public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository,GitlabActivityFetchInterface $apiService):void
     {
         $this->executeWithHandling(function () use ($developerActivityRepository, $apiService) {
-            $client = Http::withToken($this->integration->access_token);
-            $this->syncMergedMergeRequests($developerActivityRepository,$client,$apiService);
+            $this->syncMergedMergeRequests($developerActivityRepository,$apiService);
             if ($this->maxActivities <= 0) {
                 return;
             }
-            $this->syncCommits($developerActivityRepository,$client,$apiService);
+            $this->syncCommits($developerActivityRepository,$apiService);
         });
     }
 
-    private function syncMergedMergeRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository,PendingRequest $client,GitlabActivityFetchInterface $apiService): void
+    private function syncMergedMergeRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository,GitlabActivityFetchInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 
-        $mergeRequests = $apiService->getMergedPullRequests($client,$this->projectId,$this->maxActivities,$this->updatedSince);
+        $mergeRequests = $apiService->getMergedPullRequests($this->integration->access_token,$this->projectId,$this->maxActivities,$this->updatedSince);
 
         foreach ($mergeRequests as $mr) {
             if ($this->maxActivities <= 0) break;
@@ -62,11 +59,11 @@ class SyncGitlabRepositoryJob implements ShouldQueue
         }
     }
 
-    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository,PendingRequest $client,GitlabActivityFetchInterface $apiService): void
+    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository,GitlabActivityFetchInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 
-        $commits = $apiService->getCommits($client,$this->projectId,$this->maxActivities,$this->updatedSince,$this->defaultBranch);
+        $commits = $apiService->getCommits($this->integration->access_token,$this->projectId,$this->maxActivities,$this->updatedSince,$this->defaultBranch);
 
         foreach ($commits as $commit) {
             if ($this->maxActivities <= 0) break;

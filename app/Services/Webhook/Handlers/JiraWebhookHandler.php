@@ -3,10 +3,8 @@
 namespace App\Services\Webhook\Handlers;
 
 use App\Enums\ServiceConnectionsEnum;
-use App\Models\IntegrationInstance;
-use App\Models\Webhook;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Query\Builder;
 
 class JiraWebhookHandler extends AbstractWebhookHandler
 {
@@ -16,11 +14,16 @@ class JiraWebhookHandler extends AbstractWebhookHandler
             return false;
         }
         $webhookId = $payload['matchedWebhookIds'][0];
-        $webhook = Webhook::where('webhook_id',$webhookId)
-            ->whereHas('integration',function($query){
-                $query->where('service',ServiceConnectionsEnum::JIRA->value);
-            })
-            ->first();
+
+        $webhook = $this->webhookRepository->find(
+            function (Builder $query) use ($webhookId) {
+                return $query->where('webhook_id', $webhookId)
+                    ->whereHas('integration',function (Builder $query){
+                        $query->where('service', ServiceConnectionsEnum::JIRA->value);
+                    });
+            }
+        );
+
         if(!$webhook){
             return false;
         }
@@ -68,9 +71,13 @@ class JiraWebhookHandler extends AbstractWebhookHandler
 
         $siteUrl = $urlParts['scheme'] . '://' . $urlParts['host'] . '/browse/' . $projectName;
 
-        $integrationInstance = IntegrationInstance::where('site_url', $siteUrl)
-            ->where('integration_id', $integration->id)
-            ->first();
+        $integrationInstance = $this->integrationInstanceByClosureRepository->findIntegrationInstanceByClosure(
+            function (Builder $query) use ($siteUrl,$integration) {
+                return $query->where('site_url',$siteUrl)
+                    ->where('integration_id',$integration->id);
+            }
+        );
+
 
         if (!$integrationInstance) return;
 

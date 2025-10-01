@@ -8,8 +8,15 @@ use App\Contracts\Repositories\Achievement\WorkspaceAchievementFindRepositoryInt
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementIndexRepositoryInterface;
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityCreateRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityDeleteRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityFindRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityIndexRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityUpdateRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityWithIntegrationDataRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
 use App\Contracts\Repositories\Email\GenerateVerificationCodeRepositoryInterface;
+use App\Contracts\Repositories\IntegrationInstance\FindIntegrationInstanceByClosureRepositoryInterface;
 use App\Contracts\Repositories\IntegrationInstance\UpdateOrCreateIntegrationInstanceRepositoryInterface;
 use App\Contracts\Repositories\Integrations\FindIntegrationByClosureRepositoryInterface;
 use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
@@ -50,8 +57,15 @@ use App\Repositories\Achievement\WorkspaceAchievementFindRepository;
 use App\Repositories\Achievement\WorkspaceAchievementIndexRepository;
 use App\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepository;
 use App\Repositories\Achievement\WorkspaceAchievementUpdateRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityCreateRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityDeleteRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityFindRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityIndexRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityUpdateRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityWithIntegrationDataRepository;
 use App\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivity;
 use App\Repositories\Email\GenerateVerificationCodeRepository;
+use App\Repositories\IntegrationInstances\FindIntegrationInstanceByClosureRepository;
 use App\Repositories\IntegrationInstances\UpdateOrCreateIntegrationInstanceRepository;
 use App\Repositories\Integrations\FindIntegrationByClosureRepository;
 use App\Repositories\Integrations\UpdateIntegrationRepository;
@@ -261,6 +275,30 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             FindIntegrationByClosureRepositoryInterface::class,
             FindIntegrationByClosureRepository::class
+        );
+        $this->app->bind(
+            FindIntegrationInstanceByClosureRepositoryInterface::class,
+            FindIntegrationInstanceByClosureRepository::class
+        );
+        $this->app->bind(
+            DeveloperActivityUpdateRepositoryInterface::class,
+            DeveloperActivityUpdateRepository::class
+        );
+        $this->app->bind(
+            DeveloperActivityDeleteRepositoryInterface::class,
+            DeveloperActivityDeleteRepository::class
+        );
+        $this->app->bind(
+            DeveloperActivityIndexRepositoryInterface::class,
+            DeveloperActivityIndexRepository::class
+        );
+        $this->app->bind(
+            DeveloperActivityFindRepositoryInterface::class,
+            DeveloperActivityFindRepository::class
+        );
+        $this->app->bind(
+            DeveloperActivityWithIntegrationDataRepositoryInterface::class,
+            DeveloperActivityWithIntegrationDataRepository::class
         );
     }
 

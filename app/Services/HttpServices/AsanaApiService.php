@@ -4,6 +4,7 @@ namespace App\Services\HttpServices;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
+use App\Contracts\Repositories\Webhook\EloquentWebhookRepositoryInterface;
 use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectRefreshTokenInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
@@ -13,6 +14,7 @@ use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
 use App\Models\Webhook;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 
@@ -21,6 +23,7 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
     public function __construct(
         private ThrottleServiceInterface                 $throttleService,
         private UpdateIntegrationRepositoryInterface     $integrationRepository,
+        private EloquentWebhookRepositoryInterface $webhookRepository,
     )
     {}
 
@@ -131,12 +134,17 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
                 ],
             ];
 
-            $getWebhooksUrl = "https://app.asana.com/api/1.0/webhooks?workspace=$workspaceGid";
+            $getWebhooksUrl = config('services.asana_integration.get_webhooks_url');
+            $getWebhooksUrl = str_replace('{workspaceGid}', $workspaceGid, $getWebhooksUrl);
             $client = Http::withToken($integration->access_token);
 
             $getWebhooksResponse = $client->get($getWebhooksUrl);
             foreach ($getWebhooksResponse->json('data') as $existingWebhook) {
-                $webhook = Webhook::where('webhook_id', $existingWebhook['gid'])->first();
+                $webhook = $this->webhookRepository->find(
+                    function (Builder $query) use($existingWebhook){
+                        return $query->where('webhook_id', $existingWebhook['gid']);
+                    }
+                );
                 if ($webhook) {
 //                    $client->delete("https://app.asana.com/api/1.0/webhooks/" . $existingWebhook['gid'])->throw();
 //                    $webhook->delete();
@@ -171,7 +179,8 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
     public function refreshAccessToken(Integration $integration):bool
     {
         return $this->throttleService->for(ServiceConnectionsEnum::ASANA,function () use($integration){
-            $response = Http::asForm()->post('https://app.asana.com/-/oauth_token', [
+            $url = config('services.asana_integration.get_access_token_url');
+            $response = Http::asForm()->post($url, [
                 'grant_type'    => 'refresh_token',
                 'client_id'     => config('services.asana.client_id'),
                 'client_secret' => config('services.asana.client_secret'),

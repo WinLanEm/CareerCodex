@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Achievement\WorkspaceAchievementUpdateRequest;
 use App\Http\Resources\Achievement\AchievementWrapperResource;
 use App\Http\Resources\MessageResource;
-use App\Models\Achievement;
 
 class WorkspaceAchievementUpdateController extends Controller
 {

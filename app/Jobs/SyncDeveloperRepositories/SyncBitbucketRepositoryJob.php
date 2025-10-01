@@ -9,8 +9,6 @@ use App\Traits\HandlesGitSyncErrors;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
-use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Facades\Http;
 
 class SyncBitbucketRepositoryJob implements ShouldQueue
 {
@@ -29,20 +27,19 @@ class SyncBitbucketRepositoryJob implements ShouldQueue
     public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository,BitbucketActivityFetchInterface $apiService):void
     {
         $this->executeWithHandling(function () use ($developerActivityRepository, $apiService) {
-            $client = Http::withToken($this->integration->access_token);
-            $this->syncMergedPullRequests($developerActivityRepository, $client,$apiService);
+            $this->syncMergedPullRequests($developerActivityRepository,$apiService);
             if ($this->maxActivities <= 0) {
                 return;
             }
-            $this->syncCommits($developerActivityRepository, $client,$apiService);
+            $this->syncCommits($developerActivityRepository,$apiService);
         });
     }
 
-    private function syncMergedPullRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client,BitbucketActivityFetchInterface $apiService): void
+    private function syncMergedPullRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository,BitbucketActivityFetchInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 
-        $pullRequests = $apiService->getMergedPullRequests($client,$this->workspaceSlug,$this->repoSlug,$this->maxActivities,$this->updatedSince);
+        $pullRequests = $apiService->getMergedPullRequests($this->integration->access_token,$this->workspaceSlug,$this->repoSlug,$this->maxActivities,$this->updatedSince);
 
 
         foreach ($pullRequests as $pr) {
@@ -52,7 +49,7 @@ class SyncBitbucketRepositoryJob implements ShouldQueue
             $this->maxActivities--;
 
             if (isset($pr['links']['diffstat']['href'])) {
-                $additionsAndDeletions = $apiService->getExtendedInfo($client,$pr['links']['diffstat']['href']);
+                $additionsAndDeletions = $apiService->getExtendedInfo($this->integration->access_token,$pr['links']['diffstat']['href']);
             }
 
             $activityRepository->updateOrCreateDeveloperActivity([
@@ -69,11 +66,11 @@ class SyncBitbucketRepositoryJob implements ShouldQueue
         }
     }
 
-    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client,BitbucketActivityFetchInterface $apiService): void
+    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository,BitbucketActivityFetchInterface $apiService): void
     {
         if ($this->maxActivities <= 0) return;
 
-        $commits = $apiService->getCommits($client,$this->workspaceSlug,$this->repoSlug,$this->maxActivities,$this->defaultBranch);
+        $commits = $apiService->getCommits($this->integration->access_token,$this->workspaceSlug,$this->repoSlug,$this->maxActivities,$this->defaultBranch);
 
         foreach ($commits as $commit) {
             // Сначала фильтруем по дате, так как Bitbucket API не позволяет это в запросе
@@ -87,7 +84,7 @@ class SyncBitbucketRepositoryJob implements ShouldQueue
 
             $additionsAndDeletions = ['additions' => 0, 'deletions' => 0];
             if (isset($commit['links']['diffstat']['href'])) {
-                $additionsAndDeletions = $apiService->getExtendedInfo($client,$commit['links']['diffstat']['href']);
+                $additionsAndDeletions = $apiService->getExtendedInfo($this->integration->access_token,$commit['links']['diffstat']['href']);
             }
 
             $activityRepository->updateOrCreateDeveloperActivity([

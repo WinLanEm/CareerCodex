@@ -3,7 +3,6 @@
 namespace App\Jobs\SyncDeveloperActivities;
 
 use App\Contracts\Services\HttpServices\Gitlab\GitlabRepositorySyncInterface;
-use App\Contracts\Services\HttpServices\GitlabApiServiceInterface;
 use App\Jobs\RegisterWebhook\RegisterGitlabWebhookJob;
 use App\Jobs\SyncDeveloperRepositories\SyncGitlabRepositoryJob;
 use App\Models\Integration;
@@ -12,7 +11,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Support\Facades\Http;
 
 class SyncGitlabJob implements ShouldQueue
 {
@@ -25,9 +23,8 @@ class SyncGitlabJob implements ShouldQueue
     {
         $this->executeWithHandling(function () use ($apiService) {
             $updatedSince = CarbonImmutable::now()->subDays(7);
-            $client = Http::withToken($this->integration->access_token);
 
-            $apiService->syncRepositories($client, function ($repository) use ($updatedSince) {
+            $apiService->syncRepositories($this->integration->access_token, function ($repository) use ($updatedSince) {
                 SyncGitlabRepositoryJob::dispatch(
                     $this->integration,
                     $repository['default_branch'],

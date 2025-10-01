@@ -4,6 +4,7 @@ namespace App\Services\Webhook\Handlers;
 
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
+use App\Contracts\Repositories\IntegrationInstance\FindIntegrationInstanceByClosureRepositoryInterface;
 use App\Contracts\Repositories\Integrations\FindIntegrationByClosureRepositoryInterface;
 use App\Contracts\Repositories\Webhook\EloquentWebhookRepositoryInterface;
 use App\Contracts\Services\Webhook\WebhookHandlerInterface;
@@ -18,6 +19,7 @@ abstract class AbstractWebhookHandler implements WebhookHandlerInterface
         protected EloquentWebhookRepositoryInterface $webhookRepository,
         protected FindIntegrationByClosureRepositoryInterface $integrationRepository,
         protected WorkspaceAchievementUpdateOrCreateRepositoryInterface $achievementRepository,
+        protected FindIntegrationInstanceByClosureRepositoryInterface $integrationInstanceByClosureRepository
     ) {
     }
 

@@ -3,7 +3,7 @@
 namespace App\Services\HttpServices;
 
 
-use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
+use App\Contracts\Repositories\Webhook\EloquentWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Github\GithubActivityFetchInterface;
 use App\Contracts\Services\HttpServices\Github\GithubCheckIfAppInstalledInterface;
 use App\Contracts\Services\HttpServices\Github\GithubRegisterWebhookInterface;
@@ -11,23 +11,22 @@ use App\Contracts\Services\HttpServices\Github\GithubRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
-use App\Models\Webhook;
-use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Http;
 use Laravel\Socialite\Contracts\User;
 
 class GithubApiService implements GithubRepositorySyncInterface, GithubActivityFetchInterface, GithubRegisterWebhookInterface,GithubCheckIfAppInstalledInterface
 {
-    private const GRAPHQL_URL = 'https://api.github.com/graphql';
-
     public function __construct(
         private ThrottleServiceInterface $throttleService,
+        private EloquentWebhookRepositoryInterface $webhookRepository,
     )
     {}
 
-    public function syncRepositories(PendingRequest $client, \Closure $closure): void
+    public function syncRepositories(string $token, \Closure $closure): void
     {
         $page = 1;
+        $client = Http::withToken($token);
         do {
             $repositoriesOnPage = $this->throttleService->for(
                 ServiceConnectionsEnum::GITHUB,
@@ -49,8 +48,9 @@ class GithubApiService implements GithubRepositorySyncInterface, GithubActivityF
 
         } while (!empty($repositoriesOnPage));
     }
-    public function getMergedPullRequests(PendingRequest $client,string $searchQuery, int $limit): array
+    public function getMergedPullRequests(string $token,string $searchQuery, int $limit): array
     {
+        $client = Http::withToken($token);
         return $this->throttleService->for(
             ServiceConnectionsEnum::GITHUB,
             function () use ($searchQuery, $limit,$client) {
@@ -86,8 +86,9 @@ class GithubApiService implements GithubRepositorySyncInterface, GithubActivityF
             },
         );
     }
-    public function getCommits(PendingRequest $client,string $owner, string $repo, string $branch, string $since, int $limit): array
+    public function getCommits(string $token,string $owner, string $repo, string $branch, string $since, int $limit): array
     {
+        $client = Http::withToken($token);
         return $this->throttleService->for(
             ServiceConnectionsEnum::GITHUB,
             function () use ($owner, $repo, $branch, $since, $limit,$client) {
@@ -149,7 +150,11 @@ class GithubApiService implements GithubRepositorySyncInterface, GithubActivityF
                     if (!$hook['active']) {
                         $client->patch("{$url}/{$hook['id']}", ['active' => true])->throw();
                     }
-                    $webhook = Webhook::where('webhook_id',$hook['id'])->first();
+                    $webhook = $this->webhookRepository->find(
+                        function (Builder $query) use($hook){
+                            return $query->where('webhook_id', $hook['id']);
+                        }
+                    );
                     if ($webhook) {
                         return $webhook->toArray();
                     }
@@ -197,7 +202,8 @@ class GithubApiService implements GithubRepositorySyncInterface, GithubActivityF
             $client = Http::withToken($user->token)
                 ->withHeaders(['Accept' => 'application/vnd.github.v3+json']);
 
-            $response = $client->get('https://api.github.com/user/installations');
+            $url = config('services.github_integration.check_app_installation_url');
+            $response = $client->get($url);
 
             $response->throw();
 
