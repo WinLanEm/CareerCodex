@@ -30,6 +30,7 @@ class RegisterController extends Controller
         }else if(isset($user->provider) && !$user->password){
             return new MessageResource("Registration failed. This email is already registered with $user->provider. Try login with $user->provider and attach password",false,401);
         }
+
         if($user){
             return new MessageResource("Email already exists.",false,401);
         }
