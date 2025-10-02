@@ -7,12 +7,14 @@ use App\Contracts\Repositories\Achievement\WorkspaceAchievementCreateRepositoryI
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementDeleteRepositoryInterface;
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementFindRepositoryInterface;
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementIndexRepositoryInterface;
+use App\Contracts\Repositories\Achievement\WorkspaceAchievementIsApprovedUpdateRepositoryInterface;
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityCreateRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityDeleteRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityFindRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityIndexRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityIsApprovedUpdateRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityUpdateRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityWithIntegrationDataRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
@@ -58,12 +60,14 @@ use App\Repositories\Achievement\WorkspaceAchievementCreateRepository;
 use App\Repositories\Achievement\WorkspaceAchievementDeleteRepository;
 use App\Repositories\Achievement\WorkspaceAchievementFindRepository;
 use App\Repositories\Achievement\WorkspaceAchievementIndexRepository;
+use App\Repositories\Achievement\WorkspaceAchievementIsApprovedUpdateRepository;
 use App\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepository;
 use App\Repositories\Achievement\WorkspaceAchievementUpdateRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityCreateRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityDeleteRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityFindRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityIndexRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityIsApprovedUpdateRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityUpdateRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityWithIntegrationDataRepository;
 use App\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivity;
@@ -311,6 +315,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             AchievementIndexRepositoryInterface::class,
             AchievementIndexRepository::class
+        );
+        $this->app->bind(
+            DeveloperActivityIsApprovedUpdateRepositoryInterface::class,
+            DeveloperActivityIsApprovedUpdateRepository::class
+        );
+        $this->app->bind(
+            WorkspaceAchievementIsApprovedUpdateRepositoryInterface::class,
+            WorkspaceAchievementIsApprovedUpdateRepository::class
         );
     }
 
