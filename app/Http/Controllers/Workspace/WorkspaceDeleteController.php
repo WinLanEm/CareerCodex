@@ -10,15 +10,16 @@ use App\Http\Resources\MessageResource;
 class WorkspaceDeleteController extends Controller
 {
     public function __construct(
-        private FindWorkspaceRepositoryInterface $findWorkspaceRepository,
-        private DeleteWorkspaceRepositoryInterface $deleteWorkspaceRepository,
+        readonly private FindWorkspaceRepositoryInterface $findWorkspaceRepository,
+        readonly private DeleteWorkspaceRepositoryInterface $deleteWorkspaceRepository,
     )
     {
     }
 
     public function __invoke(int $id)
     {
-        $workspace = $this->findWorkspaceRepository->find($id);
+        $userId = auth()->id();
+        $workspace = $this->findWorkspaceRepository->find($id,$userId);
         if(!$workspace){
             return new MessageResource('workspace not found',false,404);
         }

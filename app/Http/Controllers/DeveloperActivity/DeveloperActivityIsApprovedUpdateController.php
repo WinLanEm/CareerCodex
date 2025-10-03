@@ -17,8 +17,9 @@ class DeveloperActivityIsApprovedUpdateController extends Controller
 
     public function __invoke(DeveloperActivityIsApprovedUpdateRequest $request)
     {
+        $userId = auth()->id();
         $developerActivityIds = $request->get('developer_activity_ids');
-        $res = $this->developerActivityIsApprovedUpdateRepository->update($developerActivityIds);
+        $res = $this->developerActivityIsApprovedUpdateRepository->update($developerActivityIds,$userId);
         if(!$res) {
             return new MessageResource('ids not found',false,404);
         }

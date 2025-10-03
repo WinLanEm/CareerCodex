@@ -22,7 +22,9 @@ class AchievementIndexController extends Controller
         $page = $request->get('page', 1);
         $isApproved = $request->get('is_approved');
         $workspaceId = $request->get('workspace_id');
-        $achievements = $this->repository->index($page,$this->perPage,$userId,$isApproved,$workspaceId,null,null);
+        $startDate = $request->get('start_date');
+        $endDate = $request->get('end_date');
+        $achievements = $this->repository->index($page,$this->perPage,$userId,$isApproved,$workspaceId,$startDate,$endDate);
         return new IndexAchievementResource($achievements);
     }
 }

@@ -25,6 +25,8 @@ class AchievementIndexRequest extends FormRequest
             'page' => 'int|nullable',
             'is_approved' => 'boolean|required',
             'workspace_id' => 'int|nullable|exists:workspaces,id',
+            'start_date' => 'date|nullable',
+            'end_date' => 'date|nullable|after:start_date',
         ];
     }
 
@@ -36,6 +38,9 @@ class AchievementIndexRequest extends FormRequest
             'is_approved.required' => 'is_approved is required.',
             'workspace_id.int' => 'workspace_id must be an integer.',
             'workspace_id.exists' => 'not found workspace.',
+            'start_date.date' => 'start_date must be a date.',
+            'end_date.date' => 'end_date must be a date.',
+            'end_date.after' => 'end_date must be a date after end_date.',
         ];
     }
 }

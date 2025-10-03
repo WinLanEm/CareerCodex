@@ -10,14 +10,15 @@ use App\Http\Resources\MessageResource;
 class AchievementFindController extends Controller
 {
     public function __construct(
-        private AchievementFindRepositoryInterface $achievementFindRepository
+        readonly private AchievementFindRepositoryInterface $achievementFindRepository
     )
     {
     }
 
     public function __invoke(int $achievementId)
     {
-        $achievement = $this->achievementFindRepository->find($achievementId);
+        $userId = auth()->id();
+        $achievement = $this->achievementFindRepository->find($achievementId,$userId);
         if(!$achievement) {
             return new MessageResource('achievement not found',false,404);
         }

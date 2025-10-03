@@ -10,7 +10,7 @@ class IndexWorkspaceResource extends BaseJsonResource
     public function toArray(Request $request): array
     {
         return [
-            'workspace' => WorkspaceResource::collection($this->resource->items()),
+            'workspaces' => WorkspaceResource::collection($this->resource->items()),
             'paginator' => [
                 'total' => $this->resource->total(),
                 'current_page' => $this->resource->currentPage(),

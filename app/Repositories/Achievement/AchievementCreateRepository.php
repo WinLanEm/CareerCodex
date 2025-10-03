@@ -3,12 +3,23 @@
 namespace App\Repositories\Achievement;
 
 use App\Contracts\Repositories\Achievement\AchievementCreateRepositoryInterface;
+use App\Contracts\Repositories\Workspace\FindWorkspaceRepositoryInterface;
 use App\Models\Achievement;
 
 class AchievementCreateRepository implements AchievementCreateRepositoryInterface
 {
-    public function create(array $data): Achievement
+    public function __construct(
+        readonly private FindWorkspaceRepositoryInterface $findWorkspaceRepository,
+    )
     {
+    }
+
+    public function create(array $data,int $userId): ?Achievement
+    {
+        $workspace = $this->findWorkspaceRepository->find($data['workspace_id'],$userId);
+        if(!$workspace){
+            return null;
+        }
         return Achievement::create([
             'workspace_id' => $data['workspace_id'],
             'title' => $data['title'],

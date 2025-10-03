@@ -10,15 +10,16 @@ use App\Http\Resources\MessageResource;
 class AchievementDeleteController extends Controller
 {
     public function __construct(
-        private AchievementDeleteRepositoryInterface $workspaceAchievementDeleteRepository,
-        private AchievementFindRepositoryInterface   $workspaceAchievementFindRepository
+        readonly private AchievementDeleteRepositoryInterface $workspaceAchievementDeleteRepository,
+        readonly private AchievementFindRepositoryInterface   $workspaceAchievementFindRepository
     )
     {
     }
 
     public function __invoke(int $achievementId)
     {
-        $achievement = $this->workspaceAchievementFindRepository->find($achievementId);
+        $userId = auth()->id();
+        $achievement = $this->workspaceAchievementFindRepository->find($achievementId,$userId);
         if(!$achievement){
             return new MessageResource('achievement not found',false,404);
         }

@@ -8,8 +8,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class IndexWorkspaceRepository implements IndexWorkspaceRepositoryInterface
 {
-    public function index(int $page, int $perPage): LengthAwarePaginator
+    public function index(int $page, int $perPage,int $userId): LengthAwarePaginator
     {
-        return Workspace::paginate($perPage, ['name','type','id'], 'page', $page);
+        return Workspace::where('user_id',$userId)->paginate($perPage, ['name','type','id','description','start_date','end_date'], 'page', $page);
     }
 }

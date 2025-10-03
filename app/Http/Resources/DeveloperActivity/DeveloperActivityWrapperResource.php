@@ -9,7 +9,7 @@ class DeveloperActivityWrapperResource extends BaseJsonResource
     public function toArray($request): array
     {
         return [
-            'achievement' => new DeveloperActivityResource($this->resource)
+            'developer_activity' => new DeveloperActivityResource($this->resource)
         ];
     }
 }

@@ -21,9 +21,10 @@ class DeveloperActivityUpdateController extends Controller
 
     public function __invoke(DeveloperActivityUpdateRequest $request,int $id)
     {
+        $userId = auth()->id();
         $title = $request->get('title');
         $isApproved = $request->get('is_approved');
-        $developerActivity = $this->findRepository->find($id);
+        $developerActivity = $this->findRepository->find($id,$userId);
         if(!$developerActivity){
             return new MessageResource('DeveloperActivity not found',false,404);
         }

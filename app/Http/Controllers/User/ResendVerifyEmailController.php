@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\Mail;
 class ResendVerifyEmailController extends Controller
 {
     public function __construct(
-        private FindUserRepositoryInterface                 $findUserRepository,
-        private GenerateVerificationCodeRepositoryInterface $generateVerificationCode,
+        readonly private FindUserRepositoryInterface                 $findUserRepository,
+        readonly private GenerateVerificationCodeRepositoryInterface $generateVerificationCode,
     )
     {
     }
