@@ -2,10 +2,10 @@
 
 namespace App\Repositories\Achievement;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementDeleteRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementDeleteRepositoryInterface;
 use App\Models\Achievement;
 
-class WorkspaceAchievementDeleteRepository implements WorkspaceAchievementDeleteRepositoryInterface
+class AchievementDeleteRepository implements AchievementDeleteRepositoryInterface
 {
     public function delete(int $achievementId): int
     {

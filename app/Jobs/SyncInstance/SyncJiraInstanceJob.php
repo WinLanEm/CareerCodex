@@ -2,7 +2,7 @@
 
 namespace App\Jobs\SyncInstance;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraProjectServiceInterface;
 use App\Models\Integration;
@@ -27,9 +27,9 @@ class SyncJiraInstanceJob implements ShouldQueue
     ) {}
 
     public function handle(
-        WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
-        JiraProjectServiceInterface $apiService,
-        UpdateIntegrationRepositoryInterface $integrationRepository
+        AchievementUpdateOrCreateRepositoryInterface $repository,
+        JiraProjectServiceInterface                  $apiService,
+        UpdateIntegrationRepositoryInterface         $integrationRepository
     ) {
         $this->executeWithHandling(function () use ($repository, $apiService, $integrationRepository) {
             $apiService->syncCompletedIssuesForProject(

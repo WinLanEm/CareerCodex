@@ -1,11 +1,12 @@
 <?php
 
-use App\Http\Controllers\Achievement\WorkspaceAchievementCreateController;
-use App\Http\Controllers\Achievement\WorkspaceAchievementDeleteController;
-use App\Http\Controllers\Achievement\WorkspaceAchievementFindController;
+use App\Http\Controllers\Achievement\AchievementIndexController;
+use App\Http\Controllers\Achievement\AchievementCreateController;
+use App\Http\Controllers\Achievement\AchievementDeleteController;
+use App\Http\Controllers\Achievement\AchievementFindController;
 use App\Http\Controllers\Achievement\WorkspaceAchievementIndexController;
-use App\Http\Controllers\Achievement\WorkspaceAchievementIsApprovedUpdateController;
-use App\Http\Controllers\Achievement\WorkspaceAchievementUpdateController;
+use App\Http\Controllers\Achievement\AchievementIsApprovedUpdateController;
+use App\Http\Controllers\Achievement\AchievementUpdateController;
 use App\Http\Controllers\DeveloperActivity\DeveloperActivityDeleteController;
 use App\Http\Controllers\DeveloperActivity\DeveloperActivityFindController;
 use App\Http\Controllers\DeveloperActivity\DeveloperActivityIndexController;
@@ -54,13 +55,12 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::patch('/workspace/{id}',WorkspaceUpdateController::class)->name('workspace.update');
     Route::delete('/workspace/{id}',WorkspaceDeleteController::class)->name('workspace.delete');
 
-    Route::patch('/achievements/approved',WorkspaceAchievementIsApprovedUpdateController::class)->name('achievements.approved');
-
-    Route::get('/workspace/{id}/achievements',WorkspaceAchievementIndexController::class)->name('achievement.index');
-    Route::get('/workspace/achievements/{id}',WorkspaceAchievementFindController::class)->name('achievement.find');
-    Route::post('/workspace/{id}/achievements',WorkspaceAchievementCreateController::class)->name('achievement.create');
-    Route::patch('/workspace/achievements/{id}',WorkspaceAchievementUpdateController::class)->name('achievement.update');
-    Route::delete('/workspace/achievements/{id}',WorkspaceAchievementDeleteController::class)->name('achievement.delete');
+    Route::get('/achievements',AchievementIndexController::class)->name('achievements.index');
+    Route::get('/achievements/{id}',AchievementFindController::class)->name('achievement.find');
+    Route::post('/achievements',AchievementCreateController::class)->name('achievement.create');
+    Route::patch('/achievements/{id}',AchievementUpdateController::class)->name('achievement.update');
+    Route::delete('/achievements/{id}',AchievementDeleteController::class)->name('achievement.delete');
+    Route::patch('/achievements/approved',AchievementIsApprovedUpdateController::class)->name('achievements.approved');
 
     Route::get('/service/{service}/redirect', IntegrationRedirectController::class)->name('service.redirect');
     Route::get('/service/sync', SyncIntegrationController::class)->middleware(['throttle:1,5'])->name('service.sync');

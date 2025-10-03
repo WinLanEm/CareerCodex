@@ -2,10 +2,10 @@
 
 namespace App\Repositories\Achievement;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
 use App\Models\Achievement;
 
-class WorkspaceAchievementUpdateOrCreateRepository implements WorkspaceAchievementUpdateOrCreateRepositoryInterface
+class AchievementUpdateOrCreateRepository implements AchievementUpdateOrCreateRepositoryInterface
 {
     public function updateOrCreate(array $data, $workspaceId = null): Achievement
     {

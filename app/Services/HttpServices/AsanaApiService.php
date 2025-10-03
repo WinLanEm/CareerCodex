@@ -2,7 +2,7 @@
 
 namespace App\Services\HttpServices;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Contracts\Repositories\Webhook\EloquentWebhookRepositoryInterface;
 use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
@@ -77,11 +77,11 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
     }
 
     public function syncCompletedIssuesForProject(
-        string $projectKey,
-        WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
-        string $projectName,
-        string $token,
-        \Closure $closure
+        string                                       $projectKey,
+        AchievementUpdateOrCreateRepositoryInterface $repository,
+        string                                       $projectName,
+        string                                       $token,
+        \Closure                                     $closure
     )
     {
         $updatedSince = now()->subDays(7)->toIso8601String();

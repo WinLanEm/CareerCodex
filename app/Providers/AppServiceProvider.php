@@ -3,13 +3,13 @@
 namespace App\Providers;
 
 use App\Contracts\Repositories\Achievement\AchievementIndexRepositoryInterface;
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementCreateRepositoryInterface;
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementDeleteRepositoryInterface;
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementFindRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementCreateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementDeleteRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementFindRepositoryInterface;
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementIndexRepositoryInterface;
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementIsApprovedUpdateRepositoryInterface;
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementIsApprovedUpdateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementUpdateRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityCreateRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityDeleteRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityFindRepositoryInterface;
@@ -56,13 +56,13 @@ use App\Contracts\Services\ProviderInstanceStrategy\GetIntegrationInstanceStrate
 use App\Contracts\Services\Report\DownloadReportStrategyInterface;
 use App\Contracts\Services\Webhook\WebhookHandlerFactoryInterface;
 use App\Repositories\Achievement\AchievementIndexRepository;
-use App\Repositories\Achievement\WorkspaceAchievementCreateRepository;
-use App\Repositories\Achievement\WorkspaceAchievementDeleteRepository;
-use App\Repositories\Achievement\WorkspaceAchievementFindRepository;
+use App\Repositories\Achievement\AchievementCreateRepository;
+use App\Repositories\Achievement\AchievementDeleteRepository;
+use App\Repositories\Achievement\AchievementFindRepository;
 use App\Repositories\Achievement\WorkspaceAchievementIndexRepository;
-use App\Repositories\Achievement\WorkspaceAchievementIsApprovedUpdateRepository;
-use App\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepository;
-use App\Repositories\Achievement\WorkspaceAchievementUpdateRepository;
+use App\Repositories\Achievement\AchievementIsApprovedUpdateRepository;
+use App\Repositories\Achievement\AchievementUpdateOrCreateRepository;
+use App\Repositories\Achievement\AchievementUpdateRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityCreateRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityDeleteRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityFindRepository;
@@ -151,20 +151,20 @@ class AppServiceProvider extends ServiceProvider
             WorkspaceAchievementIndexRepository::class
         );
         $this->app->bind(
-            WorkspaceAchievementCreateRepositoryInterface::class,
-            WorkspaceAchievementCreateRepository::class
+            AchievementCreateRepositoryInterface::class,
+            AchievementCreateRepository::class
         );
         $this->app->bind(
-            WorkspaceAchievementFindRepositoryInterface::class,
-            WorkspaceAchievementFindRepository::class
+            AchievementFindRepositoryInterface::class,
+            AchievementFindRepository::class
         );
         $this->app->bind(
-            WorkspaceAchievementUpdateRepositoryInterface::class,
-            WorkspaceAchievementUpdateRepository::class
+            AchievementUpdateRepositoryInterface::class,
+            AchievementUpdateRepository::class
         );
         $this->app->bind(
-            WorkspaceAchievementDeleteRepositoryInterface::class,
-            WorkspaceAchievementDeleteRepository::class
+            AchievementDeleteRepositoryInterface::class,
+            AchievementDeleteRepository::class
         );
         $this->app->bind(
             UpdateOrCreateUserRepositoryInterface::class,
@@ -187,8 +187,8 @@ class AppServiceProvider extends ServiceProvider
             UpdateOrCreateIntegrationInstanceRepository::class
         );
         $this->app->bind(
-            WorkspaceAchievementUpdateOrCreateRepositoryInterface::class,
-            WorkspaceAchievementUpdateOrCreateRepository::class
+            AchievementUpdateOrCreateRepositoryInterface::class,
+            AchievementUpdateOrCreateRepository::class
         );
         $this->app->bind(
             UpdateIntegrationRepositoryInterface::class,
@@ -321,8 +321,8 @@ class AppServiceProvider extends ServiceProvider
             DeveloperActivityIsApprovedUpdateRepository::class
         );
         $this->app->bind(
-            WorkspaceAchievementIsApprovedUpdateRepositoryInterface::class,
-            WorkspaceAchievementIsApprovedUpdateRepository::class
+            AchievementIsApprovedUpdateRepositoryInterface::class,
+            AchievementIsApprovedUpdateRepository::class
         );
     }
 

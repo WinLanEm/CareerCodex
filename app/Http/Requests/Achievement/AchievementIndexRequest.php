@@ -4,7 +4,7 @@ namespace App\Http\Requests\Achievement;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class WorkspaceAchievementIndexRequest extends FormRequest
+class AchievementIndexRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -23,12 +23,19 @@ class WorkspaceAchievementIndexRequest extends FormRequest
     {
         return [
             'page' => 'int|nullable',
+            'is_approved' => 'boolean|required',
+            'workspace_id' => 'int|nullable|exists:workspaces,id',
         ];
     }
+
     public function messages(): array
     {
         return [
-            'page.int' => 'page must be an integer',
+            'page.int' => 'page must be an integer.',
+            'is_approved.boolean' => 'is_approved must be an boolean.',
+            'is_approved.required' => 'is_approved is required.',
+            'workspace_id.int' => 'workspace_id must be an integer.',
+            'workspace_id.exists' => 'not found workspace.',
         ];
     }
 }

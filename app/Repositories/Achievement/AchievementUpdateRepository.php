@@ -2,10 +2,10 @@
 
 namespace App\Repositories\Achievement;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementUpdateRepositoryInterface;
 use App\Models\Achievement;
 
-class WorkspaceAchievementUpdateRepository implements WorkspaceAchievementUpdateRepositoryInterface
+class AchievementUpdateRepository implements AchievementUpdateRepositoryInterface
 {
     public function update(array $data, Achievement $achievement)
     {

@@ -2,10 +2,10 @@
 
 namespace App\Repositories\Achievement;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementFindRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementFindRepositoryInterface;
 use App\Models\Achievement;
 
-class WorkspaceAchievementFindRepository implements WorkspaceAchievementFindRepositoryInterface
+class AchievementFindRepository implements AchievementFindRepositoryInterface
 {
     public function find(int $achievementId): ?Achievement
     {

@@ -4,7 +4,7 @@ namespace App\Http\Requests\Achievement;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class WorkspaceAchievementUpdateRequest extends FormRequest
+class AchievementUpdateRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -28,6 +28,7 @@ class WorkspaceAchievementUpdateRequest extends FormRequest
             'hours_spent' => 'nullable|int|between:1,999',
             'date' => 'nullable|date|date_format:Y-m-d',
             'skills' => 'nullable|array',
+            'workspace_id' => 'nullable|integer|exists:workspaces,id',
         ];
     }
 
@@ -43,6 +44,8 @@ class WorkspaceAchievementUpdateRequest extends FormRequest
             'date.date' => 'Date must be a date',
             'date.date_format' => 'Date format must be Y-m-d',
             'skills.array' => 'Skills must be an array',
+            'workspace_id.integer' => 'Workspace must be an integer',
+            'workspace_id.exists' => 'Workspace must be an integer',
         ];
     }
 }

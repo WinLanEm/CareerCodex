@@ -2,7 +2,7 @@
 
 namespace App\Contracts\Repositories\Achievement;
 
-interface WorkspaceAchievementIsApprovedUpdateRepositoryInterface
+interface AchievementIsApprovedUpdateRepositoryInterface
 {
     public function update(array $achievementIds): bool;
 }

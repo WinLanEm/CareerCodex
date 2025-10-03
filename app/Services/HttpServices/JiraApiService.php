@@ -2,7 +2,7 @@
 
 namespace App\Services\HttpServices;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraProjectServiceInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraRegisterWebhookInterface;
@@ -71,11 +71,11 @@ class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectService
     }
 
     public function syncCompletedIssuesForProject(
-        WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
-        Integration $integration,
-        string $projectKey,
-        string $cloudId,
-        \Closure $closure
+        AchievementUpdateOrCreateRepositoryInterface $repository,
+        Integration                                  $integration,
+        string                                       $projectKey,
+        string                                       $cloudId,
+        \Closure                                     $closure
     ):void
     {
         $startAt = 0;

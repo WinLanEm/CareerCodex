@@ -4,7 +4,7 @@ namespace App\Http\Requests\Achievement;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class WorkspaceAchievementIsApprovedUpdateRequest extends FormRequest
+class AchievementIsApprovedUpdateRequest extends FormRequest
 {
     public function authorize(): bool
     {

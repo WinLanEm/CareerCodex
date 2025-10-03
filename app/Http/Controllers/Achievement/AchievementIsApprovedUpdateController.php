@@ -2,21 +2,21 @@
 
 namespace App\Http\Controllers\Achievement;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementIsApprovedUpdateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementIsApprovedUpdateRepositoryInterface;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Achievement\WorkspaceAchievementIsApprovedUpdateRequest;
+use App\Http\Requests\Achievement\AchievementIsApprovedUpdateRequest;
 use App\Http\Resources\MessageResource;
 use Illuminate\Http\Request;
 
-class WorkspaceAchievementIsApprovedUpdateController extends Controller
+class AchievementIsApprovedUpdateController extends Controller
 {
     public function __construct(
-        readonly private WorkspaceAchievementIsApprovedUpdateRepositoryInterface $repository
+        readonly private AchievementIsApprovedUpdateRepositoryInterface $repository
     )
     {
     }
 
-    public function __invoke(WorkspaceAchievementIsApprovedUpdateRequest $request)
+    public function __invoke(AchievementIsApprovedUpdateRequest $request)
     {
         $achievementIds = $request->get('achievement_ids');
         $res = $this->repository->update($achievementIds);

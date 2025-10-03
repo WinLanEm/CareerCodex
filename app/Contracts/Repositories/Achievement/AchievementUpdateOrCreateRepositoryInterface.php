@@ -4,7 +4,7 @@ namespace App\Contracts\Repositories\Achievement;
 
 use App\Models\Achievement;
 
-interface WorkspaceAchievementUpdateOrCreateRepositoryInterface
+interface AchievementUpdateOrCreateRepositoryInterface
 {
     public function updateOrCreate(array $data):Achievement;
 }

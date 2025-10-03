@@ -4,10 +4,11 @@ namespace App\Repositories\Achievement;
 
 use App\Contracts\Repositories\Achievement\AchievementIndexRepositoryInterface;
 use App\Models\Achievement;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class AchievementIndexRepository implements AchievementIndexRepositoryInterface
 {
-    public function index(int $page, int $perPage, int $userId, bool $isApproved, ?string $startDate, ?string $endDate)
+    public function index(int $page, int $perPage, int $userId, bool $isApproved,?int $workspaceId, ?string $startDate, ?string $endDate):LengthAwarePaginator
     {
         return Achievement
             ::with([
@@ -28,9 +29,11 @@ class AchievementIndexRepository implements AchievementIndexRepositoryInterface
                     return $query->whereDate('date', '>=', $startDate);
                 })->when($endDate !== null, function ($query) use ($endDate) {
                     return $query->whereDate('date', '<=', $endDate);
-            })
-                ->where('is_approved', $isApproved)
-                ->orderBy('date', 'desc')
+                })->when($workspaceId !== null, function ($query) use ($workspaceId) {
+                    return $query->where('workspace_id', $workspaceId);
+                })
+            ->where('is_approved', $isApproved)
+            ->orderBy('date', 'desc')
             ->paginate(
                 $perPage,
                 [

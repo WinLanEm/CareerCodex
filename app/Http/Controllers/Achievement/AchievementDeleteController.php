@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Achievement;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementDeleteRepositoryInterface;
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementFindRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementDeleteRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementFindRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MessageResource;
 
-class WorkspaceAchievementDeleteController extends Controller
+class AchievementDeleteController extends Controller
 {
     public function __construct(
-        private WorkspaceAchievementDeleteRepositoryInterface $workspaceAchievementDeleteRepository,
-        private WorkspaceAchievementFindRepositoryInterface $workspaceAchievementFindRepository
+        private AchievementDeleteRepositoryInterface $workspaceAchievementDeleteRepository,
+        private AchievementFindRepositoryInterface   $workspaceAchievementFindRepository
     )
     {
     }

@@ -2,23 +2,23 @@
 
 namespace App\Http\Controllers\Achievement;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementFindRepositoryInterface;
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementFindRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementUpdateRepositoryInterface;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Achievement\WorkspaceAchievementUpdateRequest;
+use App\Http\Requests\Achievement\AchievementUpdateRequest;
 use App\Http\Resources\Achievement\AchievementWrapperResource;
 use App\Http\Resources\MessageResource;
 
-class WorkspaceAchievementUpdateController extends Controller
+class AchievementUpdateController extends Controller
 {
     public function __construct(
-        private WorkspaceAchievementFindRepositoryInterface $findRepository,
-        private WorkspaceAchievementUpdateRepositoryInterface $updateRepository
+        private AchievementFindRepositoryInterface            $findRepository,
+        private AchievementUpdateRepositoryInterface $updateRepository
     )
     {
     }
 
-    public function __invoke(WorkspaceAchievementUpdateRequest $request,int $achievementId)
+    public function __invoke(AchievementUpdateRequest $request, int $achievementId)
     {
         $achievement = $this->findRepository->find($achievementId);
         if(!$achievement){

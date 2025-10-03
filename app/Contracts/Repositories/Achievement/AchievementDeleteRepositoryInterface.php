@@ -3,7 +3,7 @@
 namespace App\Contracts\Repositories\Achievement;
 
 
-interface WorkspaceAchievementDeleteRepositoryInterface
+interface AchievementDeleteRepositoryInterface
 {
     public function delete(int $achievementId): int;
 }

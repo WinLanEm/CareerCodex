@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Achievement;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementFindRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementFindRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Achievement\AchievementWrapperResource;
 use App\Http\Resources\MessageResource;
 
-class WorkspaceAchievementFindController extends Controller
+class AchievementFindController extends Controller
 {
     public function __construct(
-        private WorkspaceAchievementFindRepositoryInterface $achievementFindRepository
+        private AchievementFindRepositoryInterface $achievementFindRepository
     )
     {
     }

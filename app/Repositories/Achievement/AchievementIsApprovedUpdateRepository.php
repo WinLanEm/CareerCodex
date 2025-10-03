@@ -2,10 +2,10 @@
 
 namespace App\Repositories\Achievement;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementIsApprovedUpdateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementIsApprovedUpdateRepositoryInterface;
 use App\Models\Achievement;
 
-class WorkspaceAchievementIsApprovedUpdateRepository implements WorkspaceAchievementIsApprovedUpdateRepositoryInterface
+class AchievementIsApprovedUpdateRepository implements AchievementIsApprovedUpdateRepositoryInterface
 {
     public function update(array $achievementIds): bool
     {
