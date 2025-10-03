@@ -6,5 +6,5 @@ use App\Models\Webhook;
 
 interface EloquentWebhookRepositoryInterface
 {
-    public function find(\Closure $criteria): ?Webhook;
+    public function find(\Closure $closure): ?Webhook;
 }

@@ -27,6 +27,11 @@ class Achievement extends Model
         return $this->belongsTo(Workspace::class);
     }
 
+    public function integrationInstance(): BelongsTo
+    {
+        return $this->belongsTo(IntegrationInstance::class);
+    }
+
     protected $casts = [
         'skills' => 'array',
     ];

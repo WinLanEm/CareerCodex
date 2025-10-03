@@ -2,28 +2,28 @@
 
 namespace App\Services\HttpServices;
 
-use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Gitlab\GitlabActivityFetchInterface;
 use App\Contracts\Services\HttpServices\Gitlab\GitlabRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Gitlab\GitlabRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
-use App\Models\Webhook;
+use App\Repositories\Webhook\EloquentWebhookRepository;
 use Carbon\CarbonImmutable;
-use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Database\Query\Builder;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class GitlabApiService implements GitlabActivityFetchInterface, GitlabRegisterWebhookInterface, GitlabRepositorySyncInterface
 {
     public function __construct(
         private ThrottleServiceInterface $throttleService,
+        private EloquentWebhookRepository $webhookRepository,
     )
     {}
-    public function syncRepositories(PendingRequest $client, \Closure $closure): void
+    public function syncRepositories(string $token, \Closure $closure): void
     {
         $page = 1;
+        $client = Http::withToken($token);
         do {
             $repositoriesOnPage = $this->throttleService->for(
                 ServiceConnectionsEnum::GITLAB,
@@ -47,8 +47,9 @@ class GitlabApiService implements GitlabActivityFetchInterface, GitlabRegisterWe
         } while (!empty($repositoriesOnPage));
     }
 
-    public function getMergedPullRequests(PendingRequest $client,int $projectId, int $limit,CarbonImmutable $updatedSince): array
+    public function getMergedPullRequests(string $token,int $projectId, int $limit,CarbonImmutable $updatedSince): array
     {
+        $client = Http::withToken($token);
         return $this->throttleService->for(
             ServiceConnectionsEnum::GITLAB,
             function () use($client, $updatedSince,$projectId, $limit) {
@@ -69,8 +70,9 @@ class GitlabApiService implements GitlabActivityFetchInterface, GitlabRegisterWe
             },
         );
     }
-    public function getCommits(PendingRequest $client,int $projectId, int $limit,CarbonImmutable $updatedSince,string $branch): array
+    public function getCommits(string $token,int $projectId, int $limit,CarbonImmutable $updatedSince,string $branch): array
     {
+        $client = Http::withToken($token);
         return $this->throttleService->for(
             ServiceConnectionsEnum::GITLAB,
             function () use($client, $projectId, $limit, $updatedSince,$branch) {
@@ -108,7 +110,13 @@ class GitlabApiService implements GitlabActivityFetchInterface, GitlabRegisterWe
 
             foreach ($existingHooks as $hook) {
                 if (isset($hook['url']) && $hook['url'] === $webhookUrl) {
-                    $webhook = Webhook::where('webhook_id',$hook['id'])->first();
+
+                    $webhook = $this->webhookRepository->find(
+                        function (Builder $query) use($hook) {
+                            return $query->where('webhook_id', $hook['id']);
+                        }
+                    );
+
                     if($webhook) {
                         return $webhook->toArray();
                     }

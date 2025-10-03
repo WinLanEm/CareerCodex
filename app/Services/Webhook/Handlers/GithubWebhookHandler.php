@@ -80,11 +80,11 @@ class GithubWebhookHandler extends AbstractWebhookHandler
         }
 
         $pr = $payload['pull_request'];
-        $integrationId = $this->findIntegrationById($pr['user']['id'],ServiceConnectionsEnum::GITHUB);
-        if (!$integrationId) return;
+        $integration = $this->findIntegrationById($pr['user']['id'],ServiceConnectionsEnum::GITHUB);
+        if (!$integration) return;
 
         $this->activityRepository->updateOrCreateDeveloperActivity([
-            'integration_id' => $integrationId,
+            'integration_id' => $integration->id,
             'type' => 'pull_request',
             'external_id' => $pr['number'],
             'repository_name' => $payload['repository']['full_name'],

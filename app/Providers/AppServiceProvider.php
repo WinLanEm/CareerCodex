@@ -2,14 +2,24 @@
 
 namespace App\Providers;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementCreateRepositoryInterface;
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementDeleteRepositoryInterface;
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementFindRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementIndexRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementCreateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementDeleteRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementFindRepositoryInterface;
 use App\Contracts\Repositories\Achievement\WorkspaceAchievementIndexRepositoryInterface;
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementIsApprovedUpdateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementUpdateRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityCreateRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityDeleteRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityFindRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityIndexRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityIsApprovedUpdateRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityUpdateRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityWithIntegrationDataRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
 use App\Contracts\Repositories\Email\GenerateVerificationCodeRepositoryInterface;
+use App\Contracts\Repositories\IntegrationInstance\FindIntegrationInstanceByClosureRepositoryInterface;
 use App\Contracts\Repositories\IntegrationInstance\UpdateOrCreateIntegrationInstanceRepositoryInterface;
 use App\Contracts\Repositories\Integrations\FindIntegrationByClosureRepositoryInterface;
 use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
@@ -43,15 +53,26 @@ use App\Contracts\Services\HttpServices\Jira\JiraRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraWorkspaceServiceInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Contracts\Services\ProviderInstanceStrategy\GetIntegrationInstanceStrategyInterface;
+use App\Contracts\Services\Report\DownloadReportStrategyInterface;
 use App\Contracts\Services\Webhook\WebhookHandlerFactoryInterface;
-use App\Repositories\Achievement\WorkspaceAchievementCreateRepository;
-use App\Repositories\Achievement\WorkspaceAchievementDeleteRepository;
-use App\Repositories\Achievement\WorkspaceAchievementFindRepository;
+use App\Repositories\Achievement\AchievementIndexRepository;
+use App\Repositories\Achievement\AchievementCreateRepository;
+use App\Repositories\Achievement\AchievementDeleteRepository;
+use App\Repositories\Achievement\AchievementFindRepository;
 use App\Repositories\Achievement\WorkspaceAchievementIndexRepository;
-use App\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepository;
-use App\Repositories\Achievement\WorkspaceAchievementUpdateRepository;
+use App\Repositories\Achievement\AchievementIsApprovedUpdateRepository;
+use App\Repositories\Achievement\AchievementUpdateOrCreateRepository;
+use App\Repositories\Achievement\AchievementUpdateRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityCreateRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityDeleteRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityFindRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityIndexRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityIsApprovedUpdateRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityUpdateRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityWithIntegrationDataRepository;
 use App\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivity;
 use App\Repositories\Email\GenerateVerificationCodeRepository;
+use App\Repositories\IntegrationInstances\FindIntegrationInstanceByClosureRepository;
 use App\Repositories\IntegrationInstances\UpdateOrCreateIntegrationInstanceRepository;
 use App\Repositories\Integrations\FindIntegrationByClosureRepository;
 use App\Repositories\Integrations\UpdateIntegrationRepository;
@@ -74,6 +95,7 @@ use App\Services\HttpServices\GitlabApiService;
 use App\Services\HttpServices\JiraApiService;
 use App\Services\HttpServices\ThrottleService;
 use App\Services\IntegrationInstanceStrategy\GetIntegrationInstanceStrategy;
+use App\Services\Report\DownloadReportStrategy;
 use App\Services\Webhook\WebhookHandlerFactory;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\ServiceProvider;
@@ -129,20 +151,20 @@ class AppServiceProvider extends ServiceProvider
             WorkspaceAchievementIndexRepository::class
         );
         $this->app->bind(
-            WorkspaceAchievementCreateRepositoryInterface::class,
-            WorkspaceAchievementCreateRepository::class
+            AchievementCreateRepositoryInterface::class,
+            AchievementCreateRepository::class
         );
         $this->app->bind(
-            WorkspaceAchievementFindRepositoryInterface::class,
-            WorkspaceAchievementFindRepository::class
+            AchievementFindRepositoryInterface::class,
+            AchievementFindRepository::class
         );
         $this->app->bind(
-            WorkspaceAchievementUpdateRepositoryInterface::class,
-            WorkspaceAchievementUpdateRepository::class
+            AchievementUpdateRepositoryInterface::class,
+            AchievementUpdateRepository::class
         );
         $this->app->bind(
-            WorkspaceAchievementDeleteRepositoryInterface::class,
-            WorkspaceAchievementDeleteRepository::class
+            AchievementDeleteRepositoryInterface::class,
+            AchievementDeleteRepository::class
         );
         $this->app->bind(
             UpdateOrCreateUserRepositoryInterface::class,
@@ -165,8 +187,8 @@ class AppServiceProvider extends ServiceProvider
             UpdateOrCreateIntegrationInstanceRepository::class
         );
         $this->app->bind(
-            WorkspaceAchievementUpdateOrCreateRepositoryInterface::class,
-            WorkspaceAchievementUpdateOrCreateRepository::class
+            AchievementUpdateOrCreateRepositoryInterface::class,
+            AchievementUpdateOrCreateRepository::class
         );
         $this->app->bind(
             UpdateIntegrationRepositoryInterface::class,
@@ -261,6 +283,46 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             FindIntegrationByClosureRepositoryInterface::class,
             FindIntegrationByClosureRepository::class
+        );
+        $this->app->bind(
+            FindIntegrationInstanceByClosureRepositoryInterface::class,
+            FindIntegrationInstanceByClosureRepository::class
+        );
+        $this->app->bind(
+            DeveloperActivityUpdateRepositoryInterface::class,
+            DeveloperActivityUpdateRepository::class
+        );
+        $this->app->bind(
+            DeveloperActivityDeleteRepositoryInterface::class,
+            DeveloperActivityDeleteRepository::class
+        );
+        $this->app->bind(
+            DeveloperActivityIndexRepositoryInterface::class,
+            DeveloperActivityIndexRepository::class
+        );
+        $this->app->bind(
+            DeveloperActivityFindRepositoryInterface::class,
+            DeveloperActivityFindRepository::class
+        );
+        $this->app->bind(
+            DeveloperActivityWithIntegrationDataRepositoryInterface::class,
+            DeveloperActivityWithIntegrationDataRepository::class
+        );
+        $this->app->bind(
+            DownloadReportStrategyInterface::class,
+            DownloadReportStrategy::class
+        );
+        $this->app->bind(
+            AchievementIndexRepositoryInterface::class,
+            AchievementIndexRepository::class
+        );
+        $this->app->bind(
+            DeveloperActivityIsApprovedUpdateRepositoryInterface::class,
+            DeveloperActivityIsApprovedUpdateRepository::class
+        );
+        $this->app->bind(
+            AchievementIsApprovedUpdateRepositoryInterface::class,
+            AchievementIsApprovedUpdateRepository::class
         );
     }
 

@@ -2,8 +2,9 @@
 
 namespace App\Services\Webhook\Handlers;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
+use App\Contracts\Repositories\IntegrationInstance\FindIntegrationInstanceByClosureRepositoryInterface;
 use App\Contracts\Repositories\Integrations\FindIntegrationByClosureRepositoryInterface;
 use App\Contracts\Repositories\Webhook\EloquentWebhookRepositoryInterface;
 use App\Contracts\Services\Webhook\WebhookHandlerInterface;
@@ -14,10 +15,11 @@ use Illuminate\Database\Eloquent\Builder;
 abstract class AbstractWebhookHandler implements WebhookHandlerInterface
 {
     public function __construct(
-        protected UpdateOrCreateDeveloperActivityInterface $activityRepository,
-        protected EloquentWebhookRepositoryInterface $webhookRepository,
-        protected FindIntegrationByClosureRepositoryInterface $integrationRepository,
-        protected WorkspaceAchievementUpdateOrCreateRepositoryInterface $achievementRepository,
+        protected UpdateOrCreateDeveloperActivityInterface            $activityRepository,
+        protected EloquentWebhookRepositoryInterface                  $webhookRepository,
+        protected FindIntegrationByClosureRepositoryInterface         $integrationRepository,
+        protected AchievementUpdateOrCreateRepositoryInterface        $achievementRepository,
+        protected FindIntegrationInstanceByClosureRepositoryInterface $integrationInstanceByClosureRepository
     ) {
     }
 

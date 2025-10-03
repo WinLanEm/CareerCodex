@@ -26,24 +26,22 @@ class SyncGithubRepositoryJob implements ShouldQueue
 
     public function handle(UpdateOrCreateDeveloperActivityInterface $developerActivityRepository, GithubActivityFetchInterface $apiService):void
     {
-        Log::info(json_encode($this->integration,JSON_PRETTY_PRINT));
-        Log::info(json_encode($this->updatedSince,JSON_PRETTY_PRINT));
-        Log::info($this->defaultBranch);
-        Log::info($this->repoName);
         $this->executeWithHandling(function () use ($developerActivityRepository, $apiService) {
-            $client = Http::withToken($this->integration->access_token);
-            $this->syncMergedPullRequests($developerActivityRepository, $client,$apiService);
-            $this->syncCommits($developerActivityRepository, $client,$apiService);
+            $this->syncMergedPullRequests($developerActivityRepository,$apiService);
+            if ($this->maxActivities <= 0) {
+                return;
+            }
+            $this->syncCommits($developerActivityRepository,$apiService);
         });
     }
 
-    private function syncMergedPullRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client, GithubActivityFetchInterface $apiService): void
+    private function syncMergedPullRequests(UpdateOrCreateDeveloperActivityInterface $activityRepository, GithubActivityFetchInterface $apiService): void
     {
-        $limit = 10;
+        if ($this->maxActivities <= 0) return;
 
         $searchQuery = "repo:{$this->repoName} is:pr is:merged updated:>" . $this->updatedSince->format('Y-m-d');
 
-        $pullRequests = $apiService->getMergedPullRequests($client, $searchQuery,$limit);
+        $pullRequests = $apiService->getMergedPullRequests($this->integration->access_token, $searchQuery,$this->maxActivities);
 
         foreach ($pullRequests as $pr) {
             if (empty($pr)) continue;
@@ -64,13 +62,13 @@ class SyncGithubRepositoryJob implements ShouldQueue
         }
     }
 
-    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository, PendingRequest $client, GithubActivityFetchInterface $apiService): void
+    private function syncCommits(UpdateOrCreateDeveloperActivityInterface $activityRepository, GithubActivityFetchInterface $apiService): void
     {
-        $limit = 10;
+        if ($this->maxActivities <= 0) return;
 
         [$owner, $repo] = explode('/', $this->repoName);
 
-        $commits = $apiService->getCommits($client, $owner, $repo,$this->defaultBranch,$this->updatedSince->toISOString(),$limit);
+        $commits = $apiService->getCommits($this->integration->access_token, $owner, $repo,$this->defaultBranch,$this->updatedSince->toISOString(),$this->maxActivities);
 
         foreach ($commits as $commit) {
             $this->maxActivities--;

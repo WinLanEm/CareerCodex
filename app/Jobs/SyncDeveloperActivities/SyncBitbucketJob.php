@@ -2,7 +2,6 @@
 
 namespace App\Jobs\SyncDeveloperActivities;
 
-use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRepositorySyncInterface;
 use App\Jobs\RegisterWebhook\RegisterBitbucketWebhookJob;
 use App\Jobs\SyncDeveloperRepositories\SyncBitbucketRepositoryJob;
@@ -12,7 +11,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
-use Illuminate\Support\Facades\Http;
 
 class SyncBitbucketJob implements ShouldQueue
 {
@@ -26,9 +24,8 @@ class SyncBitbucketJob implements ShouldQueue
     {
         $this->executeWithHandling(function () use ($apiService) {
             $updatedSince = CarbonImmutable::now()->subDays(7);
-            $client = Http::withToken($this->integration->access_token);
 
-            $apiService->syncRepositories($client, function ($repository) use ($updatedSince) {
+            $apiService->syncRepositories($this->integration->access_token, function ($repository) use ($updatedSince) {
                 SyncBitbucketRepositoryJob::dispatch(
                     $this->integration,
                     $repository['mainbranch']['name'] ?? 'main',

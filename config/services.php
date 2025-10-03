@@ -63,6 +63,7 @@ return [
         'sync_repositories_url' => 'https://api.github.com/user/repos',
         'get_hooks_url' => "https://api.github.com/repos/{fullRepoName}/hooks",
         'webhook_secret' => env('GITHUB_SERVICE_WEBHOOK_SECRET'),
+        'check_app_installation_url' => "https://api.github.com/user/installations"
     ],
     //https://github.com/settings/apps/careercodex/installations сначала надо установить приложение
 
@@ -96,6 +97,7 @@ return [
         'provider_instance_url' => 'https://api.atlassian.com/oauth/token/accessible-resources',
         'projects_url' => "https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/project/search",
         'sync_issue' => "https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/search",
+        "register_webhook_url" => "https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/webhook"
     ],
 
     'asana_integration' => [
@@ -106,7 +108,9 @@ return [
         'provider_instance_url' => 'https://app.asana.com/api/1.0/workspaces',
         'projects_url' => "https://app.asana.com/api/1.0/projects",
         'sync_issue' => "https://app.asana.com/api/1.0/tasks",
-        'set_webhook_url' => 'https://app.asana.com/api/1.0/webhooks'
+        'set_webhook_url' => 'https://app.asana.com/api/1.0/webhooks',
+        'get_access_token_url' => "https://app.asana.com/-/oauth_token",
+        'get_webhooks_url' => "https://app.asana.com/api/1.0/webhooks?workspace={workspaceGid}"
     ],
 
     'trello_integration' => [

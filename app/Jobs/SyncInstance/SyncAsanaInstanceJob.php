@@ -2,7 +2,7 @@
 
 namespace App\Jobs\SyncInstance;
 
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementUpdateOrCreateRepositoryInterface;
+use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
 use App\Models\Integration;
@@ -22,9 +22,9 @@ class SyncAsanaInstanceJob implements ShouldQueue
         readonly private string $projectName,
     ) {}
 
-    public function handle(WorkspaceAchievementUpdateOrCreateRepositoryInterface $repository,
-                           AsanaProjectServiceInterface $apiService,
-                           UpdateIntegrationRepositoryInterface $integrationRepository
+    public function handle(AchievementUpdateOrCreateRepositoryInterface $repository,
+                           AsanaProjectServiceInterface                 $apiService,
+                           UpdateIntegrationRepositoryInterface         $integrationRepository
     )
     {
         $this->executeWithHandling(function () use ($repository, $apiService,$integrationRepository) {
