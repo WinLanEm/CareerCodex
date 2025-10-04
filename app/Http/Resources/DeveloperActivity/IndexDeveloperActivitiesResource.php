@@ -10,7 +10,7 @@ class IndexDeveloperActivitiesResource extends BaseJsonResource
     public function toArray(Request $request): array
     {
         return [
-            'achievement' => DeveloperActivityResource::collection($this->resource->items()),
+            'developer_activities' => DeveloperActivityResource::collection($this->resource->items()),
             'paginator' => [
                 'total' => $this->resource->total(),
                 'current_page' => $this->resource->currentPage(),

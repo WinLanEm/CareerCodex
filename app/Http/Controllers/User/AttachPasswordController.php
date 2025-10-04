@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 class AttachPasswordController extends Controller
 {
     public function __construct(
-        private UpdateUserRepositoryInterface $updateUserRepository,
+        readonly private UpdateUserRepositoryInterface $updateUserRepository,
     )
     {
     }

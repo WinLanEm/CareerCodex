@@ -11,7 +11,7 @@ use App\Http\Resources\User\AuthResource;
 class VerifyEmailController extends Controller
 {
     public function __construct(
-        private FindUserRepositoryInterface $findUserRepository,
+        readonly private FindUserRepositoryInterface $findUserRepository,
     )
     {
     }

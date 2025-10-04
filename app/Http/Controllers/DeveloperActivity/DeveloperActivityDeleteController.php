@@ -19,13 +19,14 @@ class DeveloperActivityDeleteController extends Controller
 
     public function __invoke(int $id)
     {
-        $developerActivity = $this->findRepository->find($id);
+        $userId = auth()->id();
+        $developerActivity = $this->findRepository->find($id,$userId);
         if(!$developerActivity){
-            return new MessageResource('DeveloperActivity not found', 404);
+            return new MessageResource('DeveloperActivity not found', false,404);
         }
         $res = $this->deleteRepository->delete($developerActivity);
         if(!$res){
-            return new MessageResource('DeveloperActivity delete failed', 500);
+            return new MessageResource('DeveloperActivity delete failed', false,500);
         }
         return response()->noContent();
     }

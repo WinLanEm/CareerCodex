@@ -15,7 +15,7 @@ class AchievementIsApprovedUpdateRequest extends FormRequest
     {
         return [
             'achievement_ids'   => ['required', 'array'],
-            'achievement_ids.*' => ['required', 'integer', 'exists:developer_activities,id'],
+            'achievement_ids.*' => ['required', 'integer', 'exists:achievements,id'],
         ];
     }
     public function messages(): array

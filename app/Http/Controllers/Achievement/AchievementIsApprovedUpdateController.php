@@ -18,8 +18,9 @@ class AchievementIsApprovedUpdateController extends Controller
 
     public function __invoke(AchievementIsApprovedUpdateRequest $request)
     {
+        $userId = auth()->id();
         $achievementIds = $request->get('achievement_ids');
-        $res = $this->repository->update($achievementIds);
+        $res = $this->repository->update($achievementIds,$userId);
         if(!$res) {
             return new MessageResource('ids not found',false,404);
         }

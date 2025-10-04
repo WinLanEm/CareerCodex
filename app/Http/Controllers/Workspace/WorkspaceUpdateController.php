@@ -12,15 +12,16 @@ use App\Http\Resources\Workspace\WorkspaceWrapperResource;
 class WorkspaceUpdateController extends Controller
 {
     public function __construct(
-        private FindWorkspaceRepositoryInterface $findWorkspaceRepository,
-        private UpdateWorkspaceRepositoryInterface $updateWorkspaceRepository
+        readonly private FindWorkspaceRepositoryInterface $findWorkspaceRepository,
+        readonly private UpdateWorkspaceRepositoryInterface $updateWorkspaceRepository
     )
     {
     }
 
     public function __invoke(UpdateWorkspaceRequest $request, int $id)
     {
-        $workspace = $this->findWorkspaceRepository->find($id);
+        $userId = auth()->id();
+        $workspace = $this->findWorkspaceRepository->find($id,$userId);
         if(!$workspace){
             return new MessageResource("workspace not found",false,404);
         }

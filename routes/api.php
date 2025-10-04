@@ -35,14 +35,14 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register',RegisterController::class)->name('register');
 Route::post('/login',LoginController::class)->name('login');
+Route::post('/email/verify', VerifyEmailController::class)->name('verify');
+Route::post('/email/verify/resend', ResendVerifyEmailController::class)->middleware(['throttle:1,2'])->name('resend');
+
 Route::get('/auth/{provider}/redirect', SocialRedirectController::class)->name('auth.redirect');
 Route::get('/auth/{provider}/callback', SocialAuthController::class)->name('auth.callback');
 Route::get('/service/{service}/callback', IntegrationCallbackController::class)->name('service.callback');
 Route::post('/webhook/{service}', WebhookCallbackController::class)->name('webhook');
 //https://github.com/apps/ВАШЕ-ПРИЛОЖЕНИЕ/installations/new для гитхаба перед переходом и service/redirect нужно сначала чтобы пользователь скачал приложение к своему гитхаб и дал разрешения на получение уведов с конкретных репозиториев
-Route::post('/email/verify', VerifyEmailController::class)->name('verify');
-Route::post('/email/verify/resend', ResendVerifyEmailController::class)->middleware(['throttle:1,2'])->name('resend');
-
 
 Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/logout',LogoutController::class)->name('logout');
@@ -55,21 +55,21 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::patch('/workspace/{id}',WorkspaceUpdateController::class)->name('workspace.update');
     Route::delete('/workspace/{id}',WorkspaceDeleteController::class)->name('workspace.delete');
 
+    Route::patch('/achievements/approved',AchievementIsApprovedUpdateController::class)->name('achievements.approved');
     Route::get('/achievements',AchievementIndexController::class)->name('achievements.index');
     Route::get('/achievements/{id}',AchievementFindController::class)->name('achievement.find');
     Route::post('/achievements',AchievementCreateController::class)->name('achievement.create');
     Route::patch('/achievements/{id}',AchievementUpdateController::class)->name('achievement.update');
     Route::delete('/achievements/{id}',AchievementDeleteController::class)->name('achievement.delete');
-    Route::patch('/achievements/approved',AchievementIsApprovedUpdateController::class)->name('achievements.approved');
 
     Route::get('/service/{service}/redirect', IntegrationRedirectController::class)->name('service.redirect');
     Route::get('/service/sync', SyncIntegrationController::class)->middleware(['throttle:1,5'])->name('service.sync');
 
+    Route::patch('/developer-activities/approved',DeveloperActivityIsApprovedUpdateController::class)->name('developer.activity.is_approved.update');
     Route::get('/developer-activities',DeveloperActivityIndexController::class)->name('developer.activity.index');
     Route::get('/developer-activities/{id}',DeveloperActivityFindController::class)->name('developer.activity.find');
     Route::patch('/developer-activities/{id}',DeveloperActivityUpdateController::class)->name('developer.activity.update');
     Route::delete('/developer-activities/{id}',DeveloperActivityDeleteController::class)->name('developer.activity.delete');
-    Route::patch('/developer-activities/approved',DeveloperActivityIsApprovedUpdateController::class)->name('developer.activity.is_approved.update');
 
     Route::get('/reports/download',DownloadReportController::class)->name('report.download');
 });

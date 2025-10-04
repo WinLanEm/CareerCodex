@@ -11,7 +11,7 @@ use App\Http\Resources\Workspace\WorkspaceWrapperResource;
 class WorkspaceCreateController extends Controller
 {
     public function __construct(
-        private CreateWorkspaceRepositoryInterface $workspaceRepository
+        readonly private CreateWorkspaceRepositoryInterface $workspaceRepository
     )
     {
     }

@@ -14,9 +14,9 @@ use Illuminate\Support\Facades\Mail;
 class RegisterController extends Controller
 {
     public function __construct(
-        private CreateUserRepositoryInterface $createUserRepository,
-        private GenerateVerificationCodeRepositoryInterface $generateVerificationCodeRepository,
-        private FindUserRepositoryInterface $findUserRepository,
+        readonly private CreateUserRepositoryInterface $createUserRepository,
+        readonly private GenerateVerificationCodeRepositoryInterface $generateVerificationCodeRepository,
+        readonly private FindUserRepositoryInterface $findUserRepository,
     )
     {
     }

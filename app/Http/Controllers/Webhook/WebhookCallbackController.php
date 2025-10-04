@@ -17,6 +17,7 @@ class WebhookCallbackController extends Controller
         if (!$serviceEnum) {
             return new MessageResource('Service not supported',false,404);
         }
+
         if ($serviceEnum === ServiceConnectionsEnum::ASANA && $request->hasHeader('X-Hook-Secret')) {
             $secret = $request->header('X-Hook-Secret');
             return response(null, 200)->header('X-Hook-Secret', $secret);

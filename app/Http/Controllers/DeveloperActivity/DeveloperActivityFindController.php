@@ -19,7 +19,8 @@ class DeveloperActivityFindController extends Controller
 
     public function __invoke(int $id)
     {
-        $developerActivity = $this->repository->find($id);
+        $userId = auth()->id();
+        $developerActivity = $this->repository->find($id,$userId);
         if(!$developerActivity){
             return new MessageResource('DeveloperActivity not found',false,404);
         }

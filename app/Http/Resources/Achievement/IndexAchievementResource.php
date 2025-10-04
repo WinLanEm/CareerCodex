@@ -10,7 +10,7 @@ class IndexAchievementResource extends BaseJsonResource
     public function toArray(Request $request): array
     {
         return [
-            'achievement' => AchievementResource::collection($this->resource->items()),
+            'achievements' => AchievementResource::collection($this->resource->items()),
             'paginator' => [
                 'total' => $this->resource->total(),
                 'current_page' => $this->resource->currentPage(),
