@@ -64,7 +64,7 @@ class WorkspaceFindTest extends TestCase
 
         $response = $this->actingAs($user1)->getJson(route('workspace.find', ['id' => $workspaceOfUser2->id]));
 
-        $response->assertStatus(404);
+        $response->assertStatus(403);
     }
 
     public function test_an_unauthorized_user_cannot_find_any_workspace()

@@ -6,6 +6,9 @@ use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityIsApprovedUp
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DeveloperActivity\DeveloperActivityIsApprovedUpdateRequest;
 use App\Http\Resources\MessageResource;
+use App\Models\DeveloperActivity;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Gate;
 
 class DeveloperActivityIsApprovedUpdateController extends Controller
 {
@@ -17,12 +20,14 @@ class DeveloperActivityIsApprovedUpdateController extends Controller
 
     public function __invoke(DeveloperActivityIsApprovedUpdateRequest $request)
     {
-        $userId = auth()->id();
         $developerActivityIds = $request->get('developer_activity_ids');
-        $res = $this->developerActivityIsApprovedUpdateRepository->update($developerActivityIds,$userId);
-        if(!$res) {
-            return new MessageResource('ids not found',false,404);
+        try {
+            Gate::authorize('approveMultiple',[DeveloperActivity::class, $developerActivityIds]);
+        }catch (AuthorizationException $e){
+            return new MessageResource('This action is unauthorized.',false,403);
         }
+        $this->developerActivityIsApprovedUpdateRepository->update($developerActivityIds);
+
         return response()->noContent();
     }
 }

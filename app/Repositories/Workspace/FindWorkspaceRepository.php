@@ -7,12 +7,8 @@ use App\Models\Workspace;
 
 class FindWorkspaceRepository implements FindWorkspaceRepositoryInterface
 {
-    public function find(int $id,int $userId): ?Workspace
+    public function find(int $id): ?Workspace
     {
-        $workspace = Workspace::find($id);
-        if(!$workspace || $workspace->user_id != $userId) {
-            return null;
-        }
-        return $workspace;
+        return Workspace::find($id);
     }
 }

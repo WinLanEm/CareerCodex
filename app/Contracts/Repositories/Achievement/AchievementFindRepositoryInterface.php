@@ -6,5 +6,7 @@ use App\Models\Achievement;
 
 interface AchievementFindRepositoryInterface
 {
-    public function find(int $achievementId, int $userId): ?Achievement;
+    public function find(int $achievementId): ?Achievement;
+
+    public function findWithRelations(int $achievementId): ?Achievement;
 }

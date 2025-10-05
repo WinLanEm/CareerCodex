@@ -3,7 +3,9 @@
 namespace App\Contracts\Repositories\Achievement;
 
 
+use App\Models\Achievement;
+
 interface AchievementDeleteRepositoryInterface
 {
-    public function delete(int $achievementId): int;
+    public function delete(Achievement $achievement): int;
 }

@@ -13,6 +13,7 @@
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.23",
         "laravel/tinker": "^2.10.1",
+        "predis/predis": "^3.2",
         "socialiteproviders/asana": "^4.1",
         "socialiteproviders/atlassian": "^4.0",
         "socialiteproviders/manager": "^4.8"

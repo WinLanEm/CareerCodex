@@ -7,29 +7,12 @@ use App\Models\Achievement;
 
 class AchievementIsApprovedUpdateRepository implements AchievementIsApprovedUpdateRepositoryInterface
 {
-    public function update(array $achievementIds,int $userId): bool
+    public function update(array $achievementIds): int
     {
         if (empty($achievementIds)) {
-            return false;
+            return 0;
         }
 
-        $ownedCount = Achievement::whereIn('id', $achievementIds)
-            ->where(function ($query) use ($userId) {
-                $query->whereHas('workspace.user', function ($q) use ($userId) {
-                    $q->where('id', $userId);
-                })
-                    ->orWhereHas('integrationInstance.integration.user', function ($q) use ($userId) {
-                        $q->where('id', $userId);
-                    });
-            })
-            ->count();
-
-        if ($ownedCount !== count($achievementIds)) {
-            return false;
-        }
-
-        Achievement::whereIn('id', $achievementIds)->update(['is_approved' => true]);
-
-        return true;
+        return Achievement::whereIn('id', $achievementIds)->update(['is_approved' => true]);
     }
 }

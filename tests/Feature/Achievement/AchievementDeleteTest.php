@@ -3,6 +3,8 @@
 namespace Achievement;
 
 use App\Models\Achievement;
+use App\Models\Integration;
+use App\Models\IntegrationInstance;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,9 +17,13 @@ class AchievementDeleteTest extends TestCase
     public function test_an_authorized_user_can_delete_their_achievement()
     {
         $user = User::factory()->create();
-        $workspace = Workspace::factory()->create(['user_id' => $user->id]);
-        $achievement = Achievement::factory()->create(['workspace_id' => $workspace->id]);
+        $integration = Integration::factory()->create(['user_id' => $user->id]);
+        $integrationInstance = IntegrationInstance::factory()->create(['integration_id' => $integration->id]);
 
+        $achievement = Achievement::factory()->create([
+            'integration_instance_id' => $integrationInstance->id,
+            'workspace_id' => null,
+        ]);
         $response = $this->actingAs($user)->deleteJson(
             route('achievement.delete', ['id' => $achievement->id])
         );
@@ -38,8 +44,7 @@ class AchievementDeleteTest extends TestCase
             route('achievement.delete', ['id' => $achievementOfUser2->id])
         );
 
-        $response->assertStatus(404);
-        $response->assertJson(['message' => 'achievement not found']);
+        $response->assertStatus(403);
 
         $this->assertDatabaseHas('achievements', ['id' => $achievementOfUser2->id]);
     }

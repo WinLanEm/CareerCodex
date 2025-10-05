@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Workspace;
 use App\Contracts\Repositories\Workspace\CreateWorkspaceRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Workspace\CreateWorkspaceRequest;
-use App\Http\Resources\Workspace\WorkspaceResource;
 use App\Http\Resources\Workspace\WorkspaceWrapperResource;
 
 class WorkspaceCreateController extends Controller

@@ -8,6 +8,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Achievement\AchievementUpdateRequest;
 use App\Http\Resources\Achievement\AchievementWrapperResource;
 use App\Http\Resources\MessageResource;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Gate;
+
 
 class AchievementUpdateController extends Controller
 {
@@ -20,12 +23,19 @@ class AchievementUpdateController extends Controller
 
     public function __invoke(AchievementUpdateRequest $request, int $achievementId)
     {
-        $user = auth()->id();
-        $achievement = $this->findRepository->find($achievementId,$user);
+        $achievement = $this->findRepository->findWithRelations($achievementId);
+
         if(!$achievement){
             return new MessageResource('achievement not found',false,404);
         }
-        $updatedAchievement = $this->updateRepository->update($request->toArray(), $achievement);
+
+        try {
+            Gate::authorize('update', $achievement);
+            $updatedAchievement = $this->updateRepository->update($request->toArray(), $achievement);
+        }catch(AuthorizationException $e){
+            return new MessageResource('This action is unauthorized.',false,403);
+        }
+
         return new AchievementWrapperResource($updatedAchievement);
     }
 }

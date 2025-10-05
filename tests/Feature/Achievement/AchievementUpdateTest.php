@@ -3,6 +3,8 @@
 namespace Achievement;
 
 use App\Models\Achievement;
+use App\Models\Integration;
+use App\Models\IntegrationInstance;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,8 +17,13 @@ class AchievementUpdateTest extends TestCase
     public function test_an_authorized_user_can_update_their_achievement()
     {
         $user = User::factory()->create();
-        $workspace = Workspace::factory()->create(['user_id' => $user->id]);
-        $achievement = Achievement::factory()->create(['workspace_id' => $workspace->id]);
+        $integration = Integration::factory()->create(['user_id' => $user->id]);
+        $integrationInstance = IntegrationInstance::factory()->create(['integration_id' => $integration->id]);
+
+        $achievement = Achievement::factory()->create([
+            'integration_instance_id' => $integrationInstance->id,
+            'workspace_id' => null,
+        ]);
 
         $updateData = [
             'title' => 'Updated Achievement Title',
@@ -50,9 +57,7 @@ class AchievementUpdateTest extends TestCase
             $updateData
         );
 
-        // Assert
-        $response->assertStatus(404);
-        $response->assertJson(['message' => 'achievement not found']);
+        $response->assertStatus(403);
         $this->assertDatabaseMissing('achievements', ['title' => 'Hacked Title']);
     }
 
@@ -72,9 +77,11 @@ class AchievementUpdateTest extends TestCase
     {
         $user = User::factory()->create();
         $workspace = Workspace::factory()->create(['user_id' => $user->id]);
+
+
         $achievement = Achievement::factory()->create([
+            'title' => 'Original Title',
             'workspace_id' => $workspace->id,
-            'title' => 'Original Title'
         ]);
 
         $response = $this->actingAs($user)->patchJson(

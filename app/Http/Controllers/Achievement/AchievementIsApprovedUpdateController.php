@@ -6,7 +6,10 @@ use App\Contracts\Repositories\Achievement\AchievementIsApprovedUpdateRepository
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Achievement\AchievementIsApprovedUpdateRequest;
 use App\Http\Resources\MessageResource;
+use App\Models\Achievement;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class AchievementIsApprovedUpdateController extends Controller
 {
@@ -18,12 +21,17 @@ class AchievementIsApprovedUpdateController extends Controller
 
     public function __invoke(AchievementIsApprovedUpdateRequest $request)
     {
-        $userId = auth()->id();
         $achievementIds = $request->get('achievement_ids');
-        $res = $this->repository->update($achievementIds,$userId);
-        if(!$res) {
-            return new MessageResource('ids not found',false,404);
+
+        try {
+            Gate::authorize('approveMultiple',[Achievement::class, $achievementIds]);
+        } catch (AuthorizationException $e) {
+            return new MessageResource('This action is unauthorized.', false, 403);
         }
+
+
+        $this->repository->update($achievementIds);
+
         return response()->noContent();
     }
 }

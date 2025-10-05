@@ -6,11 +6,10 @@ use App\Contracts\Repositories\Achievement\AchievementIndexRepositoryInterface;
 use App\Contracts\Repositories\Achievement\AchievementCreateRepositoryInterface;
 use App\Contracts\Repositories\Achievement\AchievementDeleteRepositoryInterface;
 use App\Contracts\Repositories\Achievement\AchievementFindRepositoryInterface;
-use App\Contracts\Repositories\Achievement\WorkspaceAchievementIndexRepositoryInterface;
 use App\Contracts\Repositories\Achievement\AchievementIsApprovedUpdateRepositoryInterface;
 use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\Achievement\AchievementUpdateRepositoryInterface;
-use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityCreateRepositoryInterface;
+use App\Contracts\Repositories\Cache\CacheRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityDeleteRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityFindRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityIndexRepositoryInterface;
@@ -59,11 +58,10 @@ use App\Repositories\Achievement\AchievementIndexRepository;
 use App\Repositories\Achievement\AchievementCreateRepository;
 use App\Repositories\Achievement\AchievementDeleteRepository;
 use App\Repositories\Achievement\AchievementFindRepository;
-use App\Repositories\Achievement\WorkspaceAchievementIndexRepository;
 use App\Repositories\Achievement\AchievementIsApprovedUpdateRepository;
 use App\Repositories\Achievement\AchievementUpdateOrCreateRepository;
 use App\Repositories\Achievement\AchievementUpdateRepository;
-use App\Repositories\DeveloperActivities\DeveloperActivityCreateRepository;
+use App\Repositories\Cache\CacheRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityDeleteRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityFindRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityIndexRepository;
@@ -323,6 +321,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             AchievementIsApprovedUpdateRepositoryInterface::class,
             AchievementIsApprovedUpdateRepository::class
+        );
+        $this->app->bind(
+            CacheRepositoryInterface::class,
+            CacheRepository::class
         );
     }
 

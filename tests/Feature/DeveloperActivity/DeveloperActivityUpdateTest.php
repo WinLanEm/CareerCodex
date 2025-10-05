@@ -57,8 +57,7 @@ class DeveloperActivityUpdateTest extends TestCase
             $updateData
         );
 
-        $response->assertStatus(404);
-        $response->assertJson(['message' => 'DeveloperActivity not found']);
+        $response->assertStatus(403);
         $this->assertDatabaseHas('developer_activities', ['title' => 'Original Title']);
     }
 

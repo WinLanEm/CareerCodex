@@ -6,7 +6,9 @@ use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityDeleteReposi
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityFindRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MessageResource;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class DeveloperActivityDeleteController extends Controller
 {
@@ -19,15 +21,19 @@ class DeveloperActivityDeleteController extends Controller
 
     public function __invoke(int $id)
     {
-        $userId = auth()->id();
-        $developerActivity = $this->findRepository->find($id,$userId);
+        $developerActivity = $this->findRepository->findWithRelations($id);
         if(!$developerActivity){
             return new MessageResource('DeveloperActivity not found', false,404);
         }
-        $res = $this->deleteRepository->delete($developerActivity);
-        if(!$res){
-            return new MessageResource('DeveloperActivity delete failed', false,500);
+
+        try {
+            Gate::authorize('delete', $developerActivity);
+        }catch(AuthorizationException $e){
+            return new MessageResource('This action is unauthorized.',false,403);
         }
+
+        $this->deleteRepository->delete($developerActivity);
+
         return response()->noContent();
     }
 }

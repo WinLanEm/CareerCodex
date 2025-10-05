@@ -32,11 +32,7 @@ class WorkspaceDeleteTest extends TestCase
 
         $response = $this->actingAs($user1)->deleteJson(route('workspace.delete', ['id' => $workspaceOfUser2->id]));
 
-        $response->assertStatus(404);
-        $response->assertJson([
-            'message' => 'workspace not found',
-            'status' => false,
-        ]);
+        $response->assertStatus(403);
 
         $this->assertDatabaseHas('workspaces', ['id' => $workspaceOfUser2->id]);
     }

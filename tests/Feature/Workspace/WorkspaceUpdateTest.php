@@ -40,7 +40,7 @@ class WorkspaceUpdateTest extends TestCase
         ]);
     }
 
-    public function test_it_returns_404_if_workspace_does_not_exist_or_not_belongs_to_user()
+    public function test_it_returns_403_if_workspace_does_not_exist_or_not_belongs_to_user()
     {
         $user = User::factory()->create();
         $workspace = Workspace::factory()->create();
@@ -49,11 +49,7 @@ class WorkspaceUpdateTest extends TestCase
 
         $response = $this->actingAs($user)->patchJson(route('workspace.update', ['id' => $workspace->id]), $updateData);
 
-        $response->assertStatus(404);
-        $response->assertJson([
-            'message' => 'workspace not found',
-            'status' => false,
-        ]);
+        $response->assertStatus(403);
     }
 
     public function test_unauthorized_user_cannot_update_workspace()

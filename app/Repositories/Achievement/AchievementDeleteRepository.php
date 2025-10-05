@@ -7,8 +7,8 @@ use App\Models\Achievement;
 
 class AchievementDeleteRepository implements AchievementDeleteRepositoryInterface
 {
-    public function delete(int $achievementId): int
+    public function delete(Achievement $achievement): int
     {
-        return Achievement::destroy($achievementId);
+        return $achievement->delete();
     }
 }
