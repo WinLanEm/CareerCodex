@@ -49,11 +49,11 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me',MeController::class)->name('me');
     Route::post('/attach/password',AttachPasswordController::class)->name('attach.password');
 
-    Route::get('/workspace',WorkspaceIndexController::class)->name('workspace.index');
-    Route::get('/workspace/{id}',WorkspaceFindController::class)->name('workspace.find');
-    Route::post('/workspace',WorkspaceCreateController::class)->name('workspace.create');
-    Route::patch('/workspace/{id}',WorkspaceUpdateController::class)->name('workspace.update');
-    Route::delete('/workspace/{id}',WorkspaceDeleteController::class)->name('workspace.delete');
+    Route::get('/workspaces',WorkspaceIndexController::class)->name('workspace.index');
+    Route::get('/workspaces/{id}',WorkspaceFindController::class)->name('workspace.find');
+    Route::post('/workspaces',WorkspaceCreateController::class)->name('workspace.create');
+    Route::patch('/workspaces/{id}',WorkspaceUpdateController::class)->name('workspace.update');
+    Route::delete('/workspaces/{id}',WorkspaceDeleteController::class)->name('workspace.delete');
 
     Route::patch('/achievements/approved',AchievementIsApprovedUpdateController::class)->name('achievements.approved');
     Route::get('/achievements',AchievementIndexController::class)->name('achievements.index');

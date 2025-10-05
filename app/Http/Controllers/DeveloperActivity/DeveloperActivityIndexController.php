@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\DeveloperActivity;
 
+use App\Contracts\Repositories\Cache\CacheRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityIndexRepositoryInterface;
 use App\Enums\DeveloperActivityEnum;
 use App\Http\Controllers\Controller;
@@ -11,7 +12,8 @@ use App\Http\Resources\DeveloperActivity\IndexDeveloperActivitiesResource;
 class DeveloperActivityIndexController extends Controller
 {
     public function __construct(
-        readonly private DeveloperActivityIndexRepositoryInterface $repository
+        readonly private DeveloperActivityIndexRepositoryInterface $repository,
+        readonly private CacheRepositoryInterface $cacheRepository
     )
     {
     }
@@ -25,15 +27,21 @@ class DeveloperActivityIndexController extends Controller
         $isApproved = $request->get('is_approved');
         $startAt = $request->get('start_at');
         $endAt = $request->get('end_at');
-        $developerActivities = $this->repository->index(
-            $page,
-            $this->perPage,
-            $userId,
-            $type,
-            $isApproved,
-            $startAt,
-            $endAt,
-        );
+
+        $queryString = http_build_query($request->validated());
+        $cacheKey = "achievements:user:{$userId}:$queryString";
+
+        $developerActivities = $this->cacheRepository->remember($cacheKey, function () use ($userId, $page, $isApproved, $type, $endAt,$startAt) {
+            return $this->repository->index(
+                $page,
+                $this->perPage,
+                $userId,
+                $type,
+                $isApproved,
+                $startAt,
+                $endAt,
+            );
+        });
         return new IndexDeveloperActivitiesResource($developerActivities);
     }
 }
