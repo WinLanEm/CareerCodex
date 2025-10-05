@@ -37,8 +37,7 @@ class DeveloperActivityDeleteTest extends TestCase
             route('developer.activity.delete', ['id' => $activityOfUser2->id])
         );
 
-        $response->assertStatus(404);
-        $response->assertJson(['message' => 'DeveloperActivity not found']);
+        $response->assertStatus(403);
         $this->assertDatabaseHas('developer_activities', ['id' => $activityOfUser2->id]);
     }
 

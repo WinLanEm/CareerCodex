@@ -49,8 +49,7 @@ class DeveloperActivityApproveTest extends TestCase
             ['developer_activity_ids' => $idsToUpdate]
         );
 
-        $response->assertStatus(404);
-        $response->assertJson(['message' => 'ids not found']);
+        $response->assertStatus(403);
         $this->assertDatabaseHas('developer_activities', ['id' => $idsToUpdate[0], 'is_approved' => false]);
     }
 

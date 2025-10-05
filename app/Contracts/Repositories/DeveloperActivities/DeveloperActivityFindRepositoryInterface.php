@@ -6,5 +6,7 @@ use App\Models\DeveloperActivity;
 
 interface DeveloperActivityFindRepositoryInterface
 {
-    public function find(int $id,int $userId):?DeveloperActivity;
+    public function find(int $id):?DeveloperActivity;
+
+    public function findWithRelations(int $id):?DeveloperActivity;
 }

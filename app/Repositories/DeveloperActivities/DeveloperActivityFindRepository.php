@@ -7,12 +7,13 @@ use App\Models\DeveloperActivity;
 
 class DeveloperActivityFindRepository implements DeveloperActivityFindRepositoryInterface
 {
-    public function find(int $id,int $userId): ?DeveloperActivity
+    public function find(int $id): ?DeveloperActivity
     {
-        return DeveloperActivity::where('id', $id)
-            ->whereHas('integration.user', function ($query) use ($userId) {
-                $query->where('id', $userId);
-            })
-            ->first();
+        return DeveloperActivity::find($id);
+    }
+
+    public function findWithRelations(int $id): ?DeveloperActivity
+    {
+        return DeveloperActivity::with('integration.user')->find($id);
     }
 }

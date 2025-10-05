@@ -6,6 +6,8 @@ use App\Contracts\Repositories\Achievement\AchievementDeleteRepositoryInterface;
 use App\Contracts\Repositories\Achievement\AchievementFindRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\MessageResource;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Gate;
 
 class AchievementDeleteController extends Controller
 {
@@ -18,12 +20,17 @@ class AchievementDeleteController extends Controller
 
     public function __invoke(int $achievementId)
     {
-        $userId = auth()->id();
-        $achievement = $this->workspaceAchievementFindRepository->find($achievementId,$userId);
+        $achievement = $this->workspaceAchievementFindRepository->findWithRelations($achievementId);
         if(!$achievement){
             return new MessageResource('achievement not found',false,404);
         }
-        $this->workspaceAchievementDeleteRepository->delete($achievementId);
+
+        try {
+            Gate::authorize('delete', $achievement);
+        }catch (AuthorizationException $e){
+            return new MessageResource('This action is unauthorized.',false,403);
+        }
+        $this->workspaceAchievementDeleteRepository->delete($achievement);
         return response()->noContent();
     }
 }

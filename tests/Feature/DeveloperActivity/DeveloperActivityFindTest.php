@@ -41,8 +41,7 @@ class DeveloperActivityFindTest extends TestCase
 
         $response = $this->actingAs($user1)->getJson(route('developer.activity.find', ['id' => $activityOfUser2->id]));
 
-        $response->assertStatus(404);
-        $response->assertJson(['message' => 'DeveloperActivity not found']);
+        $response->assertStatus(403);
     }
 
     public function test_it_returns_404_if_developer_activity_does_not_exist()

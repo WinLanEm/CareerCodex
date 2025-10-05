@@ -47,7 +47,7 @@ class AchievementApproveTest extends TestCase
             ['achievement_ids' => $idsToUpdate]
         );
 
-        $response->assertStatus(404);
+        $response->assertStatus(403);
         $this->assertDatabaseHas('achievements', ['id' => $idsToUpdate[0], 'is_approved' => false]);
     }
     public function test_a_user_cannot_bulk_update_a_mixed_list_of_owned_and_unowned_achievements()
@@ -65,7 +65,7 @@ class AchievementApproveTest extends TestCase
             ['achievement_ids' => $mixedIds]
         );
 
-        $response->assertStatus(404);
+        $response->assertStatus(403);
         $this->assertDatabaseHas('achievements', ['id' => $achievementUser1->id, 'is_approved' => false]);
     }
 

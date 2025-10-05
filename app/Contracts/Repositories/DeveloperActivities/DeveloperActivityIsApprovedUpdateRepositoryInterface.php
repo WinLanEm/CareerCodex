@@ -4,5 +4,5 @@ namespace App\Contracts\Repositories\DeveloperActivities;
 
 interface DeveloperActivityIsApprovedUpdateRepositoryInterface
 {
-    public function update(array $developerActivityIds,int $userId): bool;
+    public function update(array $developerActivityIds): int;
 }

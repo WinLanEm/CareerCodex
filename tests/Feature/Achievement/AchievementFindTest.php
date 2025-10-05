@@ -3,6 +3,8 @@
 namespace Achievement;
 
 use App\Models\Achievement;
+use App\Models\Integration;
+use App\Models\IntegrationInstance;
 use App\Models\User;
 use App\Models\Workspace;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,8 +17,13 @@ class AchievementFindTest extends TestCase
     public function test_an_authorized_user_can_find_their_own_achievement()
     {
         $user = User::factory()->create();
-        $workspace = Workspace::factory()->create(['user_id' => $user->id]);
-        $achievement = Achievement::factory()->create(['workspace_id' => $workspace->id]);
+        $integration = Integration::factory()->create(['user_id' => $user->id]);
+        $integrationInstance = IntegrationInstance::factory()->create(['integration_id' => $integration->id]);
+
+        $achievement = Achievement::factory()->create([
+            'integration_instance_id' => $integrationInstance->id,
+            'workspace_id' => null,
+        ]);
 
         $response = $this->actingAs($user)->getJson(route('achievement.find', ['id' => $achievement->id]));
 
@@ -63,10 +70,6 @@ class AchievementFindTest extends TestCase
 
         $response = $this->actingAs($user1)->getJson(route('achievement.find', ['id' => $achievementOfUser2->id]));
 
-        $response->assertStatus(404);
-        $response->assertJson([
-            'message' => 'achievement not found',
-            'status' => false,
-        ]);
+        $response->assertStatus(403);
     }
 }

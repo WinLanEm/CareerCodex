@@ -25,7 +25,7 @@ class WorkspaceIndexController extends Controller
         $queryString = http_build_query($request->validated());
         $cacheKey = "achievements:user:{$userId}:$queryString";
         $workspaces = $this->cacheRepository->remember($cacheKey,function () use ($userId, $page) {
-            return $this->workspaceRepository->index($userId, $this->perPage,$page);
+            return $this->workspaceRepository->index($page, $this->perPage,$userId);
         });
         return new IndexWorkspaceResource($workspaces);
     }

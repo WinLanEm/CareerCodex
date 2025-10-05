@@ -5,6 +5,8 @@ namespace App\Repositories\Achievement;
 use App\Contracts\Repositories\Achievement\AchievementCreateRepositoryInterface;
 use App\Contracts\Repositories\Workspace\FindWorkspaceRepositoryInterface;
 use App\Models\Achievement;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Support\Facades\Gate;
 
 class AchievementCreateRepository implements AchievementCreateRepositoryInterface
 {
@@ -16,10 +18,17 @@ class AchievementCreateRepository implements AchievementCreateRepositoryInterfac
 
     public function create(array $data,int $userId): ?Achievement
     {
-        $workspace = $this->findWorkspaceRepository->find($data['workspace_id'],$userId);
+        $workspace = $this->findWorkspaceRepository->find($data['workspace_id']);
         if(!$workspace){
             return null;
         }
+
+        try {
+            Gate::authorize('createAchievement', $workspace);
+        }catch (AuthorizationException $e){
+            return null;
+        }
+
         return Achievement::create([
             'workspace_id' => $data['workspace_id'],
             'title' => $data['title'],
