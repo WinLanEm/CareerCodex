@@ -10,7 +10,7 @@ class Achievement extends Model
 {
     use HasFactory;
     protected $fillable = [
-        'workspace_id',
+        'user_id',
         'integration_instance_id',
         'title',
         'description',
@@ -24,14 +24,14 @@ class Achievement extends Model
         'link',
     ];
 
-    public function workspace(): BelongsTo
-    {
-        return $this->belongsTo(Workspace::class);
-    }
-
     public function integrationInstance(): BelongsTo
     {
         return $this->belongsTo(IntegrationInstance::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     protected $casts = [

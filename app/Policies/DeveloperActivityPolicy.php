@@ -21,7 +21,13 @@ class DeveloperActivityPolicy
      */
     public function view(User $user, DeveloperActivity $developerActivity): bool
     {
-        return $user->id === $developerActivity->integration->user_id;
+        if($developerActivity->integration){
+            return $user->id === $developerActivity->integration->user_id;
+        }
+        if($developerActivity->user_id){
+            return $user->id === $developerActivity->user_id;
+        }
+        return false;
     }
 
     /**

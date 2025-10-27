@@ -23,8 +23,6 @@ class DeveloperActivityUpdateController extends Controller
 
     public function __invoke(DeveloperActivityUpdateRequest $request,int $id)
     {
-        $title = $request->get('title');
-        $isApproved = $request->get('is_approved');
         $developerActivity = $this->findRepository->findWithRelations($id);
         if(!$developerActivity){
             return new MessageResource('DeveloperActivity not found',false,404);
@@ -36,7 +34,7 @@ class DeveloperActivityUpdateController extends Controller
             return new MessageResource('This action is unauthorized.',false,403);
         }
 
-        $updatedDeveloperActivity = $this->updateRepository->update($developerActivity, ['title' => $title, 'is_approved' => $isApproved]);
+        $updatedDeveloperActivity = $this->updateRepository->update($developerActivity, $request->toArray());
         return new DeveloperActivityWrapperResource($updatedDeveloperActivity);
     }
 }

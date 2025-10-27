@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Achievement;
-use App\Models\Workspace;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class AchievementFactory extends Factory
@@ -13,7 +12,7 @@ class AchievementFactory extends Factory
     public function definition()
     {
         return [
-            'workspace_id' => Workspace::factory(),
+            'user_id' => $this->faker->numberBetween(1, 100),
             'title' => $this->faker->title(),
             'description' => $this->faker->paragraph(),
             'result' => $this->faker->sentence(),

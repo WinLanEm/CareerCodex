@@ -10,7 +10,6 @@ class AchievementResource extends BaseJsonResource
     public function toArray(Request $request): array
     {
         return [
-            'workspace_id' => $this->workspace_id,
             'id' => $this->id,
             'title' => $this->title,
             'description' => $this->description,
@@ -21,6 +20,8 @@ class AchievementResource extends BaseJsonResource
             'is_approved' => $this->is_approved,
             'link' => $this->link,
             'is_from_provider' => $this->is_from_provider,
+            'service' => $this?->integrationInstance?->integration?->service,
+            'created_at' => $this->created_at
         ];
     }
 }

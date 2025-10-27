@@ -22,8 +22,8 @@ class AchievementPolicy
     public function view(User $user, Achievement $achievement): bool
     {
 
-        if ($achievement->workspace_id) {
-            return $user->id === $achievement->workspace?->user_id;
+        if ($achievement->user_id) {
+            return $user->id === $achievement->user?->user_id;
         }
 
         if ($achievement->integration_instance_id) {
@@ -46,8 +46,8 @@ class AchievementPolicy
      */
     public function update(User $user, Achievement $achievement): bool
     {
-        if ($achievement->workspace_id) {
-            return $user->id === $achievement->workspace?->user_id;
+        if ($achievement->user_id) {
+            return $user->id === $achievement->user_id;
         }
 
         if ($achievement->integration_instance_id) {
@@ -63,8 +63,8 @@ class AchievementPolicy
     public function delete(User $user, Achievement $achievement): bool
     {
 
-        if ($achievement->workspace_id) {
-            return $user->id === $achievement->workspace?->user_id;
+        if ($achievement->user_id) {
+            return $user->id === $achievement->user_id;
         }
 
         if ($achievement->integration_instance_id) {

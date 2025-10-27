@@ -9,6 +9,7 @@ class DeveloperActivityUpdateRepository implements DeveloperActivityUpdateReposi
 {
     public function update(DeveloperActivity $activity, array $data): DeveloperActivity
     {
+        $data['url'] = $data['url'] ?? '';
         $activity->update($data);
         return $activity->fresh();
     }

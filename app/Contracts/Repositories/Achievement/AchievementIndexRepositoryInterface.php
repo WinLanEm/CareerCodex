@@ -6,5 +6,5 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 interface AchievementIndexRepositoryInterface
 {
-    public function index(int $page,int $perPage,int $userId,bool $isApproved,?int $workspaceId,?string $startDate,?string $endDate):LengthAwarePaginator;
+    public function index(int $page,int $perPage,int $userId,bool $isApproved,?string $startDate,?string $endDate):LengthAwarePaginator;
 }

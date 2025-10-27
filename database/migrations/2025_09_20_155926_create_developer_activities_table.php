@@ -13,19 +13,21 @@ return new class extends Migration
     {
         Schema::create('developer_activities', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('integration_id')->constrained('integrations')->onDelete('cascade');
-            $table->string('external_id');
+            $table->foreignId('integration_id')->nullable()->constrained('integrations')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
+            $table->string('external_id')->nullable();
             $table->string('repository_name');
             $table->enum('type', ['commit', 'pull_request']);
             $table->boolean('is_approved')->default(false);
             $table->string('title');
             $table->text('url');
-            $table->timestamp('completed_at');
+            $table->timestamp('completed_at')->nullable();
             $table->unsignedInteger('additions')->default(0);
             $table->unsignedInteger('deletions')->default(0);
+            $table->boolean('is_from_provider')->default(false);
             $table->timestamps();
 
-            $table->unique(['integration_id', 'type', 'external_id']);
+            $table->unique(['integration_id', 'type', 'external_id','user_id']);
         });
     }
 

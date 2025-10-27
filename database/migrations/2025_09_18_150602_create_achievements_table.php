@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('achievements', function (Blueprint $table) {
             $table->id();
             $table->foreignId('integration_instance_id')->nullable()->constrained('integration_instances')->onDelete('cascade');
-            $table->foreignId('workspace_id')->nullable()->constrained('workspaces')->onDelete('cascade');
+            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->string('title');
             $table->text('description');
             $table->text('result')->nullable();
@@ -28,8 +28,7 @@ return new class extends Migration
             $table->string('link')->nullable();
             $table->timestamps();
 
-            $table->unique(['title','link','workspace_id']);
-            $table->index('workspace_id');
+            $table->unique(['title','link','user_id']);
             $table->index('date');
         });
 

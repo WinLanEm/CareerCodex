@@ -15,7 +15,7 @@ class AchievementFindRepository implements AchievementFindRepositoryInterface
     public function findWithRelations(int $achievementId): ?Achievement
     {
         return Achievement::with([
-            'workspace.user',
+            'user',
             'integrationInstance.integration.user',
         ])->find($achievementId);
     }

@@ -30,7 +30,6 @@ class RegisterController extends Controller
         }else if(isset($user->provider) && !$user->password){
             return new MessageResource("Registration failed. This email is already registered with $user->provider. Try login with $user->provider and attach password",false,401);
         }
-
         if($user){
             return new MessageResource("Email already exists.",false,401);
         }
@@ -46,6 +45,6 @@ class RegisterController extends Controller
 
         Mail::to($user->email)->send(new VerifyEmail($user,$this->generateVerificationCodeRepository));
 
-        return new MessageResource('User registered successfully. Please check your email for verification.',true,201);
+        return new MessageResource('Registered successfully. Please check your email for verification.',true,201);
     }
 }

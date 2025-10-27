@@ -8,18 +8,18 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class AchievementIndexRepository implements AchievementIndexRepositoryInterface
 {
-    public function index(int $page, int $perPage, int $userId, bool $isApproved,?int $workspaceId, ?string $startDate, ?string $endDate):LengthAwarePaginator
+    public function index(int $page, int $perPage, int $userId, bool $isApproved, ?string $startDate, ?string $endDate):LengthAwarePaginator
     {
         return Achievement
             ::with([
                 'integrationInstance.integration',
-                'workspace'
+                'user',
             ])
             ->where(function ($query) use ($userId) {
                 $query->whereHas('integrationInstance.integration.user', function ($q) use ($userId) {
                     $q->where('id', $userId);
                 })
-                    ->orWhereHas('workspace.user', function ($q) use ($userId) {
+                    ->orWhereHas('user', function ($q) use ($userId) {
                         $q->where('id', $userId);
                     });
             })
@@ -27,15 +27,12 @@ class AchievementIndexRepository implements AchievementIndexRepositoryInterface
                     return $query->whereDate('date', '>=', $startDate);
                 })->when($endDate !== null, function ($query) use ($endDate) {
                     return $query->whereDate('date', '<=', $endDate);
-                })->when($workspaceId !== null, function ($query) use ($workspaceId) {
-                    return $query->where('workspace_id', $workspaceId);
                 })
             ->where('is_approved', $isApproved)
             ->orderBy('date', 'desc')
             ->paginate(
                 $perPage,
                 [
-                    'workspace_id',
                     'id',
                     'title',
                     'description',

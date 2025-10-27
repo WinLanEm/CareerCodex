@@ -24,6 +24,10 @@ class DeveloperActivityUpdateRequest extends FormRequest
         return [
             'title' => 'nullable|string|max:255',
             'is_approved' => 'nullable|boolean',
+            'repository_name' => 'nullable|string|max:255',
+            'url' => 'nullable|string',
+            'additions' => 'nullable|int',
+            'deletions' => 'nullable|int',
         ];
     }
     public function messages(): array
@@ -32,6 +36,11 @@ class DeveloperActivityUpdateRequest extends FormRequest
             'title.string' => 'title must be a string.',
             'title.max' => 'title must be less than 255 characters.',
             'is_approved.boolean' => 'is_approved value must be boolean.',
+            'repository_name.string' => 'repository_name must be a string.',
+            'repository_name.max' => 'repository_name must be less than 255 characters.',
+            'url.string' => 'url must be a string.',
+            'additions.int' => 'additions must be an integer.',
+            'deletions.int' => 'deletions must be an integer.',
         ];
     }
 }

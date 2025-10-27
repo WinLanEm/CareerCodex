@@ -4,11 +4,11 @@ namespace App\Http\Controllers\User;
 
 use App\Contracts\Repositories\User\UpdateUserRepositoryInterface;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\User\AttachPasswordRequest;
+use App\Http\Requests\User\UserUpdateRequest;
 use App\Http\Resources\MessageResource;
 use Illuminate\Support\Facades\Auth;
 
-class AttachPasswordController extends Controller
+class UserUpdateController extends Controller
 {
     public function __construct(
         readonly private UpdateUserRepositoryInterface $updateUserRepository,
@@ -16,9 +16,9 @@ class AttachPasswordController extends Controller
     {
     }
 
-    public function __invoke(AttachPasswordRequest $request)
+    public function __invoke(UserUpdateRequest $request)
     {
         $this->updateUserRepository->update($request->toArray(),Auth::user());
-        return new MessageResource('Password updated successfully',true,202);
+        return new MessageResource('Updated successfully',true,202);
     }
 }

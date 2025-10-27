@@ -23,13 +23,12 @@ class AchievementIndexController extends Controller
         $userId = auth()->id();
         $page = $request->get('page', 1);
         $isApproved = $request->get('is_approved');
-        $workspaceId = $request->get('workspace_id');
         $startDate = $request->get('start_date');
         $endDate = $request->get('end_date');
         $queryString = http_build_query($request->validated());
         $cacheKey = "achievements:user:{$userId}:$queryString";
-        $achievements = $this->cacheRepository->remember($cacheKey, function () use ($userId, $page, $isApproved, $startDate, $endDate,$workspaceId) {
-            return $this->repository->index($page,$this->perPage,$userId,$isApproved,$workspaceId,$startDate,$endDate);
+        $achievements = $this->cacheRepository->remember($cacheKey, function () use ($userId, $page, $isApproved, $startDate, $endDate) {
+            return $this->repository->index($page,$this->perPage,$userId,$isApproved,$startDate,$endDate);
         });
         return new IndexAchievementResource($achievements);
     }

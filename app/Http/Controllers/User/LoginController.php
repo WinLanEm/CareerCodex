@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\User;
 
-use App\Contracts\Repositories\User\FindUserRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\User\LoginRequest;
 use App\Http\Resources\MessageResource;
 use App\Http\Resources\User\AuthResource;
+use App\Http\Resources\User\UserWrapperResource;
 use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
@@ -23,8 +23,13 @@ class LoginController extends Controller
             return new MessageResource('Email not verified.', false,403);
         }
 
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return new AuthResource($user, 'success',$token);
+        if ($request->has('issue_token')) {
+            $token = $user->createToken('api-token')->plainTextToken;
+            return new AuthResource($user, 'success', $token);
+        } else {
+            Auth::guard('web')->login($user);
+            $request->session()->regenerate();
+            return new UserWrapperResource($user,true,200);
+        }
     }
 }

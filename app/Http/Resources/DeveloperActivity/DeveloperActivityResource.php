@@ -11,16 +11,18 @@ class DeveloperActivityResource extends BaseJsonResource
     {
         return [
             'id' => $this->id,
-            'integration_id' => $this->integration->id,
+            'integration_id' => $this?->integration?->id,
             'title' => $this->title,
             'repository_name' => $this->repository_name,
             'type' => $this->type,
-            'service' => $this->integration->service,
+            'service' => $this?->integration?->service,
             'url' => $this->url,
             'completed_at' => $this->completed_at,
             'additions' => $this->additions ?? 0,
             'deletions' => $this->deletions ?? 0,
             'is_approved' => $this->is_approved,
+            'is_from_provider' => $this->is_from_provider,
+            'created_at' => $this->created_at
         ];
     }
 }

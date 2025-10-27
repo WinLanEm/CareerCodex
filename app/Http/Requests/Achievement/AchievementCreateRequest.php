@@ -28,7 +28,6 @@ class AchievementCreateRequest extends FormRequest
             'hours_spent' => 'nullable|int|between:1,999',
             'date' => 'nullable|date|date_format:Y-m-d',
             'skills' => 'nullable|array',
-            'workspace_id' => 'int|required|exists:workspaces,id',
         ];
     }
 
@@ -47,9 +46,6 @@ class AchievementCreateRequest extends FormRequest
             'date.date' => 'Date must be a date',
             'date.date_format' => 'Date format must be Y-m-d',
             'skills.array' => 'Skills must be an array',
-            'workspace_id.int' => 'Workspace id must be an integer',
-            'workspace_id.required' => 'Workspace id is required',
-            'workspace_id.exists' => 'Workspace not found',
         ];
     }
 }

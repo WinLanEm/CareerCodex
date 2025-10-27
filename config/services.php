@@ -118,4 +118,7 @@ return [
         'client_secret' => env('TRELLO_SERVICE_CLIENT_SECRET'),
         'redirect' => env('TRELLO_SERVICE_REDIRECT_URI'),
     ],
+    'frontend' => [
+        'url' => 'https://convincingly-special-barbel.cloudpub.ru/'
+    ]
 ];

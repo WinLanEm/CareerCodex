@@ -9,7 +9,12 @@ use App\Contracts\Repositories\Achievement\AchievementFindRepositoryInterface;
 use App\Contracts\Repositories\Achievement\AchievementIsApprovedUpdateRepositoryInterface;
 use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\Achievement\AchievementUpdateRepositoryInterface;
+use App\Contracts\Repositories\AllActivities\ActivitiesIndexRepositoryInterface;
+use App\Contracts\Repositories\AllActivities\ActivitiesPendingApprovalInterface;
+use App\Contracts\Repositories\AllActivities\ActivitiesStatRepositoryInterface;
+use App\Contracts\Repositories\AllActivities\RecentActivityRepositoryInterface;
 use App\Contracts\Repositories\Cache\CacheRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityCreateRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityDeleteRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityFindRepositoryInterface;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityIndexRepositoryInterface;
@@ -61,7 +66,12 @@ use App\Repositories\Achievement\AchievementFindRepository;
 use App\Repositories\Achievement\AchievementIsApprovedUpdateRepository;
 use App\Repositories\Achievement\AchievementUpdateOrCreateRepository;
 use App\Repositories\Achievement\AchievementUpdateRepository;
+use App\Repositories\AllActivities\ActivitiesIndexRepository;
+use App\Repositories\AllActivities\ActivitiesPendingApprovalRepository;
+use App\Repositories\AllActivities\ActivitiesStatRepository;
+use App\Repositories\AllActivities\RecentActivityRepository;
 use App\Repositories\Cache\CacheRepository;
+use App\Repositories\DeveloperActivities\DeveloperActivityCreateRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityDeleteRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityFindRepository;
 use App\Repositories\DeveloperActivities\DeveloperActivityIndexRepository;
@@ -123,30 +133,6 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             FindUserRepositoryInterface::class,
             FindUserRepository::class
-        );
-        $this->app->bind(
-            IndexWorkspaceRepositoryInterface::class,
-            IndexWorkspaceRepository::class
-        );
-        $this->app->bind(
-            CreateWorkspaceRepositoryInterface::class,
-            CreateWorkspaceRepository::class
-        );
-        $this->app->bind(
-            DeleteWorkspaceRepositoryInterface::class,
-            DeleteWorkspaceRepository::class
-        );
-        $this->app->bind(
-            FindWorkspaceRepositoryInterface::class,
-            FindWorkspaceRepository::class
-        );
-        $this->app->bind(
-            UpdateWorkspaceRepositoryInterface::class,
-            UpdateWorkspaceRepository::class
-        );
-        $this->app->bind(
-            WorkspaceAchievementIndexRepositoryInterface::class,
-            WorkspaceAchievementIndexRepository::class
         );
         $this->app->bind(
             AchievementCreateRepositoryInterface::class,
@@ -291,6 +277,10 @@ class AppServiceProvider extends ServiceProvider
             DeveloperActivityUpdateRepository::class
         );
         $this->app->bind(
+            DeveloperActivityCreateRepositoryInterface::class,
+            DeveloperActivityCreateRepository::class
+        );
+        $this->app->bind(
             DeveloperActivityDeleteRepositoryInterface::class,
             DeveloperActivityDeleteRepository::class
         );
@@ -325,6 +315,22 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             CacheRepositoryInterface::class,
             CacheRepository::class
+        );
+        $this->app->bind(
+            RecentActivityRepositoryInterface::class,
+            RecentActivityRepository::class
+        );
+        $this->app->bind(
+            ActivitiesStatRepositoryInterface::class,
+            ActivitiesStatRepository::class
+        );
+        $this->app->bind(
+            ActivitiesPendingApprovalInterface::class,
+            ActivitiesPendingApprovalRepository::class
+        );
+        $this->app->bind(
+            ActivitiesIndexRepositoryInterface::class,
+            ActivitiesIndexRepository::class
         );
     }
 

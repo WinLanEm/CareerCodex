@@ -5,7 +5,6 @@ namespace App\Repositories\DeveloperActivities;
 use App\Contracts\Repositories\DeveloperActivities\DeveloperActivityIndexRepositoryInterface;
 use App\Enums\DeveloperActivityEnum;
 use App\Models\DeveloperActivity;
-use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class DeveloperActivityIndexRepository implements DeveloperActivityIndexRepositoryInterface
@@ -19,10 +18,16 @@ class DeveloperActivityIndexRepository implements DeveloperActivityIndexReposito
                 },
                 'integration.user' => function ($query) {
                     $query->select('id');
-                }
+                },
+                'user'
             ])
-            ->whereHas('integration.user', function ($query) use ($userId) {
-                $query->where('id', $userId);
+            ->where(function ($query) use ($userId) {
+                $query->whereHas('integration.user', function ($q) use ($userId) {
+                    $q->where('id', $userId);
+                })
+                    ->orWhereHas('user', function ($q) use ($userId) {
+                        $q->where('id', $userId);
+                    });
             })
             ->when($type !== null, function ($query) use ($type) {
                 return $query->where('type', $type->value);
@@ -36,7 +41,7 @@ class DeveloperActivityIndexRepository implements DeveloperActivityIndexReposito
             ->orderBy('completed_at', 'desc')
             ->paginate(
                 $perPage,
-                ['id','integration_id','title','repository_name','type','is_approved','completed_at','url','additions','deletions'],
+                ['id','user_id','integration_id','title','repository_name','type','is_approved','completed_at','url','additions','deletions'],
                 'page',
                 $page
         );

@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\User\VerifyEmailRequest;
 use App\Http\Resources\MessageResource;
 use App\Http\Resources\User\AuthResource;
+use App\Http\Resources\User\UserWrapperResource;
+use Illuminate\Support\Facades\Auth;
 
 class VerifyEmailController extends Controller
 {
@@ -37,8 +39,13 @@ class VerifyEmailController extends Controller
         $user->verification_code_expires_at = null;
         $user->save();
 
-        $token = $user->createToken('api-token')->plainTextToken;
-
-        return new AuthResource($user, 'Email verify successfully.', $token);
+        if ($request->has('issue_token')) {
+            $token = $user->createToken('api-token')->plainTextToken;
+            return new AuthResource($user, 'Email verify successfully.', $token);
+        } else {
+            Auth::guard('web')->login($user);
+            $request->session()->regenerate();
+            return new UserWrapperResource($user,true,200);
+        }
     }
 }

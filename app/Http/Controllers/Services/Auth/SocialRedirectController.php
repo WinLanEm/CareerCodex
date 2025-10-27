@@ -2,13 +2,10 @@
 
 namespace App\Http\Controllers\Services\Auth;
 
-use App\Contracts\Repositories\User\UpdateOrCreateUserRepositoryInterface;
-use App\Enums\AuthServiceEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Services\ValidateOAuthProviderRequest;
 use App\Http\Resources\MessageResource;
 use App\Http\Resources\UrlResource;
-use App\Http\Resources\User\AuthResource;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;

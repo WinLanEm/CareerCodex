@@ -10,6 +10,7 @@ class DeveloperActivity extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'user_id',
         'integration_id',
         'external_id',
         'type',
@@ -25,5 +26,9 @@ class DeveloperActivity extends Model
     public function integration(): BelongsTo
     {
         return $this->belongsTo(Integration::class);
+    }
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 }

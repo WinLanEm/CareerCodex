@@ -14,6 +14,6 @@ class DeveloperActivityFindRepository implements DeveloperActivityFindRepository
 
     public function findWithRelations(int $id): ?DeveloperActivity
     {
-        return DeveloperActivity::with('integration.user')->find($id);
+        return DeveloperActivity::with(['integration.user','user'])->find($id);
     }
 }
