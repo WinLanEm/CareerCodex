@@ -59,6 +59,7 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
 
     private function handlePush(array $payload): void
     {
+        Log::info(print_r($payload, true));
         $repoName = $payload['repository']['full_name'];
         $integration = $this->findIntegrationById($payload['actor']['uuid'],ServiceConnectionsEnum::BITBUCKET);
 
