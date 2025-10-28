@@ -36,10 +36,11 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
         );
 
         if (!$webhook || !$webhook->secret) {
-            Log::info(print_r($headers, true));
             Log::warning('Webhook or secret not found for Bitbucket hook', ['hook_uuid' => $hookUuid]);
             return false;
         }
+
+        Log::info('Webhook found', ['hook_uuid' => $hookUuid]);
 
         // ВАЖНО: Для 100% надежности здесь нужно использовать "сырое" тело запроса,
         // для прода поменять логику
