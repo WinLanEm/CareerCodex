@@ -59,15 +59,23 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
 
     private function handlePush(array $payload): void
     {
-        Log::info(print_r($payload, true));
         $repoName = $payload['repository']['full_name'];
-        $integration = $this->findIntegrationById($payload['actor']['uuid'],ServiceConnectionsEnum::BITBUCKET);
-
-        if (!$integration) return;
 
         foreach ($payload['push']['changes'] as $change) {
             foreach ($change['commits'] as $commit) {
-                Log::info(print_r($commit, true));
+                $authorUuid = $commit['author']['user']['uuid'] ?? null;
+
+                if (!$authorUuid) {
+                    continue;
+                }
+
+                $integration = $this->findIntegrationById($authorUuid, ServiceConnectionsEnum::BITBUCKET);
+
+                if (!$integration) {
+                    Log::warning('Integration not found for author', ['author_uuid' => $authorUuid]);
+                    continue;
+                }
+
                 $this->activityRepository->updateOrCreateDeveloperActivity([
                     'integration_id' => $integration->id,
                     'type' => 'commit',
@@ -77,8 +85,8 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
                     'title' => mb_substr($commit['message'], 0, 255),
                     'url' => $commit['links']['html']['href'],
                     'completed_at' => CarbonImmutable::parse($commit['date']),
-                    'additions' => 0, // Недоступно в push-событии
-                    'deletions' => 0, // Недоступно в push-событии
+                    'additions' => 0,
+                    'deletions' => 0,
                 ]);
             }
         }
@@ -88,12 +96,22 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
     {
         $pr = $payload['pullrequest'];
         $repoName = $payload['repository']['full_name'];
-        $integrationId = $this->findIntegrationById($pr['author']['uuid'],ServiceConnectionsEnum::BITBUCKET);
 
-        if (!$integrationId) return;
+        $authorUuid = $pr['author']['uuid'] ?? null;
+
+        if (!$authorUuid) {
+            return;
+        }
+
+        $integration = $this->findIntegrationById($authorUuid, ServiceConnectionsEnum::BITBUCKET);
+
+        if (!$integration) {
+            Log::warning('Integration not found for PR author', ['author_uuid' => $authorUuid]);
+            return;
+        }
 
         $this->activityRepository->updateOrCreateDeveloperActivity([
-            'integration_id' => $integrationId,
+            'integration_id' => $integration->id,
             'type' => 'pull_request',
             'external_id' => $pr['id'],
             'repository_name' => $repoName,
@@ -101,7 +119,6 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
             'is_from_provider' => true,
             'url' => $pr['links']['html']['href'],
             'completed_at' => CarbonImmutable::parse($pr['updated_on']),
-            // Additions/deletions в Bitbucket нужно получать отдельным запросом к diffstat
             'additions' => 0,
             'deletions' => 0,
         ]);
