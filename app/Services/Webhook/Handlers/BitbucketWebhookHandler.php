@@ -36,7 +36,6 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
         );
 
         if (!$webhook || !$webhook->secret) {
-            Log::info(print_r($payload, true));
             Log::info(print_r($headers, true));
             Log::warning('Webhook or secret not found for Bitbucket hook', ['hook_uuid' => $hookUuid]);
             return false;
@@ -75,6 +74,7 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
                     'type' => 'commit',
                     'external_id' => $commit['hash'],
                     'repository_name' => $repoName,
+                    'is_from_provider' => true,
                     'title' => mb_substr($commit['message'], 0, 255),
                     'url' => $commit['links']['html']['href'],
                     'completed_at' => CarbonImmutable::parse($commit['date']),
@@ -99,6 +99,7 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
             'external_id' => $pr['id'],
             'repository_name' => $repoName,
             'title' => mb_substr($pr['title'], 0, 255),
+            'is_from_provider' => true,
             'url' => $pr['links']['html']['href'],
             'completed_at' => CarbonImmutable::parse($pr['updated_on']),
             // Additions/deletions в Bitbucket нужно получать отдельным запросом к diffstat
