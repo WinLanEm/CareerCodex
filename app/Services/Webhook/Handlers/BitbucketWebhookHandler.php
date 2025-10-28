@@ -25,6 +25,7 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
             return false;
         }
 
+        Log::info('Webhook found', ['hook_uuid' => $hookUuid]);
 
         $webhook = $this->webhookRepository->find(
             function(Builder $query) use ($hookUuid) {
@@ -39,8 +40,6 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
             Log::warning('Webhook or secret not found for Bitbucket hook', ['hook_uuid' => $hookUuid]);
             return false;
         }
-
-        Log::info('Webhook found', ['hook_uuid' => $hookUuid]);
 
         // ВАЖНО: Для 100% надежности здесь нужно использовать "сырое" тело запроса,
         // для прода поменять логику
