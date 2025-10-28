@@ -27,7 +27,6 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
         }
 
         $hookUuidWithBraces = '{' . trim($hookUuid, '{}') . '}';
-        Log::info($hookUuidWithBraces);
 
         $webhook = $this->webhookRepository->find(
             function(Builder $query) use ($hookUuidWithBraces) {
@@ -62,14 +61,14 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
     private function handlePush(array $payload): void
     {
         $repoName = $payload['repository']['full_name'];
-        $integrationId = $this->findIntegrationById($payload['actor']['uuid'],ServiceConnectionsEnum::BITBUCKET);
+        $integration = $this->findIntegrationById($payload['actor']['uuid'],ServiceConnectionsEnum::BITBUCKET);
 
-        if (!$integrationId) return;
+        if (!$integration) return;
 
         foreach ($payload['push']['changes'] as $change) {
             foreach ($change['commits'] as $commit) {
                 $this->activityRepository->updateOrCreateDeveloperActivity([
-                    'integration_id' => $integrationId,
+                    'integration_id' => $integration->id,
                     'type' => 'commit',
                     'external_id' => $commit['hash'],
                     'repository_name' => $repoName,
