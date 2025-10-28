@@ -43,10 +43,12 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
             return false;
         }
 
-        $expectedSignature = 'sha256=' . hash_hmac('sha256', json_encode($payload), $webhook->secret);
-        Log::info($expectedSignature);
-        Log::info($signature);
-        Log::info($webhook->secret);
+        $expectedSignature = 'sha256=' . hash_hmac('sha256', $rawPayload, $webhook->secret);
+
+        Log::info("Expected signature: {$expectedSignature}");
+        Log::info("Actual signature: {$signature}");
+        Log::info("Secret used: {$webhook->secret}");
+        Log::info("Raw payload length: " . strlen($rawPayload));
         return hash_equals($expectedSignature, $signature);
     }
 
