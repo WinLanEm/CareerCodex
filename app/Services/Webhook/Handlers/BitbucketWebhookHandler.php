@@ -28,8 +28,7 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
 
         $hookUuidWithBraces = '{' . trim($hookUuid, '{}') . '}';
         Log::info($hookUuidWithBraces);
-        $webhooks = Webhook::query()->where('repository','career_codex/careercodex')->select('webhook_id')->get();
-        Log::info(print_r($webhooks, true));
+
         $webhook = $this->webhookRepository->find(
             function(Builder $query) use ($hookUuidWithBraces) {
                 return $query->where('webhook_id', $hookUuidWithBraces)
