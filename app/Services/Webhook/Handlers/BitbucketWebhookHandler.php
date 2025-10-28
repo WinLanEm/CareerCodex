@@ -50,7 +50,6 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
     public function handle(array $payload, array $headers): void
     {
         $eventType = $headers['x-event-key'][0] ?? null;
-        Log::info($eventType);
         match ($eventType) {
             'repo:push' => $this->handlePush($payload),
             'pullrequest:fulfilled' => $this->handlePullRequest($payload), // fulfilled - это слияние
@@ -67,6 +66,7 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
 
         foreach ($payload['push']['changes'] as $change) {
             foreach ($change['commits'] as $commit) {
+                Log::info(print_r($commit, true));
                 $this->activityRepository->updateOrCreateDeveloperActivity([
                     'integration_id' => $integration->id,
                     'type' => 'commit',
