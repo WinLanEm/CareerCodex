@@ -6,6 +6,7 @@ use App\Enums\ServiceConnectionsEnum;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
+use function PHPUnit\Framework\isNull;
 
 class BitbucketWebhookHandler extends AbstractWebhookHandler
 {
@@ -24,6 +25,7 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
             return false;
         }
 
+
         $webhook = $this->webhookRepository->find(
             function(Builder $query) use ($hookUuid) {
                 return $query->where('webhook_id', $hookUuid)
@@ -34,6 +36,8 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
         );
 
         if (!$webhook || !$webhook->secret) {
+            Log::info(print_r($payload, true));
+            Log::info(print_r($headers, true));
             Log::warning('Webhook or secret not found for Bitbucket hook', ['hook_uuid' => $hookUuid]);
             return false;
         }
