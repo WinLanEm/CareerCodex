@@ -37,17 +37,16 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
                     });
             }
         );
-        if($webhook){
-            Log::info($webhook->webhook_id);
-        }
 
         if (!$webhook || !$webhook->secret) {
             Log::warning('Webhook or secret not found for Bitbucket hook', ['hook_uuid' => $hookUuid]);
             return false;
         }
-        Log::info('Success');
-        $expectedSignature = 'sha256=' . hash_hmac('sha256', json_encode($payload), $webhook->secret);
 
+        $expectedSignature = 'sha256=' . hash_hmac('sha256', json_encode($payload), $webhook->secret);
+        Log::info($expectedSignature);
+        Log::info($signature);
+        Log::info($webhook->secret);
         return hash_equals($expectedSignature, $signature);
     }
 
