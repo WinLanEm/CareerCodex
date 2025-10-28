@@ -63,6 +63,7 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
 
         foreach ($payload['push']['changes'] as $change) {
             foreach ($change['commits'] as $commit) {
+                Log::info(print_r($commit, true));
                 $authorUuid = $commit['author']['user']['uuid'] ?? null;
 
                 if (!$authorUuid) {
