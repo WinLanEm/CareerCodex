@@ -12,6 +12,7 @@ use App\Repositories\Webhook\EloquentWebhookRepository;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class BitbucketApiService implements BitbucketRepositorySyncInterface, BitbucketRegisterWebhookInterface, BitbucketActivityFetchInterface
 {
@@ -88,7 +89,7 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
         return $this->throttleService->for(
             ServiceConnectionsEnum::BITBUCKET,
             function () use($client, $workspaceSlug,$repoSlug,$limit,$defaultBranch) {
-                $url = config('services.bitbucket_integration.get_merged_pull_requests_url');
+                $url = config('services.bitbucket_integration.get_commits_url');
                 $url = str_replace(['{workspaceSlug}','{repoSlug}'],[$workspaceSlug,$repoSlug],$url);
                 $response = $client->get($url, [
                     'include' => $defaultBranch,

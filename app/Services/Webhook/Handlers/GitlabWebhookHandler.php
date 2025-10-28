@@ -106,6 +106,7 @@ class GitlabWebhookHandler extends AbstractWebhookHandler
             'repository_name' => $payload['project']['path_with_namespace'],
             'title' => mb_substr($mr['title'], 0, 255),
             'url' => $mr['url'],
+            'is_from_provider' => true,
             'completed_at' => CarbonImmutable::parse($mr['updated_at']),
             // GitLab не предоставляет additions/deletions в вебхуке MR.
             // Нужно делать доп. запрос к API или оставить 0.

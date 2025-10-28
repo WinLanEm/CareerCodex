@@ -65,6 +65,7 @@ class GithubWebhookHandler extends AbstractWebhookHandler
                     'title' => mb_substr($commit['message'], 0, 255),
                     'url' => $commit['url'],
                     'completed_at' => CarbonImmutable::parse($commit['timestamp']),
+                    'is_from_provider' => true,
                     // Additions/deletions в push-событии для коммита недоступны напрямую,
                     // для этого нужен отдельный API-запрос, который можно вынести в другую джобу
                     'additions' => 0,
@@ -91,6 +92,7 @@ class GithubWebhookHandler extends AbstractWebhookHandler
             'repository_name' => $payload['repository']['full_name'],
             'title' => mb_substr($pr['title'], 0, 255),
             'url' => $pr['html_url'],
+            'is_from_provider' => true,
             'completed_at' => CarbonImmutable::parse($pr['merged_at']),
             'additions' => $pr['additions'] ?? 0,
             'deletions' => $pr['deletions'] ?? 0,
