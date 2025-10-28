@@ -26,12 +26,11 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
             return false;
         }
 
-        Log::info('Webhook found', ['hook_uuid' => $hookUuid]);
-        $webhooks = Webhook::where('repository','career_codex/careercodex')->get();
-        Log::info(print_r($webhooks->toArray(), true));
+        $hookUuidWithBraces = '{' . trim($hookUuid, '{}') . '}';
+
         $webhook = $this->webhookRepository->find(
-            function(Builder $query) use ($hookUuid) {
-                return $query->where('webhook_id', $hookUuid)
+            function(Builder $query) use ($hookUuidWithBraces) {
+                return $query->where('webhook_id', $hookUuidWithBraces)
                     ->whereHas('integration', function ($subQuery) {
                         $subQuery->where('service', ServiceConnectionsEnum::BITBUCKET->value);
                     });
@@ -43,9 +42,6 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
             return false;
         }
 
-        // ВАЖНО: Для 100% надежности здесь нужно использовать "сырое" тело запроса,
-        // для прода поменять логику
-        // или после тестов
         $expectedSignature = 'sha256=' . hash_hmac('sha256', json_encode($payload), $webhook->secret);
 
         return hash_equals($expectedSignature, $signature);
