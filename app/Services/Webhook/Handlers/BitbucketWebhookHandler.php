@@ -39,7 +39,7 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
             }
         );
         if($webhook){
-            Log::info($webhook);
+            Log::info(print_r($webhook->toArray(),true));
         }
 
         if (!$webhook || !$webhook->secret) {
