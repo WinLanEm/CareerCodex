@@ -21,6 +21,7 @@ class DeveloperActivity extends Model
         'completed_at',
         'additions',
         'deletions',
+        'is_from_provider',
     ];
 
     public function integration(): BelongsTo

@@ -21,21 +21,37 @@ class GitlabWebhookHandler extends AbstractWebhookHandler
             return false;
         }
 
-        $webhook = $this->webhookRepository->find(
+        $webhooks = $this->webhookRepository->findAll(
             function (Builder $query) use($projectId) {
-                return $query->where('webhook_id', $projectId)
+                return $query->where(function($q) use($projectId) {
+                    $q->where('repository_id', $projectId)
+                        ->orWhere('webhook_id', $projectId);
+                })
                     ->whereHas('integration', function ($subQuery) {
                         $subQuery->where('service', ServiceConnectionsEnum::GITLAB->value);
                     });
             }
         );
 
-        if (!$webhook || !$webhook->secret) {
-            Log::warning('Webhook secret not found for GitLab project', ['project_id' => $projectId]);
+        if ($webhooks->isEmpty()) {
+            Log::warning('No webhooks found for GitLab project', [
+                'project_id' => $projectId,
+                'search_fields' => ['repository_id', 'webhook_id']
+            ]);
             return false;
         }
 
-        return hash_equals($webhook->secret, $token);
+        foreach ($webhooks as $webhook) {
+            if ($webhook->secret && hash_equals($webhook->secret, $token)) {
+                return true;
+            }
+        }
+
+        Log::warning('GitLab webhook token mismatch', [
+            'project_id' => $projectId,
+        ]);
+
+        return false;
     }
 
     public function handle(array $payload, array $headers): void
@@ -52,17 +68,18 @@ class GitlabWebhookHandler extends AbstractWebhookHandler
     private function handlePush(array $payload): void
     {
         $repoName = $payload['project']['path_with_namespace'];
-        $integrationId = $this->findIntegrationById($payload['user_id'],ServiceConnectionsEnum::GITLAB);
+        $integration = $this->findIntegrationById($payload['user_id'],ServiceConnectionsEnum::GITLAB);
 
-        if (!$integrationId) return;
+        if (!$integration) return;
 
         foreach ($payload['commits'] as $commit) {
             $this->activityRepository->updateOrCreateDeveloperActivity([
-                'integration_id' => $integrationId,
+                'integration_id' => $integration->id,
                 'type' => 'commit',
                 'external_id' => $commit['id'],
                 'repository_name' => $repoName,
                 'title' => mb_substr($commit['message'], 0, 255),
+                'is_from_provider' => true,
                 'url' => $commit['url'],
                 'completed_at' => CarbonImmutable::parse($commit['timestamp']),
                 'additions' => $commit['added'] ? count($commit['added']) : 0,

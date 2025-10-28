@@ -16,6 +16,7 @@ class UpdateOrCreateDeveloperActivity implements UpdateOrCreateDeveloperActivity
                 'external_id' => $data['external_id'],
             ],
             [
+                'is_from_provider' => $data['is_from_provider'] ?? false,
                 'repository_name' => $data['repository_name'],
                 'title' => $data['title'],
                 'url' => $data['url'],
