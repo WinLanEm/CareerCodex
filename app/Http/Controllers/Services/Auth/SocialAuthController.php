@@ -31,7 +31,7 @@ class SocialAuthController extends AbstractServiceCallbackController
             }
             $providerUser = Socialite::driver($provider->value)->stateless()->user();
             $user = $this->updateOrCreateUserRepository->updateOrCreateProviderUser($providerUser,$provider);
-            if ($request->has('issue_token')) {
+            if ($validationResult['data']['issue_token']) {
                 $token = $user->createToken("$provider->value-token")->plainTextToken;
                 return new AuthResource($user, 'success', $token);
             } else {

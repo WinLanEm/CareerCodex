@@ -7,10 +7,10 @@ use App\Models\Achievement;
 
 class AchievementUpdateOrCreateRepository implements AchievementUpdateOrCreateRepositoryInterface
 {
-    public function updateOrCreate(array $data, $workspaceId = null): Achievement
+    public function updateOrCreate(array $data): Achievement
     {
         return Achievement::updateOrCreate(
-            ['title' => $data['title'],'link' => $data['link'] ?? null,'workspace_id' => $workspaceId],
+            ['title' => $data['title'],'link' => $data['link'] ?? null],
             [
                 'description' => $data['description'],
                 'result' => $data['result'] ?? null,

@@ -25,7 +25,7 @@ class AchievementCreateRequest extends FormRequest
             'title' => 'required|string|max:255',
             'description' => 'required|string',
             'result' => 'required|string',
-            'hours_spent' => 'nullable|int|between:1,999',
+            'hours_spent' => 'nullable|between:0,999',
             'date' => 'nullable|date|date_format:Y-m-d',
             'skills' => 'nullable|array',
         ];
@@ -41,8 +41,7 @@ class AchievementCreateRequest extends FormRequest
             'description.string' => 'Description must be a string',
             'result.required' => 'Result is required',
             'result.string' => 'Result must be a string',
-            'hours_spent.int' => 'Hours spent must be an integer',
-            'hours_spent.between' => 'Hours spent must be between 1 and 999',
+            'hours_spent.between' => 'Hours spent must be between 0 and 999',
             'date.date' => 'Date must be a date',
             'date.date_format' => 'Date format must be Y-m-d',
             'skills.array' => 'Skills must be an array',

@@ -21,9 +21,8 @@ class AchievementPolicy
      */
     public function view(User $user, Achievement $achievement): bool
     {
-
         if ($achievement->user_id) {
-            return $user->id === $achievement->user?->user_id;
+            return $user->id === $achievement->user_id;
         }
 
         if ($achievement->integration_instance_id) {
@@ -90,16 +89,18 @@ class AchievementPolicy
         return false;
     }
 
-    public function approveMultiple(User $user, array $achievementIds):bool
+    public function approveMultiple(User $user, array $achievementIds): bool
     {
+        if (empty($achievementIds)) {
+            return false;
+        }
+
         $ownedCount = Achievement::whereIn('id', $achievementIds)
             ->where(function ($query) use ($user) {
-                $query->whereHas('workspace.user', function ($q) use ($user) {
-                    $q->where('id', $user->id);
-                })
-                    ->orWhereHas('integrationInstance.integration.user', function ($q) use ($user) {
-                        $q->where('id', $user->id);
-                    });
+                $query->where('user_id', $user->id)
+                ->orWhereHas('integrationInstance.integration', function ($q) use ($user) {
+                    $q->where('user_id', $user->id);
+                });
             })
             ->count();
 

@@ -10,6 +10,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FetchAsanaData implements ShouldQueue
 {
@@ -28,7 +29,7 @@ class FetchAsanaData implements ShouldQueue
             $workspaces = $apiService->getWorkspaces($this->integration->access_token,$client);
             foreach ($workspaces as $workspace) {
                 $projects = $apiService->getProjects($this->integration->access_token,$workspace['gid'],$client);
-
+                Log::info(print_r($projects,true));
                 foreach ($projects as $project) {
                     ProcessAsanaProjectJob::dispatch(
                         $this->integration,

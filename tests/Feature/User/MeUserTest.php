@@ -4,12 +4,13 @@ namespace Tests\Feature\User;
 
 use App\Http\Resources\User\UserWrapperResource;
 use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class MeUserTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
 
     public function test_a_user_can_see_me_data()
     {

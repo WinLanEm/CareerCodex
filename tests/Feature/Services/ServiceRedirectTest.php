@@ -3,13 +3,14 @@
 namespace Services;
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use Tests\TestCase;
 
 class ServiceRedirectTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
 
     public function test_auth_redirect_fails_validation_for_an_invalid_provider_name()
     {

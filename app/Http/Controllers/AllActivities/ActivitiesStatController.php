@@ -11,7 +11,6 @@ class ActivitiesStatController extends Controller
 {
     public function __construct(
         readonly private ActivitiesStatRepositoryInterface $activitiesStatRepository,
-        readonly private CacheRepositoryInterface $cacheRepository
     )
     {
     }
@@ -19,10 +18,9 @@ class ActivitiesStatController extends Controller
     public function __invoke()
     {
         $userId = auth()->id();
-        $key = 'activities:stats:user:' . $userId;
-        $activities = $this->cacheRepository->remember($key, function () use ($userId) {
-             return $this->activitiesStatRepository->allStats($userId);
-        },600);
+
+        $activities = $this->activitiesStatRepository->allStats($userId);
+
         return new ActivitiesStatResource($activities);
     }
 }

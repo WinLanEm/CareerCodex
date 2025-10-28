@@ -25,4 +25,21 @@ class AchievementFactory extends Factory
             'link' => $this->faker->optional()->url(),
         ];
     }
+    public function approved()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'is_approved' => true,
+            ];
+        });
+    }
+
+    public function notApproved()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'is_approved' => false,
+            ];
+        });
+    }
 }

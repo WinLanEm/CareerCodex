@@ -99,8 +99,7 @@ class ActivitiesIndexRepository implements ActivitiesIndexRepositoryInterface
             })
             ->select('*')
             ->addSelect(DB::raw("'achievement' as entity_type"))
-            ->where('is_approved', true)
-            ->get();
+            ->where('is_approved', true);
 
         if ($dateFrom) $query->where('created_at', '>=', $dateFrom);
         if ($dateTo) $query->where('created_at', '<=', $dateTo . ' 23:59:59');
@@ -135,8 +134,7 @@ class ActivitiesIndexRepository implements ActivitiesIndexRepositoryInterface
             })
             ->where('is_approved', true)
             ->select('*')
-            ->addSelect(DB::raw("'developer_activity' as entity_type"))
-            ->get();
+            ->addSelect(DB::raw("'developer_activity' as entity_type"));
 
         if (in_array($activityType, ['commit', 'pull_request'])) {
             $query->where('type', $activityType);

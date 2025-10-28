@@ -4,13 +4,14 @@ namespace Tests\Feature\Webhook;
 
 use App\Enums\ServiceConnectionsEnum;
 use App\Jobs\Webhook\ProcessWebhookJob;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase;
 use Illuminate\Support\Facades\Bus;
 
 class WebhookCallbackTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
 
     public function test_it_successfully_receives_a_webhook_and_dispatches_job(): void
     {

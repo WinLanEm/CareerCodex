@@ -5,13 +5,14 @@ namespace Tests\Feature\User;
 use App\Http\Controllers\Webhook\WebhookCallbackController;
 use App\Models\User;
 use App\Repositories\Email\VerifyEmail;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class ResendEmailVerifyTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
 
     public function test_a_user_can_resend_a_email_verification()
     {

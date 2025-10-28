@@ -12,7 +12,6 @@ class ActivitiesIndexController extends Controller
 {
     public function __construct(
         readonly private ActivitiesIndexRepositoryInterface $activitiesIndexRepository,
-        readonly private CacheRepositoryInterface $cacheRepository
     ) {}
 
     public function __invoke(ActivitiesIndexRequest $request)
@@ -23,26 +22,6 @@ class ActivitiesIndexController extends Controller
         $dateFrom = $request->date_from;
         $dateTo = $request->date_to;
         $userId = auth()->id();
-
-        if (!$cursor && !$dateFrom && !$dateTo && $type === 'all') {
-            $cacheKey = "activities_first_page_{$perPage}:user:{$userId}";
-
-            $result = $this->cacheRepository->remember($cacheKey, function() use ($perPage, $type, $dateFrom, $dateTo, $userId) {
-                return $this->activitiesIndexRepository->index(
-                    $userId,
-                    $perPage,
-                    $type,
-                    null,
-                    $dateFrom,
-                    $dateTo
-                );
-            });
-            return new ActivitiesCursorResource($result['data'], [
-                'next_cursor' => $result['meta']['next_cursor'],
-                'has_next_page' => $result['meta']['has_next_page'],
-                'per_page' => $result['meta']['per_page'],
-            ]);
-        }
 
         $result = $this->activitiesIndexRepository->index(
             $userId,

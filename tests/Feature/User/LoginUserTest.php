@@ -4,12 +4,13 @@ namespace Tests\Feature\User;
 
 use App\Models\User;
 use Database\Factories\UserFactory;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class LoginUserTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
     public function test_a_user_can_login():void
     {
         $password = 'password123';
@@ -20,7 +21,9 @@ class LoginUserTest extends TestCase
         $loginData = [
             'email' => $user->email,
             'password' => $password,
+            'issue_token' => true,
         ];
+
         $loginRes = $this->postJson(route('login'),$loginData);
         $loginRes->assertStatus(200)
             ->assertJsonStructure([

@@ -11,13 +11,14 @@ class LogoutController extends Controller
 {
     public function __invoke(Request $request)
     {
-        Auth::guard('web')->logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        if ($user = $request->user()) {
-            $user->tokens()->delete();
+        if ($request->user()) {
+            $request->user()->tokens()->delete();
         }
+
+        if (Auth::guard('web')->check()) {
+            Auth::guard('web')->logout();
+        }
+
         return new MessageResource('Logged out successfully.',true,200);
     }
 }

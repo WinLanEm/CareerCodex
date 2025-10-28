@@ -5,13 +5,14 @@ namespace Tests\Feature\User;
 use App\Contracts\Repositories\Email\GenerateVerificationCodeRepositoryInterface;
 use App\Models\User;
 use App\Repositories\Email\VerifyEmail;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class EmailVerifyUserTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
     public function test_a_user_can_be_registered_and_a_verification_email_is_sent()
     {
         Mail::fake();
@@ -21,7 +22,7 @@ class EmailVerifyUserTest extends TestCase
             'email' => fake()->email,
             'name' => fake()->name,
             'password' => $password,
-            'password_confirmation' => $password
+            'password_confirmation' => $password,
         ];
 
         $response = $this->postJson(route('register'), $data);
@@ -42,7 +43,8 @@ class EmailVerifyUserTest extends TestCase
 
         $verifyData = [
             'email' => $data['email'],
-            'code' => $code
+            'code' => $code,
+            'issue_token' => true,
         ];
 
         $res = $this->post(route('verify'),$verifyData);

@@ -2,8 +2,9 @@
 
 namespace Achievement;
 
+use App\Models\Integration;
+use App\Models\IntegrationInstance;
 use App\Models\User;
-use App\Models\Workspace;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -11,16 +12,20 @@ class AchievementCreateTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_an_authorized_user_can_create_an_achievement_in_their_workspace()
+    public function test_an_authorized_user_can_create_an_achievement()
     {
         $user = User::factory()->create();
-        $workspace = Workspace::factory()->create(['user_id' => $user->id]);
+        $integration = Integration::factory()->create(['user_id' => $user->id]);
+        $integrationInstance = IntegrationInstance::factory()->create(['integration_id' => $integration->id]);
 
         $postData = [
             'title' => 'New Awesome Achievement',
             'description' => 'A detailed description.',
             'result' => 'A great result.',
-            'workspace_id' => $workspace->id,
+            'integration_instance_id' => $integrationInstance->id,
+            'project_name' => 'Test Project',
+            'date' => '2025-10-29',
+            'hours_spent' => 5,
         ];
 
         $response = $this->actingAs($user)->postJson(route('achievement.create'), $postData);
@@ -30,30 +35,20 @@ class AchievementCreateTest extends TestCase
         $this->assertDatabaseHas('achievements', ['title' => 'New Awesome Achievement']);
     }
 
-    public function test_it_returns_an_error_if_user_tries_to_create_in_another_users_workspace()
-    {
-        $user1 = User::factory()->create();
-        $user2 = User::factory()->create();
-        $workspaceOfUser2 = Workspace::factory()->create(['user_id' => $user2->id]);
-
-        $postData = [
-            'title' => 'Unauthorized Achievement',
-            'description' => 'desc',
-            'result' => 'res',
-            'workspace_id' => $workspaceOfUser2->id,
-        ];
-
-        $response = $this->actingAs($user1)->postJson(route('achievement.create'), $postData);
-
-        $response->assertStatus(401);
-        $response->assertJson(['message' => 'Achievement create failed']);
-        $this->assertDatabaseMissing('achievements', ['title' => 'Unauthorized Achievement']);
-    }
-
     public function test_an_unauthorized_user_cannot_create_an_achievement()
     {
-        $workspace = Workspace::factory()->create();
-        $postData = ['title' => 'Test', 'description' => 'd', 'result' => 'r', 'workspace_id' => $workspace->id];
+        $user = User::factory()->create();
+        $integration = Integration::factory()->create(['user_id' => $user->id]);
+        $integrationInstance = IntegrationInstance::factory()->create(['integration_id' => $integration->id]);
+
+        $postData = [
+            'title' => 'Test',
+            'description' => 'd',
+            'result' => 'r',
+            'integration_instance_id' => $integrationInstance->id,
+            'project_name' => 'Test Project',
+            'date' => '2025-10-29',
+        ];
 
         $response = $this->postJson(route('achievement.create'), $postData);
 
@@ -67,6 +62,37 @@ class AchievementCreateTest extends TestCase
         $response = $this->actingAs($user)->postJson(route('achievement.create'), []);
 
         $response->assertStatus(422);
-        $response->assertJsonValidationErrors(['title', 'description', 'result', 'workspace_id']);
+
+        $errors = $response->json('errors');
+
+        $response->assertJsonValidationErrors(['title', 'description', 'result']);
+    }
+
+    public function test_it_creates_achievement_with_optional_fields()
+    {
+        $user = User::factory()->create();
+        $integration = Integration::factory()->create(['user_id' => $user->id]);
+        $integrationInstance = IntegrationInstance::factory()->create(['integration_id' => $integration->id]);
+
+        $postData = [
+            'title' => 'Achievement with Optional Fields',
+            'description' => 'Description',
+            'result' => 'Result',
+            'integration_instance_id' => $integrationInstance->id,
+            'project_name' => 'Optional Project',
+            'date' => '2025-10-29',
+            'hours_spent' => 10,
+            'skills' => ['PHP', 'Laravel'],
+            'link' => 'https://example.com',
+        ];
+
+        $response = $this->actingAs($user)->postJson(route('achievement.create'), $postData);
+
+        $response->assertStatus(201);
+        $this->assertDatabaseHas('achievements', [
+            'title' => 'Achievement with Optional Fields',
+            'project_name' => 'Optional Project',
+            'hours_spent' => 10,
+        ]);
     }
 }

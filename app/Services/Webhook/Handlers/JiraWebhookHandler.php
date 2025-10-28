@@ -4,7 +4,7 @@ namespace App\Services\Webhook\Handlers;
 
 use App\Enums\ServiceConnectionsEnum;
 use Carbon\Carbon;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 
 class JiraWebhookHandler extends AbstractWebhookHandler
 {

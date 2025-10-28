@@ -3,12 +3,13 @@
 namespace Tests\Feature\User;
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 class LogoutUserTest extends TestCase
 {
-    use RefreshDatabase;
+    use DatabaseMigrations;
     public function test_a_user_can_logout()
     {
         $password = 'password123';
