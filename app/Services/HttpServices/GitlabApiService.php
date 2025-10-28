@@ -2,22 +2,23 @@
 
 namespace App\Services\HttpServices;
 
+use App\Contracts\Repositories\Webhook\EloquentWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Gitlab\GitlabActivityFetchInterface;
 use App\Contracts\Services\HttpServices\Gitlab\GitlabRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Gitlab\GitlabRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
-use App\Repositories\Webhook\EloquentWebhookRepository;
 use Carbon\CarbonImmutable;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class GitlabApiService implements GitlabActivityFetchInterface, GitlabRegisterWebhookInterface, GitlabRepositorySyncInterface
 {
     public function __construct(
         private ThrottleServiceInterface $throttleService,
-        private EloquentWebhookRepository $webhookRepository,
+        private EloquentWebhookRepositoryInterface $webhookRepository,
     )
     {}
     public function syncRepositories(string $token, \Closure $closure): void
@@ -97,6 +98,7 @@ class GitlabApiService implements GitlabActivityFetchInterface, GitlabRegisterWe
         return $this->throttleService->for(ServiceConnectionsEnum::GITLAB,function () use($integration,$projectId,$fullName) {
             $token = $integration->access_token;
             $client = Http::withToken($token);
+            $webhookSecret = bin2hex(random_bytes(32));
 
             $url = config('services.gitlab_integration.get_hooks_url');
             $url = str_replace('{projectId}', $projectId, $url);
@@ -106,7 +108,6 @@ class GitlabApiService implements GitlabActivityFetchInterface, GitlabRegisterWe
             $existingHooks = $existingHooksResponse->json();
 
             $webhookUrl = route('webhook', ['service' => 'gitlab']);
-
 
             foreach ($existingHooks as $hook) {
                 if (isset($hook['url']) && $hook['url'] === $webhookUrl) {
@@ -120,11 +121,12 @@ class GitlabApiService implements GitlabActivityFetchInterface, GitlabRegisterWe
                     if($webhook) {
                         return $webhook->toArray();
                     }
-                    return [];
+                    $client->delete("{$url}/{$hook['id']}")->throw();
+                    break;
                 }
             }
 
-            $webhookSecret = bin2hex(random_bytes(32));
+
 
             $payload = [
                 'url' => $webhookUrl,

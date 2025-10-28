@@ -2,20 +2,16 @@
 
 namespace App\Services\HttpServices;
 
-use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketActivityFetchInterface;
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRepositorySyncInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
-use App\Models\Webhook;
 use App\Repositories\Webhook\EloquentWebhookRepository;
 use Carbon\CarbonImmutable;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 class BitbucketApiService implements BitbucketRepositorySyncInterface, BitbucketRegisterWebhookInterface, BitbucketActivityFetchInterface
 {
@@ -108,6 +104,7 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
         return $this->throttleService->for(ServiceConnectionsEnum::BITBUCKET,function () use($repositoryId,$integration,$workspaceSlug,$repoSlug){
             $token = $integration->access_token;
             $client = Http::withToken($token);
+            $webhookSecret = bin2hex(random_bytes(32));
 
             $url = config('services.bitbucket_integration.get_hooks_url');
             $url = str_replace(['{workspaceSlug}','{repoSlug}'],[$workspaceSlug,$repoSlug],$url);
@@ -128,11 +125,11 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
                     if ($webhook) {
                         return $webhook->toArray();
                     }
-                    return [];
+                    //из-за особенностей ауентификации не получится удалить его токен и как либо продолжить это действие
+                    //поэтому мы просто регистрируем новый вебхук игнорируя старый
+                    break;
                 }
             }
-
-            $webhookSecret = bin2hex(random_bytes(32));
 
             $payload = [
                 'description' => 'Webhook for app integration',

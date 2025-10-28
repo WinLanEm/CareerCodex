@@ -3,7 +3,6 @@
 namespace App\Services\HttpServices;
 
 use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
-use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraProjectServiceInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraWorkspaceServiceInterface;
@@ -96,6 +95,7 @@ class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectService
                         'startAt' => $startAt,
                         'maxResults' => $maxResults
                     ]);
+
                     $response->throw();
                     return $response->json();
                 },
@@ -128,7 +128,23 @@ class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectService
                             if($webhook){
                                 return $webhook->toArray();
                             }
-                            return [];
+
+                            $existingSecret = '';
+                            if (isset($hook['url'])) {
+                                $queryString = parse_url($hook['url'], PHP_URL_QUERY);
+                                parse_str($queryString, $queryParams);
+                                $existingSecret = $queryParams['secret'] ?? '';
+                            }
+
+                            return [
+                                'integration_id' => $integration->id,
+                                'repository' => $siteUrl,
+                                'repository_id' => $cloudId,
+                                'webhook_id' => $hook['id'],
+                                'secret' => $existingSecret ?? $secret,
+                                'events' => $hook['events'] ?? ['jira:issue_created', 'jira:issue_updated'],
+                                'active' => true,
+                            ];
                         }
                     }
                 }

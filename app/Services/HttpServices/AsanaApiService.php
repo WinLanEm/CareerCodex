@@ -5,7 +5,6 @@ namespace App\Services\HttpServices;
 use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Contracts\Repositories\Webhook\EloquentWebhookRepositoryInterface;
-use App\Contracts\Repositories\Webhook\UpdateOrCreateWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectRefreshTokenInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaRegisterWebhookInterface;
@@ -13,10 +12,10 @@ use App\Contracts\Services\HttpServices\Asana\AsanaWorkspaceServiceInterface;
 use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
-use App\Models\Webhook;
-use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectServiceInterface, AsanaRegisterWebhookInterface, AsanaProjectRefreshTokenInterface
 {
@@ -141,16 +140,16 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
             $getWebhooksResponse = $client->get($getWebhooksUrl);
             foreach ($getWebhooksResponse->json('data') as $existingWebhook) {
                 $webhook = $this->webhookRepository->find(
-                    function (Builder $query) use($existingWebhook){
+                    function (Builder $query) use($existingWebhook) {
                         return $query->where('webhook_id', $existingWebhook['gid']);
-                    }
-                );
+                    });
+
                 if ($webhook) {
-//                    $client->delete("https://app.asana.com/api/1.0/webhooks/" . $existingWebhook['gid'])->throw();
-//                    $webhook->delete();
                     return $webhook->toArray();
                 }
-                return [];
+
+                $client->delete("$url/" . $existingWebhook['gid'])->throw();
+                break;
             }
 
             $response = $client

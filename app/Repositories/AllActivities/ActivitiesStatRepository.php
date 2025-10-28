@@ -11,16 +11,27 @@ class ActivitiesStatRepository implements ActivitiesStatRepositoryInterface
 {
     public function allStats(int $userId)
     {
-        $developerActivities = DeveloperActivity::where([
-            ['user_id', $userId],
-            ['is_approved', true],
-            ['created_at', '>=', now()->subMonth()],
-        ])->get();
-        $achievements = Achievement::where([
-            ['user_id', $userId],
-            ['is_approved', true],
-            ['created_at', '>=', now()->subMonth()],
-        ])->get();
+        $developerActivities = DeveloperActivity::with('integration')
+            ->where(function($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->orWhereHas('integration', function($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    });
+            })
+            ->where('is_approved', true)
+            ->where('created_at', '>=', now()->subMonth())
+            ->get();
+
+        $achievements = Achievement::with(['integrationInstance.integration'])
+            ->where(function($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->orWhereHas('integrationInstance.integration', function($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    });
+            })
+            ->where('is_approved', true)
+            ->where('created_at', '>=', now()->subMonth())
+            ->get();
 
         $periodStart = now()->subDays(6)->startOfDay();
 

@@ -12,16 +12,24 @@ class ActivitiesPendingApprovalRepository implements ActivitiesPendingApprovalIn
     public function getAll(int $userId): Collection
     {
         $devActivities = DeveloperActivity::with('integration')
-            ->where([
-                ['user_id', $userId],
-                ['is_approved', false],
-            ])->get();
+            ->where(function($query) use ($userId) {
+                $query->where('user_id', $userId)
+                ->orWhereHas('integration', function($q) use ($userId) {
+                    $q->where('user_id', $userId);
+                });
+            })
+            ->where('is_approved', false)
+            ->get();
 
         $achievements = Achievement::with(['integrationInstance.integration'])
-            ->where([
-                ['user_id', $userId],
-                ['is_approved', false],
-            ])->get();
+            ->where(function($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->orWhereHas('integrationInstance.integration', function($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    });
+            })
+            ->where('is_approved', false)
+            ->get();
 
         $combined = $devActivities->concat($achievements)
             ->sortByDesc('created_at')

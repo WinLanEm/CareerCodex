@@ -12,18 +12,26 @@ class RecentActivityRepository implements RecentActivityRepositoryInterface
     private int $maxActivities = 5;
     public function getAll(int $userId): Collection
     {
-        $activities = DeveloperActivity::where([
-            ['user_id', $userId],
-            ['is_approved',true]
-        ])
+        $activities = DeveloperActivity::with('integration')
+            ->where(function($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->orWhereHas('integration', function($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    });
+            })
+            ->where('is_approved', true)
             ->latest()
             ->limit($this->maxActivities)
             ->get();
 
-        $achievements = Achievement::where([
-            ['user_id', $userId],
-            ['is_approved',true]
-        ])
+        $achievements = Achievement::with(['integrationInstance.integration'])
+            ->where(function($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->orWhereHas('integrationInstance.integration', function($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    });
+            })
+            ->where('is_approved', true)
             ->latest()
             ->limit($this->maxActivities)
             ->get();

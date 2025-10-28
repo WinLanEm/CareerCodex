@@ -91,12 +91,16 @@ class ActivitiesIndexRepository implements ActivitiesIndexRepositoryInterface
     private function getAchievementsWithCursor(int $userId,?array $cursorData, int $perPage, ?string $dateFrom, ?string $dateTo): Collection
     {
         $query = Achievement::with(['integrationInstance.integration'])
-            ->where([
-                ['user_id',$userId],
-                ['is_approved', true],
-            ])
+            ->where(function($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->orWhereHas('integrationInstance.integration', function($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    });
+            })
             ->select('*')
-            ->addSelect(DB::raw("'achievement' as entity_type"));
+            ->addSelect(DB::raw("'achievement' as entity_type"))
+            ->where('is_approved', true)
+            ->get();
 
         if ($dateFrom) $query->where('created_at', '>=', $dateFrom);
         if ($dateTo) $query->where('created_at', '<=', $dateTo . ' 23:59:59');
@@ -123,12 +127,16 @@ class ActivitiesIndexRepository implements ActivitiesIndexRepositoryInterface
     private function getDeveloperActivitiesWithCursor(int $userId,?array $cursorData, int $perPage, ?string $dateFrom, ?string $dateTo, string $activityType): Collection
     {
         $query = DeveloperActivity::with('integration')
-            ->where([
-                ['user_id',$userId],
-                ['is_approved', true],
-            ])
+            ->where(function($query) use ($userId) {
+                $query->where('user_id', $userId)
+                    ->orWhereHas('integration', function($q) use ($userId) {
+                        $q->where('user_id', $userId);
+                    });
+            })
+            ->where('is_approved', true)
             ->select('*')
-            ->addSelect(DB::raw("'developer_activity' as entity_type"));
+            ->addSelect(DB::raw("'developer_activity' as entity_type"))
+            ->get();
 
         if (in_array($activityType, ['commit', 'pull_request'])) {
             $query->where('type', $activityType);

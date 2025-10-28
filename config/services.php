@@ -96,7 +96,7 @@ return [
         'redirect' => env('JIRA_SERVICE_REDIRECT_URI'),
         'provider_instance_url' => 'https://api.atlassian.com/oauth/token/accessible-resources',
         'projects_url' => "https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/project/search",
-        'sync_issue' => "https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/search",
+        'sync_issue' => "https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/search/jql",
         "register_webhook_url" => "https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/webhook"
     ],
 
@@ -119,6 +119,7 @@ return [
         'redirect' => env('TRELLO_SERVICE_REDIRECT_URI'),
     ],
     'frontend' => [
-        'url' => 'https://convincingly-special-barbel.cloudpub.ru/'
+        'url' => 'https://convincingly-special-barbel.cloudpub.ru/',
+        'services_redirect' => 'https://convincingly-special-barbel.cloudpub.ru/dashboard/settings'
     ]
 ];

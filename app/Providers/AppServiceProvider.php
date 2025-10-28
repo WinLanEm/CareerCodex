@@ -25,7 +25,9 @@ use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivi
 use App\Contracts\Repositories\Email\GenerateVerificationCodeRepositoryInterface;
 use App\Contracts\Repositories\IntegrationInstance\FindIntegrationInstanceByClosureRepositoryInterface;
 use App\Contracts\Repositories\IntegrationInstance\UpdateOrCreateIntegrationInstanceRepositoryInterface;
+use App\Contracts\Repositories\Integrations\DeleteIntegrationRepositoryInterface;
 use App\Contracts\Repositories\Integrations\FindIntegrationByClosureRepositoryInterface;
+use App\Contracts\Repositories\Integrations\GetUserIntegrationsRepositoryInterface;
 use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Contracts\Repositories\Integrations\UpdateOrCreateIntegrationRepositoryInterface;
 use App\Contracts\Repositories\User\CreateUserRepositoryInterface;
@@ -82,7 +84,9 @@ use App\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivity;
 use App\Repositories\Email\GenerateVerificationCodeRepository;
 use App\Repositories\IntegrationInstances\FindIntegrationInstanceByClosureRepository;
 use App\Repositories\IntegrationInstances\UpdateOrCreateIntegrationInstanceRepository;
+use App\Repositories\Integrations\DeleteIntegrationRepository;
 use App\Repositories\Integrations\FindIntegrationByClosureRepository;
+use App\Repositories\Integrations\GetUserIntegrationsRepository;
 use App\Repositories\Integrations\UpdateIntegrationRepository;
 use App\Repositories\Integrations\UpdateOrCreateIntegrationRepository;
 use App\Repositories\User\CreateUserRepository;
@@ -331,6 +335,14 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(
             ActivitiesIndexRepositoryInterface::class,
             ActivitiesIndexRepository::class
+        );
+        $this->app->bind(
+            GetUserIntegrationsRepositoryInterface::class,
+            GetUserIntegrationsRepository::class
+        );
+        $this->app->bind(
+            DeleteIntegrationRepositoryInterface::class,
+            DeleteIntegrationRepository::class
         );
     }
 

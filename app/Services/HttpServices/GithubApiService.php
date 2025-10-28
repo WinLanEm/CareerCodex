@@ -158,7 +158,8 @@ class GithubApiService implements GithubRepositorySyncInterface, GithubActivityF
                     if ($webhook) {
                         return $webhook->toArray();
                     }
-                    return [];
+                    $client->delete("{$url}/{$hook['id']}")->throw();
+                    break;
                 }
             }
 

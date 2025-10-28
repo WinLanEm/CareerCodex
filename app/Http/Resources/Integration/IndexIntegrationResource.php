@@ -2,7 +2,15 @@
 
 namespace App\Http\Resources\Integration;
 
-class IndexIntegrationResource
-{
+use App\Http\Resources\BaseJsonResource;
 
+class IndexIntegrationResource extends BaseJsonResource
+{
+    public function toArray($request)
+    {
+        return [
+            'id' => $this->id,
+            'service' => $this->service
+        ];
+    }
 }

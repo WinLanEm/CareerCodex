@@ -19,6 +19,8 @@ use App\Http\Controllers\DeveloperActivity\DeveloperActivityUpdateController;
 use App\Http\Controllers\Report\DownloadReportController;
 use App\Http\Controllers\Services\Auth\SocialAuthController;
 use App\Http\Controllers\Services\Auth\SocialRedirectController;
+use App\Http\Controllers\Services\Service\DeleteServiceController;
+use App\Http\Controllers\Services\Service\IndexConnectedServicesController;
 use App\Http\Controllers\Services\Service\IntegrationCallbackController;
 use App\Http\Controllers\Services\Service\IntegrationRedirectController;
 use App\Http\Controllers\Services\Service\SyncIntegrationController;
@@ -30,7 +32,9 @@ use App\Http\Controllers\User\RegisterController;
 use App\Http\Controllers\User\ResendVerifyEmailController;
 use App\Http\Controllers\User\VerifyEmailController;
 use App\Http\Controllers\Webhook\WebhookCallbackController;
+use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register',RegisterController::class)->name('register');
@@ -38,11 +42,7 @@ Route::post('/login',LoginController::class)->name('login');
 Route::post('/email/verify', VerifyEmailController::class)->name('verify');
 Route::post('/email/verify/resend', ResendVerifyEmailController::class)->middleware(['throttle:1,2'])->name('resend');
 
-Route::middleware([
-    \Illuminate\Session\Middleware\StartSession::class,
-    \Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse::class,
-    EncryptCookies::class,
-])->group(function () {
+Route::middleware([StartSession::class, AddQueuedCookiesToResponse::class, EncryptCookies::class,])->group(function () {
     Route::get('/auth/{provider}/redirect', SocialRedirectController::class)->name('auth.redirect');
     Route::get('/auth/{provider}/callback', SocialAuthController::class)->name('auth.callback');
     Route::get('/service/{service}/callback', IntegrationCallbackController::class)->name('service.callback');
@@ -65,6 +65,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/service/{service}/redirect', IntegrationRedirectController::class)->name('service.redirect');
     Route::get('/service/sync', SyncIntegrationController::class)->middleware(['throttle:1,5'])->name('service.sync');
+    Route::get('/services',IndexConnectedServicesController::class)->name('services.index');
+    Route::delete('/services/{integration}',DeleteServiceController::class)->name('services.delete');
 
     Route::patch('/developer-activities/approved',DeveloperActivityIsApprovedUpdateController::class)->name('developer.activity.is_approved.update');
     Route::get('/developer-activities',DeveloperActivityIndexController::class)->name('developer.activity.index');

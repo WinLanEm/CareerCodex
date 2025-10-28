@@ -6,7 +6,7 @@ use App\Contracts\Repositories\Integrations\GetUserIntegrationsRepositoryInterfa
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Integration\IndexIntegrationResource;
 
-class IndexConnectedServices extends Controller
+class IndexConnectedServicesController extends Controller
 {
     public function __construct(
         readonly private GetUserIntegrationsRepositoryInterface $getUserIntegrationsRepository

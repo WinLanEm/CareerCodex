@@ -6,14 +6,14 @@ use App\Actions\Github\CheckGitHubAppInstallation;
 use App\Contracts\Repositories\Integrations\UpdateOrCreateIntegrationRepositoryInterface;
 use App\Contracts\Services\ProviderInstanceStrategy\GetIntegrationInstanceStrategyInterface;
 use App\Enums\ServiceConnectionsEnum;
-use App\Http\Controllers\Controller;
+use App\Http\Controllers\Services\AbstractServiceCallbackController;
 use App\Http\Requests\Services\ValidateServiceIntegrationRequest;
 use App\Http\Resources\MessageResource;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
-class IntegrationCallbackController extends Controller
+class IntegrationCallbackController extends AbstractServiceCallbackController
 {
     public function __construct(
         readonly private UpdateOrCreateIntegrationRepositoryInterface $connectionRepository,
@@ -26,10 +26,17 @@ class IntegrationCallbackController extends Controller
     public function __invoke(ValidateServiceIntegrationRequest $request,string $stringService)
     {
         try {
+            $validationResult = $this->validateState($request->input('state'), $stringService);
+            if (isset($validationResult['error'])) {
+                return new MessageResource($validationResult['error'], false, 401);
+            }
+
             $serviceEnum = ServiceConnectionsEnum::tryFrom($stringService);
             if (!$serviceEnum) {
                 return new MessageResource('Service not supported',false,404);
             }
+
+            $issueToken = $validationResult['data']['issue_token'] ?? false;
 
             $providerUser = Socialite::driver($stringService . "_integration")->stateless()->user();
 
@@ -46,7 +53,12 @@ class IntegrationCallbackController extends Controller
             }
 
             $this->getProviderInstanceStrategy->getInstance($integration);
-            return new MessageResource("provider successful updated",true,201);
+            if ($issueToken) {
+                return new MessageResource("Provider successfully connected", true, 201);
+            } else {
+                $redirectUrl = config('services.frontend.services_redirect');
+                return redirect()->away($redirectUrl);
+            }
         }catch (Exception $exception){
             Log::error("An error occurred during authentication with the $stringService.",[
                 'message' => $exception->getMessage(),

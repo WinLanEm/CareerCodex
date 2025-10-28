@@ -42,6 +42,7 @@ class GithubWebhookHandler extends AbstractWebhookHandler
         match ($eventType) {
             'push' => $this->handlePush($payload),
             'pull_request' => $this->handlePullRequest($payload),
+            'ping' => null,
             default => Log::info('Unsupported GitHub event type: ' . $eventType),
         };
     }

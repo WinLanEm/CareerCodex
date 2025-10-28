@@ -5,16 +5,16 @@ namespace App\Http\Controllers\Services\Auth;
 use App\Contracts\Repositories\User\UpdateOrCreateUserRepositoryInterface;
 use App\Enums\AuthServiceEnum;
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Services\AbstractServiceCallbackController;
 use App\Http\Requests\Services\ValidateOAuthProviderRequest;
 use App\Http\Resources\MessageResource;
 use App\Http\Resources\User\AuthResource;
-use App\Http\Resources\User\UserWrapperResource;
 use Exception;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
-class SocialAuthController extends Controller
+class SocialAuthController extends AbstractServiceCallbackController
 {
     public function __construct(
         private UpdateOrCreateUserRepositoryInterface $updateOrCreateUserRepository,
@@ -25,6 +25,10 @@ class SocialAuthController extends Controller
     {
         try{
             $provider = AuthServiceEnum::tryFrom($request->get('provider'));
+            $validationResult = $this->validateState($request->input('state'), $provider->value);
+            if (isset($validationResult['error'])) {
+                return new MessageResource($validationResult['error'], false, 401);
+            }
             $providerUser = Socialite::driver($provider->value)->stateless()->user();
             $user = $this->updateOrCreateUserRepository->updateOrCreateProviderUser($providerUser,$provider);
             if ($request->has('issue_token')) {
