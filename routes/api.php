@@ -82,3 +82,4 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     Route::get('/reports/download',DownloadReportController::class)->name('report.download');
 });
+
