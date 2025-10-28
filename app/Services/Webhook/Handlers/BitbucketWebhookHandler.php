@@ -39,23 +39,19 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
         );
 
         if (!$webhook || !$webhook->secret) {
-            Log::warning('Webhook or secret not found for Bitbucket hook', ['hook_uuid' => $hookUuid]);
+            //Log::warning('Webhook or secret not found for Bitbucket hook', ['hook_uuid' => $hookUuid]);
             return false;
         }
 
         $expectedSignature = 'sha256=' . hash_hmac('sha256', $rawPayload, $webhook->secret);
 
-        Log::info("Expected signature: {$expectedSignature}");
-        Log::info("Actual signature: {$signature}");
-        Log::info("Secret used: {$webhook->secret}");
-        Log::info("Raw payload length: " . strlen($rawPayload));
         return hash_equals($expectedSignature, $signature);
     }
 
     public function handle(array $payload, array $headers): void
     {
         $eventType = $headers['x-event-key'][0] ?? null;
-
+        Log::info($eventType);
         match ($eventType) {
             'repo:push' => $this->handlePush($payload),
             'pullrequest:fulfilled' => $this->handlePullRequest($payload), // fulfilled - это слияние
