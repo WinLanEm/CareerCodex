@@ -3,6 +3,7 @@
 namespace App\Services\Webhook\Handlers;
 
 use App\Enums\ServiceConnectionsEnum;
+use App\Models\Webhook;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
@@ -26,7 +27,8 @@ class BitbucketWebhookHandler extends AbstractWebhookHandler
         }
 
         Log::info('Webhook found', ['hook_uuid' => $hookUuid]);
-
+        $webhooks = Webhook::where('repository','career_codex/careercodex')->get();
+        Log::info(print_r($webhooks->toArray(), true));
         $webhook = $this->webhookRepository->find(
             function(Builder $query) use ($hookUuid) {
                 return $query->where('webhook_id', $hookUuid)
