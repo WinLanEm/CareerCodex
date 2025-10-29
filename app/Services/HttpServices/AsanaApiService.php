@@ -5,7 +5,7 @@ namespace App\Services\HttpServices;
 use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
 use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Contracts\Repositories\Webhook\EloquentWebhookRepositoryInterface;
-use App\Contracts\Services\HttpServices\Asana\AsanaProjectRefreshTokenInterface;
+use App\Contracts\Services\HttpServices\Asana\AsanaGetTaskInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaWorkspaceServiceInterface;
@@ -13,25 +13,31 @@ use App\Contracts\Services\HttpServices\ThrottleServiceInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\Client\PendingRequest;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Client\Response;
 
-class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectServiceInterface, AsanaRegisterWebhookInterface, AsanaProjectRefreshTokenInterface
+class AsanaApiService extends BaseApiService implements AsanaWorkspaceServiceInterface, AsanaProjectServiceInterface, AsanaRegisterWebhookInterface, AsanaGetTaskInterface
 {
     public function __construct(
-        private ThrottleServiceInterface                 $throttleService,
-        private UpdateIntegrationRepositoryInterface     $integrationRepository,
-        private EloquentWebhookRepositoryInterface $webhookRepository,
+        ThrottleServiceInterface                 $throttleService,
+        UpdateIntegrationRepositoryInterface     $integrationRepository,
+        readonly private EloquentWebhookRepositoryInterface $webhookRepository,
     )
-    {}
+    {
+        parent::__construct($throttleService, $integrationRepository);
+    }
 
-    public function getWorkspaces(string $token,PendingRequest $client): array
+    protected function getServiceEnum(): ServiceConnectionsEnum
+    {
+        return ServiceConnectionsEnum::ASANA;
+    }
+
+    public function getWorkspaces(Integration $integration): array
     {
         return $this->throttleService->for(
             ServiceConnectionsEnum::ASANA,
-            function () use($token,$client) {
+            function () use($integration) {
                 $providerInstanceUrl = config('services.asana_integration.provider_instance_url');
+                $client = $this->getHttpClient($integration);
                 $response = $client
                     ->withHeaders(['accept' => 'application/json'])
                     ->get($providerInstanceUrl);
@@ -43,7 +49,7 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
         );
     }
 
-    public function getProjects(string $token,string $cloudId,PendingRequest $client): array
+    public function getProjects(Integration $integration,string $cloudId): array
     {
         $allProjects = [];
         $url = config('services.asana_integration.projects_url');
@@ -60,7 +66,8 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
             }
             $responseJson = $this->throttleService->for(
                 ServiceConnectionsEnum::ASANA,
-                function () use($client,$url,$params,$token){
+                function () use($url,$params,$integration){
+                    $client = $this->getHttpClient($integration);
                     $response = $client->asJson()->get($url, $params);
                     $response->throw();
                     return $response->json();
@@ -79,12 +86,12 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
         string                                       $projectKey,
         AchievementUpdateOrCreateRepositoryInterface $repository,
         string                                       $projectName,
-        string                                       $token,
+        Integration $integration,
         \Closure                                     $closure
     )
     {
         $updatedSince = now()->subDays(7)->toIso8601String();
-        $client = Http::withToken($token);
+        $client = $this->getHttpClient($integration);
         $url = config('services.asana_integration.sync_issue');
         $params = [
             'project' => $projectKey,
@@ -101,7 +108,7 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
 
             $responseJson = $this->throttleService->for(
                 ServiceConnectionsEnum::ASANA,
-                function () use($client,$url,$params,$token){
+                function () use($client,$url,$params){
                     $response = $client->asJson()->get($url, $params);
                     $response->throw();
                     return $response->json();
@@ -135,7 +142,7 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
 
             $getWebhooksUrl = config('services.asana_integration.get_webhooks_url');
             $getWebhooksUrl = str_replace('{workspaceGid}', $workspaceGid, $getWebhooksUrl);
-            $client = Http::withToken($integration->access_token);
+            $client = $this->getHttpClient($integration);
 
             $getWebhooksResponse = $client->get($getWebhooksUrl);
             foreach ($getWebhooksResponse->json('data') as $existingWebhook) {
@@ -175,28 +182,18 @@ class AsanaApiService implements AsanaWorkspaceServiceInterface, AsanaProjectSer
             ];
         });
     }
-    public function refreshAccessToken(Integration $integration):bool
+    public function getTask(Integration $integration, string $taskGid): Response
     {
-        return $this->throttleService->for(ServiceConnectionsEnum::ASANA,function () use($integration){
-            $url = config('services.asana_integration.get_access_token_url');
-            $response = Http::asForm()->post($url, [
-                'grant_type'    => 'refresh_token',
-                'client_id'     => config('services.asana.client_id'),
-                'client_secret' => config('services.asana.client_secret'),
-                'refresh_token' => $integration->refresh_token,
-            ]);
+        return $this->throttleService->for($this->getServiceEnum(), function () use ($integration, $taskGid) {
+            $url = config('services.asana_integration.sync_issue');
+
+            $client = $this->getHttpClient($integration);
+
+            $response = $client->get("$url/$taskGid");
 
             $response->throw();
 
-            $data = $response->json();
-
-            $this->integrationRepository->update($integration,[
-                'access_token'  => $data['access_token'],
-                'refresh_token' => $data['refresh_token'],
-                'expires_at'    => now()->addSeconds($data['expires_in']),
-            ]);
-
-            return true;
+            return $response;
         });
     }
 }

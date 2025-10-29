@@ -26,7 +26,6 @@
             margin-bottom: 30px;
         }
 
-        /* Стили для карточки активности */
         .activity-card {
             background-color: #fff;
             border: 1px solid #ddd;
@@ -58,7 +57,6 @@
             font-size: 14px;
             font-weight: bold;
             margin: 0 0 10px 0;
-            /* Позволяет длинным строкам переноситься */
             word-wrap: break-word;
             white-space: normal;
         }
@@ -78,16 +76,17 @@
         }
 
         .activity-stats {
+            margin-top: 8px;
             display: flex;
             gap: 15px;
         }
 
         .additions {
-            color: #28a745; /* Зеленый цвет для добавлений */
+            color: #28a745;
             font-weight: bold;
         }
         .deletions {
-            color: #dc3545; /* Красный цвет для удалений */
+            color: #dc3545;
             font-weight: bold;
         }
 

@@ -41,6 +41,7 @@ use App\Contracts\Repositories\Workspace\DeleteWorkspaceRepositoryInterface;
 use App\Contracts\Repositories\Workspace\FindWorkspaceRepositoryInterface;
 use App\Contracts\Repositories\Workspace\IndexWorkspaceRepositoryInterface;
 use App\Contracts\Repositories\Workspace\UpdateWorkspaceRepositoryInterface;
+use App\Contracts\Services\HttpServices\Asana\AsanaGetTaskInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaProjectServiceInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Asana\AsanaWorkspaceServiceInterface;
@@ -250,6 +251,10 @@ class AppServiceProvider extends ServiceProvider
         );
         $this->app->bind(
             AsanaRegisterWebhookInterface::class,
+            AsanaApiService::class
+        );
+        $this->app->bind(
+            AsanaGetTaskInterface::class,
             AsanaApiService::class
         );
         $this->app->bind(

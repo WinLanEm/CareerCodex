@@ -18,8 +18,8 @@ return new class extends Migration
             $table->string('service_user_id');
             // 3. Данные для доступа (ХРАНИТЬ В ЗАШИФРОВАННОМ ВИДЕ!)
             $table->text('access_token');
-            $table->text('refresh_token');
-            $table->timestamp('expires_at');
+            $table->text('refresh_token')->nullable();
+            $table->timestamp('expires_at')->nullable();
             $table->timestamps();
             $table->unique(['user_id', 'service']);
 

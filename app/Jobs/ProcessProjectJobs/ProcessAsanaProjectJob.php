@@ -31,7 +31,6 @@ class ProcessAsanaProjectJob implements ShouldQueue
         $this->executeWithHandling(function () use ($instanceRepository, $asanaRegisterWebhook,$webhookRepository) {
 
             $projectGid = $this->project['gid'];
-            $webhookData = [];
 
             $webhookData = $asanaRegisterWebhook->registerWebhook($this->integration, $this->project,$this->workspaceGid);
 

@@ -2,16 +2,32 @@
 
 namespace App\Services\Webhook\Handlers;
 
-use App\Contracts\Services\HttpServices\Asana\AsanaProjectRefreshTokenInterface;
+use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
+use App\Contracts\Repositories\DeveloperActivities\UpdateOrCreateDeveloperActivityInterface;
+use App\Contracts\Repositories\IntegrationInstance\FindIntegrationInstanceByClosureRepositoryInterface;
+use App\Contracts\Repositories\Integrations\FindIntegrationByClosureRepositoryInterface;
+use App\Contracts\Repositories\Webhook\EloquentWebhookRepositoryInterface;
+use App\Contracts\Services\HttpServices\Asana\AsanaGetTaskInterface;
 use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
-use App\Models\IntegrationInstance;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class AsanaWebhookHandler extends AbstractWebhookHandler
 {
+    public function __construct(
+        UpdateOrCreateDeveloperActivityInterface $activityRepository,
+        EloquentWebhookRepositoryInterface $webhookRepository,
+        FindIntegrationByClosureRepositoryInterface $integrationRepository,
+        AchievementUpdateOrCreateRepositoryInterface $achievementRepository,
+        FindIntegrationInstanceByClosureRepositoryInterface $integrationInstanceByClosureRepository,
+        readonly private AsanaGetTaskInterface $asanaGetTask
+    )
+    {
+        parent::__construct($activityRepository, $webhookRepository, $integrationRepository, $achievementRepository, $integrationInstanceByClosureRepository);
+    }
+
     public function verify(array $payload, string $rawPayload, array $headers, ?string $secret): bool
     {
         $signature = $headers['x-hook-signature'][0] ?? null;
@@ -25,10 +41,8 @@ class AsanaWebhookHandler extends AbstractWebhookHandler
         }
 
         $integration = $this->findIntegrationById($payload['events'][0]['user']['gid'],ServiceConnectionsEnum::ASANA);
-        $extendedTaskData = config('services.asana_integration.sync_issue');
         $taskGid = $payload['events'][0]['resource']['gid'];
-        $this->updateAccessToken($integration);
-        $res = Http::withToken($integration->access_token)->get("$extendedTaskData/$taskGid")->throw();
+        $res = $this->asanaGetTask->getTask($integration,$taskGid);
 
         $projectGid = $res->json('data')['projects'][0]['gid'];
         $webhook = $this->webhookRepository->find(function (Builder $query) use ($projectGid) {
@@ -62,9 +76,7 @@ class AsanaWebhookHandler extends AbstractWebhookHandler
             $taskGid = $event['resource']['gid'] ?? null;
             if (!$taskGid) continue;
 
-            $extendedTaskDataUrl = config('services.asana_integration.sync_issue');
-            $this->updateAccessToken($integration);
-            $res = Http::withToken($integration->access_token)->get("$extendedTaskDataUrl/$taskGid");
+            $res = $this->asanaGetTask->getTask($integration,$taskGid);
 
             if (!$res->successful()) continue;
 
@@ -103,18 +115,6 @@ class AsanaWebhookHandler extends AbstractWebhookHandler
                     ], null);
                 }
             }
-        }
-    }
-    private function updateAccessToken(Integration $integration):void
-    {
-        if ($integration->expires_at->isPast()) {
-            $oauthService = app(AsanaProjectRefreshTokenInterface::class);
-            $isRefreshed = $oauthService->refreshAccessToken($integration);
-
-            if (!$isRefreshed) {
-                Log::error('Could not continue processing webhook due to failed token refresh.');
-            }
-            $integration->refresh();
         }
     }
 }

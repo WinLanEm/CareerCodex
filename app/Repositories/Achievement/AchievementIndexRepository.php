@@ -24,12 +24,12 @@ class AchievementIndexRepository implements AchievementIndexRepositoryInterface
                     });
             })
                 ->when($startDate !== null, function ($query) use ($startDate) {
-                    return $query->whereDate('date', '>=', $startDate);
+                    return $query->whereDate('created_at', '>=', $startDate);
                 })->when($endDate !== null, function ($query) use ($endDate) {
-                    return $query->whereDate('date', '<=', $endDate);
+                    return $query->whereDate('created_at', '<=', $endDate);
                 })
             ->where('is_approved', $isApproved)
-            ->orderBy('date', 'desc')
+            ->orderBy('created_at', 'desc')
             ->paginate(
                 $perPage,
                 [

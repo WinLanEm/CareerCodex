@@ -2,10 +2,10 @@
 
 namespace App\Contracts\Services\HttpServices\Asana;
 
-use Illuminate\Http\Client\PendingRequest;
+use App\Models\Integration;
 
 interface AsanaWorkspaceServiceInterface
 {
-    public function getProjects(string $token,string $cloudId,PendingRequest $client): array;
-    public function getWorkspaces(string $token,PendingRequest $client): array;
+    public function getProjects(Integration $integration,string $cloudId): array;
+    public function getWorkspaces(Integration $integration): array;
 }

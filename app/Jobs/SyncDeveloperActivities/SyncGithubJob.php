@@ -28,7 +28,10 @@ class SyncGithubJob implements ShouldQueue
         $this->executeWithHandling(function () use ($apiService) {
             $updatedSince = CarbonImmutable::now()->subDays(7);
 
-            $apiService->syncRepositories($this->integration->access_token, function ($repository) use ($updatedSince) {
+            $apiService->syncRepositories($this->integration, function ($repository) use ($updatedSince) {
+                if (empty($repository)) {
+                    return;
+                }
                 SyncGithubRepositoryJob::dispatch(
                     $this->integration,
                     $repository['default_branch'],

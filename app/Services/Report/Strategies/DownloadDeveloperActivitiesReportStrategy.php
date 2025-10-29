@@ -15,7 +15,7 @@ class DownloadDeveloperActivitiesReportStrategy extends BaseDownloadReportStrate
 
     public function download(int $userId,?string $startDate,?string $endDate):Response
     {
-        $activities = $this->repository->index(1,50,$userId,null,true,$startDate,$endDate);
+        $activities = $this->repository->index(1,100,$userId,null,true,$startDate,$endDate);
         return $this->generatePdfFromView(
             'reports.developer_activities',
             ['activities' => $activities->items()],

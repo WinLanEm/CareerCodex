@@ -25,11 +25,9 @@ class FetchAsanaData implements ShouldQueue
     public function handle(AsanaWorkspaceServiceInterface $apiService): void
     {
         $this->executeWithHandling(function () use ($apiService) {
-            $client = Http::withToken($this->integration->access_token);
-            $workspaces = $apiService->getWorkspaces($this->integration->access_token,$client);
+            $workspaces = $apiService->getWorkspaces($this->integration);
             foreach ($workspaces as $workspace) {
-                $projects = $apiService->getProjects($this->integration->access_token,$workspace['gid'],$client);
-                Log::info(print_r($projects,true));
+                $projects = $apiService->getProjects($this->integration,$workspace['gid']);
                 foreach ($projects as $project) {
                     ProcessAsanaProjectJob::dispatch(
                         $this->integration,

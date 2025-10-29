@@ -7,5 +7,5 @@ use Illuminate\Http\Client\PendingRequest;
 
 interface BitbucketRepositorySyncInterface
 {
-    public function syncRepositories(string $token, \Closure $closure): void;
+    public function syncRepositories(Integration $integration, \Closure $closure): void;
 }

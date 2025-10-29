@@ -38,7 +38,7 @@ class SyncGitlabRepositoryJob implements ShouldQueue
     {
         if ($this->maxActivities <= 0) return;
 
-        $mergeRequests = $apiService->getMergedPullRequests($this->integration->access_token,$this->projectId,$this->maxActivities,$this->updatedSince);
+        $mergeRequests = $apiService->getMergedPullRequests($this->integration,$this->projectId,$this->maxActivities,$this->updatedSince);
 
         foreach ($mergeRequests as $mr) {
             if ($this->maxActivities <= 0) break;
@@ -64,7 +64,7 @@ class SyncGitlabRepositoryJob implements ShouldQueue
     {
         if ($this->maxActivities <= 0) return;
 
-        $commits = $apiService->getCommits($this->integration->access_token,$this->projectId,$this->maxActivities,$this->updatedSince,$this->defaultBranch);
+        $commits = $apiService->getCommits($this->integration,$this->projectId,$this->maxActivities,$this->updatedSince,$this->defaultBranch);
 
         foreach ($commits as $commit) {
             if ($this->maxActivities <= 0) break;

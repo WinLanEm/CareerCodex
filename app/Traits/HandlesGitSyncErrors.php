@@ -28,6 +28,7 @@ trait HandlesGitSyncErrors
                 'integration_id' => $this->integration->id,
                 'message' => $e->getMessage(),
                 'code' => $e->getCode(),
+                'file' => $e->getFile(),
                 'line' => $e->getLine(),
             ]);
 

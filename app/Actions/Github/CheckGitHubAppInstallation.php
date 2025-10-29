@@ -8,9 +8,9 @@ use App\Contracts\Services\HttpServices\Github\GithubCheckIfAppInstalledInterfac
 use App\Http\Resources\UrlResource;
 use Laravel\Socialite\Contracts\User;
 
-class CheckGitHubAppInstallation
+readonly class CheckGitHubAppInstallation
 {
-    public function __construct(readonly private GithubCheckIfAppInstalledInterface $appInstalled)
+    public function __construct(private GithubCheckIfAppInstalledInterface $appInstalled)
     {
     }
 

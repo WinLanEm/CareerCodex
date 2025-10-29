@@ -2,6 +2,7 @@
 
 namespace App\Services\HttpServices;
 
+use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketActivityFetchInterface;
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Bitbucket\BitbucketRepositorySyncInterface;
@@ -14,17 +15,26 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class BitbucketApiService implements BitbucketRepositorySyncInterface, BitbucketRegisterWebhookInterface, BitbucketActivityFetchInterface
+class BitbucketApiService extends BaseApiService implements BitbucketRepositorySyncInterface, BitbucketRegisterWebhookInterface, BitbucketActivityFetchInterface
 {
     public function __construct(
-        private ThrottleServiceInterface $throttleService,
-        private EloquentWebhookRepository $webhookRepository,
+        ThrottleServiceInterface $throttleService,
+        UpdateIntegrationRepositoryInterface $integrationRepository,
+        readonly private EloquentWebhookRepository $webhookRepository,
     )
-    {}
-    public function syncRepositories(string $token,\Closure $closure):void
+    {
+        parent::__construct($throttleService, $integrationRepository);
+    }
+
+    protected function getServiceEnum(): ServiceConnectionsEnum
+    {
+        return ServiceConnectionsEnum::BITBUCKET;
+    }
+
+    public function syncRepositories(Integration $integration,\Closure $closure):void
     {
         $nextPageUrl = config('services.bitbucket_integration.sync_repositories_url');
-        $client = Http::withToken($token);
+        $client = $this->getHttpClient($integration);
         do {
             $repositoriesOnPage = $this->throttleService->for(
                 ServiceConnectionsEnum::BITBUCKET,
@@ -45,9 +55,9 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
             }
         } while ($nextPageUrl);
     }
-    public function getMergedPullRequests(string $token,string $workspaceSlug, string $repoSlug,int $limit,CarbonImmutable $updatedSince): array
+    public function getMergedPullRequests(Integration $integration,string $workspaceSlug, string $repoSlug,int $limit,CarbonImmutable $updatedSince): array
     {
-        $client = Http::withToken($token);
+        $client = $this->getHttpClient($integration);
         return $this->throttleService->for(
             ServiceConnectionsEnum::BITBUCKET,
             function () use($client, $workspaceSlug,$repoSlug, $limit,$updatedSince) {
@@ -64,11 +74,11 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
             },
         );
     }
-    public function getExtendedInfo(string $token,string $url):array
+    public function getExtendedInfo(Integration $integration,string $url):array
     {
         $additions = 0;
         $deletions = 0;
-        $client = Http::withToken($token);
+        $client = $this->getHttpClient($integration);
         $this->throttleService->for(
             ServiceConnectionsEnum::BITBUCKET,
             function () use($client, $url,&$additions,&$deletions) {
@@ -83,9 +93,9 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
         );
         return ['additions' => $additions, 'deletions' => $deletions];
     }
-    public function getCommits(string $token,string $workspaceSlug, string $repoSlug,int $limit,string $defaultBranch): array
+    public function getCommits(Integration $integration,string $workspaceSlug, string $repoSlug,int $limit,string $defaultBranch): array
     {
-        $client = Http::withToken($token);
+        $client = $this->getHttpClient($integration);
         return $this->throttleService->for(
             ServiceConnectionsEnum::BITBUCKET,
             function () use($client, $workspaceSlug,$repoSlug,$limit,$defaultBranch) {
@@ -103,8 +113,7 @@ class BitbucketApiService implements BitbucketRepositorySyncInterface, Bitbucket
     public function registerWebhook(Integration $integration,string $workspaceSlug,string $repoSlug,string $repositoryId):array
     {
         return $this->throttleService->for(ServiceConnectionsEnum::BITBUCKET,function () use($repositoryId,$integration,$workspaceSlug,$repoSlug){
-            $token = $integration->access_token;
-            $client = Http::withToken($token);
+            $client = $this->getHttpClient($integration);
             $webhookSecret = bin2hex(random_bytes(32));
 
             $url = config('services.bitbucket_integration.get_hooks_url');

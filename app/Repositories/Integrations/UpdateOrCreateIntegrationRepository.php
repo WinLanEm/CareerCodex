@@ -37,8 +37,8 @@ class UpdateOrCreateIntegrationRepository implements UpdateOrCreateIntegrationRe
             ],
             [
                 'access_token' => $socialiteUser->token,
-                'refresh_token' => $socialiteUser->refreshToken,
-                'expires_at' => $expiresAtTimestamp,
+                'refresh_token' => $socialiteUser->refreshToken ?? null,
+                'expires_at' => $expiresAtTimestamp ?? null,
             ]
         );
     }

@@ -63,7 +63,8 @@ return [
         'sync_repositories_url' => 'https://api.github.com/user/repos',
         'get_hooks_url' => "https://api.github.com/repos/{fullRepoName}/hooks",
         'webhook_secret' => env('GITHUB_SERVICE_WEBHOOK_SECRET'),
-        'check_app_installation_url' => "https://api.github.com/user/installations"
+        'check_app_installation_url' => "https://api.github.com/user/installations",
+        'get_access_token_url' => 'https://github.com/login/oauth/access_token',
     ],
     //https://github.com/settings/apps/careercodex/installations сначала надо установить приложение
 
@@ -76,6 +77,7 @@ return [
         'get_merged_pull_requests_url' => "https://gitlab.com/api/v4/projects/{projectId}/merge_requests",
         'get_commits_url' => "https://gitlab.com/api/v4/projects/{projectId}/repository/commits",
         'get_hooks_url' => "https://gitlab.com/api/v4/projects/{projectId}/hooks",
+        'get_access_token_url' => 'https://gitlab.com/oauth/token',
     ],
 
     'bitbucket_integration' => [
@@ -87,6 +89,7 @@ return [
         'get_merged_pull_requests_url' => "https://api.bitbucket.org/2.0/repositories/{workspaceSlug}/{repoSlug}/pullrequests",
         'get_commits_url' => "https://api.bitbucket.org/2.0/repositories/{workspaceSlug}/{repoSlug}/commits",
         'get_hooks_url' => "https://api.bitbucket.org/2.0/repositories/{workspaceSlug}/{repoSlug}/hooks",
+        'get_access_token_url' => 'https://bitbucket.org/site/oauth2/access_token',
     ],
     'jira_integration' => [
         'scopes' => 'read:jira-user read:jira-work offline_access read:me manage:jira-webhook manage:jira-configuration',
@@ -97,7 +100,8 @@ return [
         'provider_instance_url' => 'https://api.atlassian.com/oauth/token/accessible-resources',
         'projects_url' => "https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/project/search",
         'sync_issue' => "https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/search/jql",
-        "register_webhook_url" => "https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/webhook"
+        "register_webhook_url" => "https://api.atlassian.com/ex/jira/{cloudId}/rest/api/3/webhook",
+        'get_access_token_url' => 'https://auth.atlassian.com/oauth/token',
     ],
 
     'asana_integration' => [

@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -29,6 +30,11 @@ return new class extends Migration
 
             $table->unique(['integration_id', 'type', 'external_id','user_id']);
         });
+
+        if (DB::connection()->getDriverName() == 'pgsql') {
+            DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
+            DB::statement('CREATE INDEX developer_activities_title_trgm_idx ON developer_activities USING GIN (title gin_trgm_ops)');
+        }
     }
 
     /**

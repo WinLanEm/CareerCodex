@@ -64,7 +64,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::delete('/achievements/{id}',AchievementDeleteController::class)->name('achievement.delete');
 
     Route::get('/service/{service}/redirect', IntegrationRedirectController::class)->name('service.redirect');
-    Route::get('/service/sync', SyncIntegrationController::class)->middleware(['throttle:1,5'])->name('service.sync');
+    Route::get('/services/sync', SyncIntegrationController::class)->middleware(['throttle:1,240'])->name('service.sync');
     Route::get('/services',IndexConnectedServicesController::class)->name('services.index');
     Route::delete('/services/{integration}',DeleteServiceController::class)->name('services.delete');
 

@@ -3,6 +3,7 @@
 namespace App\Services\HttpServices;
 
 
+use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Contracts\Repositories\Webhook\EloquentWebhookRepositoryInterface;
 use App\Contracts\Services\HttpServices\Github\GithubActivityFetchInterface;
 use App\Contracts\Services\HttpServices\Github\GithubCheckIfAppInstalledInterface;
@@ -13,20 +14,29 @@ use App\Enums\ServiceConnectionsEnum;
 use App\Models\Integration;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Contracts\User;
 
-class GithubApiService implements GithubRepositorySyncInterface, GithubActivityFetchInterface, GithubRegisterWebhookInterface,GithubCheckIfAppInstalledInterface
+class GithubApiService extends BaseApiService implements GithubRepositorySyncInterface, GithubActivityFetchInterface, GithubRegisterWebhookInterface,GithubCheckIfAppInstalledInterface
 {
     public function __construct(
-        private ThrottleServiceInterface $throttleService,
-        private EloquentWebhookRepositoryInterface $webhookRepository,
+        ThrottleServiceInterface $throttleService,
+        UpdateIntegrationRepositoryInterface $integrationRepository,
+        readonly private EloquentWebhookRepositoryInterface $webhookRepository,
     )
-    {}
+    {
+        parent::__construct($throttleService, $integrationRepository);
+    }
 
-    public function syncRepositories(string $token, \Closure $closure): void
+    protected function getServiceEnum(): ServiceConnectionsEnum
+    {
+        return ServiceConnectionsEnum::GITHUB;
+    }
+
+    public function syncRepositories(Integration $integration, \Closure $closure): void
     {
         $page = 1;
-        $client = Http::withToken($token);
+        $client = $this->getHttpClient($integration);
         do {
             $repositoriesOnPage = $this->throttleService->for(
                 ServiceConnectionsEnum::GITHUB,
@@ -38,7 +48,7 @@ class GithubApiService implements GithubRepositorySyncInterface, GithubActivityF
                     ]);
                     $response->throw();
                     $page++;
-                    return $response->json();
+                    return $response->json() ?? [];
                 },
             );
 
@@ -48,9 +58,9 @@ class GithubApiService implements GithubRepositorySyncInterface, GithubActivityF
 
         } while (!empty($repositoriesOnPage));
     }
-    public function getMergedPullRequests(string $token,string $searchQuery, int $limit): array
+    public function getMergedPullRequests(Integration $integration,string $searchQuery, int $limit): array
     {
-        $client = Http::withToken($token);
+        $client = $this->getHttpClient($integration);
         return $this->throttleService->for(
             ServiceConnectionsEnum::GITHUB,
             function () use ($searchQuery, $limit,$client) {
@@ -86,9 +96,9 @@ class GithubApiService implements GithubRepositorySyncInterface, GithubActivityF
             },
         );
     }
-    public function getCommits(string $token,string $owner, string $repo, string $branch, string $since, int $limit): array
+    public function getCommits(Integration $integration,string $owner, string $repo, string $branch, string $since, int $limit): array
     {
-        $client = Http::withToken($token);
+        $client = $this->getHttpClient($integration);
         return $this->throttleService->for(
             ServiceConnectionsEnum::GITHUB,
             function () use ($owner, $repo, $branch, $since, $limit,$client) {
@@ -133,8 +143,7 @@ class GithubApiService implements GithubRepositorySyncInterface, GithubActivityF
     public function registerWebhook(Integration $integration,string $fullRepoName):array
     {
         return $this->throttleService->for(ServiceConnectionsEnum::GITHUB,function () use ($integration,$fullRepoName){
-            $token = $integration->access_token;
-            $client = Http::withToken($token)->acceptJson();
+            $client = $this->getHttpClient($integration);
             $webhookUrl = route('webhook', ['service' => 'github']);
             $webhookSecret = config('services.github_integration.webhook_secret');
 

@@ -41,9 +41,9 @@ class SyncGithubRepositoryJob implements ShouldQueue
 
         $searchQuery = "repo:{$this->repoName} is:pr is:merged updated:>" . $this->updatedSince->format('Y-m-d');
 
-        $pullRequests = $apiService->getMergedPullRequests($this->integration->access_token, $searchQuery,$this->maxActivities);
+        $pullRequests = $apiService->getMergedPullRequests($this->integration, $searchQuery,$this->maxActivities);
 
-        foreach ($pullRequests as $pr) {
+        foreach ($pullRequests ?? [] as $pr) {
             if (empty($pr)) continue;
 
             $this->maxActivities--;
@@ -69,9 +69,9 @@ class SyncGithubRepositoryJob implements ShouldQueue
 
         [$owner, $repo] = explode('/', $this->repoName);
 
-        $commits = $apiService->getCommits($this->integration->access_token, $owner, $repo,$this->defaultBranch,$this->updatedSince->toISOString(),$this->maxActivities);
+        $commits = $apiService->getCommits($this->integration, $owner, $repo,$this->defaultBranch,$this->updatedSince->toISOString(),$this->maxActivities);
 
-        foreach ($commits as $commit) {
+        foreach ($commits ?? [] as $commit) {
             $this->maxActivities--;
             $activityRepository->updateOrCreateDeveloperActivity([
                 'integration_id' => $this->integration->id,

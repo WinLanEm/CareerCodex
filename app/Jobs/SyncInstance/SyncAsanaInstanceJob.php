@@ -32,7 +32,7 @@ class SyncAsanaInstanceJob implements ShouldQueue
                 $this->projectGid,
                 $repository,
                 $this->projectName,
-                $this->integration->access_token,
+                $this->integration,
                 function ($task) use ($repository) {
                     if ($task['completed']) {
                         $carbonDate = Carbon::parse($task['completed_at']);

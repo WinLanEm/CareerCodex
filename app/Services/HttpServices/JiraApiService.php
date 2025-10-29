@@ -3,6 +3,7 @@
 namespace App\Services\HttpServices;
 
 use App\Contracts\Repositories\Achievement\AchievementUpdateOrCreateRepositoryInterface;
+use App\Contracts\Repositories\Integrations\UpdateIntegrationRepositoryInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraProjectServiceInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraRegisterWebhookInterface;
 use App\Contracts\Services\HttpServices\Jira\JiraWorkspaceServiceInterface;
@@ -13,18 +14,27 @@ use App\Models\Webhook;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
-class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectServiceInterface, JiraRegisterWebhookInterface
+class JiraApiService extends BaseApiService implements JiraWorkspaceServiceInterface,JiraProjectServiceInterface, JiraRegisterWebhookInterface
 {
     public function __construct(
-        private ThrottleServiceInterface $throttleService,
+        ThrottleServiceInterface $throttleService,
+        UpdateIntegrationRepositoryInterface $integrationRepository,
     )
-    {}
+    {
+        parent::__construct($throttleService, $integrationRepository);
+    }
+
+    protected function getServiceEnum(): ServiceConnectionsEnum
+    {
+        return ServiceConnectionsEnum::JIRA;
+    }
+
     public function getWorkspaces(Integration $integration): array
     {
         return $this->throttleService->for(
             ServiceConnectionsEnum::JIRA,
             function () use($integration) {
-                $client = Http::withToken($integration->access_token);
+                $client = $this->getHttpClient($integration);
                 $providerInstanceUrl = config('services.jira_integration.provider_instance_url');
                 $response = $client
                     ->timeout(30)
@@ -46,7 +56,7 @@ class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectService
             $responseJson = $this->throttleService->for(
                 ServiceConnectionsEnum::JIRA,
                 function () use ($integration, $cloudId, $startAt, $maxResults) {
-                    $client = Http::withToken($integration->access_token);
+                    $client = $this->getHttpClient($integration);
                     $url = config('services.jira_integration.projects_url');
                     $url = str_replace('{cloudId}', $cloudId, $url);
                     $response = $client->asJson()->timeout(30)->get($url, [
@@ -86,7 +96,7 @@ class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectService
             $responseJson = $this->throttleService->for(
                 ServiceConnectionsEnum::JIRA,
                 function () use ($integration,$cloudId, $jql, $startAt, $maxResults) {
-                    $client = Http::withToken($integration->access_token);
+                    $client = $this->getHttpClient($integration);
                     $url = config('services.jira_integration.sync_issue');
                     $url = str_replace('{cloudId}', $cloudId, $url);
                     $response = $client->asJson()->timeout(30)->get($url, [
@@ -113,7 +123,7 @@ class JiraApiService implements JiraWorkspaceServiceInterface,JiraProjectService
         public function registerWebhook(Integration $integration,string $cloudId,string $siteUrl):array
         {
             return $this->throttleService->for(ServiceConnectionsEnum::JIRA,function () use($integration, $cloudId, $siteUrl) {
-                $client = Http::withToken($integration->access_token);
+                $client = $this->getHttpClient($integration);
                 $apiUrl = config('services.jira_integration.register_webhook_url');
                 $apiUrl = str_replace('{cloudId}', $cloudId, $apiUrl);
                 $response = $client->get($apiUrl);

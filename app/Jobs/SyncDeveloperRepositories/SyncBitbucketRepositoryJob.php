@@ -40,7 +40,7 @@ class SyncBitbucketRepositoryJob implements ShouldQueue
     {
         if ($this->maxActivities <= 0) return;
 
-        $pullRequests = $apiService->getMergedPullRequests($this->integration->access_token,$this->workspaceSlug,$this->repoSlug,$this->maxActivities,$this->updatedSince);
+        $pullRequests = $apiService->getMergedPullRequests($this->integration,$this->workspaceSlug,$this->repoSlug,$this->maxActivities,$this->updatedSince);
 
 
         foreach ($pullRequests as $pr) {
@@ -50,7 +50,7 @@ class SyncBitbucketRepositoryJob implements ShouldQueue
             $this->maxActivities--;
 
             if (isset($pr['links']['diffstat']['href'])) {
-                $additionsAndDeletions = $apiService->getExtendedInfo($this->integration->access_token,$pr['links']['diffstat']['href']);
+                $additionsAndDeletions = $apiService->getExtendedInfo($this->integration,$pr['links']['diffstat']['href']);
             }
 
             $activityRepository->updateOrCreateDeveloperActivity([
@@ -72,7 +72,7 @@ class SyncBitbucketRepositoryJob implements ShouldQueue
     {
         if ($this->maxActivities <= 0) return;
 
-        $commits = $apiService->getCommits($this->integration->access_token,$this->workspaceSlug,$this->repoSlug,$this->maxActivities,$this->defaultBranch);
+        $commits = $apiService->getCommits($this->integration,$this->workspaceSlug,$this->repoSlug,$this->maxActivities,$this->defaultBranch);
 
         foreach ($commits as $commit) {
             // Сначала фильтруем по дате, так как Bitbucket API не позволяет это в запросе
@@ -86,7 +86,7 @@ class SyncBitbucketRepositoryJob implements ShouldQueue
 
             $additionsAndDeletions = ['additions' => 0, 'deletions' => 0];
             if (isset($commit['links']['diffstat']['href'])) {
-                $additionsAndDeletions = $apiService->getExtendedInfo($this->integration->access_token,$commit['links']['diffstat']['href']);
+                $additionsAndDeletions = $apiService->getExtendedInfo($this->integration,$commit['links']['diffstat']['href']);
             }
 
             $activityRepository->updateOrCreateDeveloperActivity([

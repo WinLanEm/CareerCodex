@@ -35,7 +35,6 @@ return new class extends Migration
         //DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
         if (DB::connection()->getDriverName() == 'pgsql') {
             DB::statement('CREATE EXTENSION IF NOT EXISTS pg_trgm');
-            DB::statement('CREATE INDEX achievements_skills_gin_idx ON achievements USING GIN (skills)');
             DB::statement('CREATE INDEX achievements_title_trgm_idx ON achievements USING GIN (title gin_trgm_ops)');
         }
     }

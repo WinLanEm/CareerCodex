@@ -3,7 +3,9 @@
 namespace App\Contracts\Services\HttpServices\Gitlab;
 
 
+use App\Models\Integration;
+
 interface GitlabRepositorySyncInterface
 {
-    public function syncRepositories(string $token, \Closure $closure): void;
+    public function syncRepositories(Integration $integration, \Closure $closure): void;
 }
